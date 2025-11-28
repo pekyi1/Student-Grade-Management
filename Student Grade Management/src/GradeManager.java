@@ -10,13 +10,13 @@ public class GradeManager {
     public void addGrade(Grade grade) {
         if (gradeCount < grades.length) {
             grades[gradeCount++] = grade;
-            System.out.println("\n✓ Grade recorded successfully!");
+            System.out.println("\n-> Grade recorded successfully!");
         } else {
             System.out.println("Cannot add grade. Maximum capacity reached.");
         }
     }
 
-    public void viewGradesByStudent(Student student) {
+    public void viewGradesByStudent(Student student) { // Displays all grades for a specific student.
         String studentId = student.getStudentId();
         boolean found = false;
 
@@ -24,7 +24,7 @@ public class GradeManager {
         System.out.println("Type: " + student.getStudentType() + " Student");
         double currentAverage = calculateOverallAverage(studentId);
         System.out.printf("Current Average: %.1f%%%n", currentAverage);
-        System.out.println("Status: " + (student.isPassing(currentAverage) ? "PASSING ✓" : "FAILING"));
+        System.out.println("Status: " + (student.isPassing(currentAverage) ? "PASSING ->" : "FAILING"));
 
         System.out.println("\nGRADE HISTORY");
         System.out.println("__________________________________________________________________________________");
@@ -55,8 +55,8 @@ public class GradeManager {
 
             System.out.println("\nPerformance Summary:");
             boolean allCorePassing = checkAllCoreSubjectsPassing(studentId, student.getPassingGrade());
-            System.out.println((allCorePassing ? "✓" : "X") + " Passing all core subjects");
-            System.out.println((student.isPassing(currentAverage) ? "✓" : "X") + " Meeting passing grade requirement ("
+            System.out.println((allCorePassing ? "->" : "X") + " Passing all core subjects");
+            System.out.println((student.isPassing(currentAverage) ? "->" : "X") + " Meeting passing grade requirement ("
                     + (int) student.getPassingGrade() + "%)");
         }
 
@@ -113,7 +113,8 @@ public class GradeManager {
         return count == 0 ? 0.0 : sum / count;
     }
 
-    public int getEnrolledSubjectCount(String studentId) {
+    public int getEnrolledSubjectCount(String studentId) { // Gets the count of subjects a student is enrolled in (has
+                                                           // grades for).
         int count = 0;
         for (int i = 0; i < gradeCount; i++) {
             if (grades[i].getStudentID().equals(studentId)) {

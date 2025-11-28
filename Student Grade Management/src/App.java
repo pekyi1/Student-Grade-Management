@@ -1,5 +1,9 @@
 import java.util.Scanner;
 
+/**
+ * Main application class for the Student Grade Management System.
+ * Handles user interaction and orchestrates the system's functionality.
+ */
 public class App {
     private static StudentManager studentManager = new StudentManager();
     private static GradeManager gradeManager = new GradeManager();
@@ -59,17 +63,22 @@ public class App {
         System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
         int typeChoice = getIntInput("\nSelect type (1-2): ");
 
-        Student student;
-        if (typeChoice == 1) {
-            student = new RegularStudent(name, age, email, phone);
-        } else if (typeChoice == 2) {
-            student = new HonorsStudent(name, age, email, phone);
-        } else {
-            System.out.println("Invalid student type. Student not added.");
-            return;
+        try {
+            Student student;
+            if (typeChoice == 1) {
+                student = new RegularStudent(name, age, email, phone);
+            } else if (typeChoice == 2) {
+                student = new HonorsStudent(name, age, email, phone);
+            } else {
+                System.out.println("Invalid student type. Student not added.");
+                return;
+            }
+
+            studentManager.addStudent(student);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error adding student: " + e.getMessage());
         }
 
-        studentManager.addStudent(student);
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
@@ -195,8 +204,14 @@ public class App {
     }
 
     private static String getStringInput(String prompt) {
-        System.out.print(prompt);
-        return scanner.nextLine();
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+            if (input != null && !input.trim().isEmpty()) {
+                return input;
+            }
+            System.out.println("Input cannot be empty. Please try again.");
+        }
     }
 
     private static int getIntInput(String prompt) {

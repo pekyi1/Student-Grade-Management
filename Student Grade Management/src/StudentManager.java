@@ -9,7 +9,7 @@ public class StudentManager {
         this.studentCount = 0;
     }
 
-    public void addStudent(Student student) {
+    public void addStudent(Student student) { //Adds a new student to the system.
         if (studentCount < students.length) {
             students[studentCount++] = student;
             System.out.println("\n-> Student added successfully!");
@@ -34,7 +34,7 @@ public class StudentManager {
         return null;
     }
 
-    public void viewAllStudents(GradeManager gm) {
+    public void viewAllStudents(GradeManager gm) { //The GradeManager used to calculate student averages.
         if (studentCount == 0) {
             System.out.println("No students found.");
             return;
@@ -54,7 +54,7 @@ public class StudentManager {
         System.out.printf("Average Class Grade: %.1f%%%n", getAverageClassGrade(gm));
 
         System.out.println("\nPress Enter to continue...");
-        new Scanner(System.in).nextLine();
+        new Scanner(System.in).nextLine(); //this pauses the program in you press enter
     }
 
     public double getAverageClassGrade(GradeManager gm) {
