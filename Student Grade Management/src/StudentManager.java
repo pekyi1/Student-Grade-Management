@@ -1,3 +1,5 @@
+import exceptions.InvalidDataException;
+import exceptions.StudentNotFoundException;
 import java.util.Scanner;
 
 public class StudentManager {
@@ -9,20 +11,29 @@ public class StudentManager {
         this.studentCount = 0;
     }
 
-    public void addStudent(Student student) { //Adds a new student to the system.
-        if (studentCount < students.length) {
-            students[studentCount++] = student;
-            System.out.println("\n-> Student added successfully!");
-            System.out.println("  Student ID: " + student.getStudentId());
-            System.out.println("  Name: " + student.getName());
-            System.out.println("  Type: " + student.getStudentType());
-            System.out.println("  Age: " + student.getAge());
-            System.out.println("  Email: " + student.getEmail());
-            System.out.printf("  Passing Grade: %.0f%%%n", student.getPassingGrade());
-            System.out.println("  Status: " + student.getStatus());
-        } else {
-            System.out.println("Cannot add student. Maximum capacity reached.");
+    public void addStudent(Student student) throws InvalidDataException {
+        if (studentCount >= students.length) {
+            throw new InvalidDataException("Cannot add student. Maximum capacity reached.");
         }
+        if (student.getName() == null || student.getName().trim().isEmpty()) {
+            throw new InvalidDataException("Student name cannot be empty.");
+        }
+        if (student.getAge() <= 0) {
+            throw new InvalidDataException("Student age must be greater than 0.");
+        }
+        if (findStudent(student.getStudentId()) != null) {
+            throw new InvalidDataException("Student with ID " + student.getStudentId() + " already exists.");
+        }
+
+        students[studentCount++] = student;
+        System.out.println("\n-> Student added successfully!");
+        System.out.println("  Student ID: " + student.getStudentId());
+        System.out.println("  Name: " + student.getName());
+        System.out.println("  Type: " + student.getStudentType());
+        System.out.println("  Age: " + student.getAge());
+        System.out.println("  Email: " + student.getEmail());
+        System.out.printf("  Passing Grade: %.0f%%%n", student.getPassingGrade());
+        System.out.println("  Status: " + student.getStatus());
     }
 
     public Student findStudent(String studentId) {
@@ -31,10 +42,19 @@ public class StudentManager {
                 return students[i];
             }
         }
-        return null;
+        return null; // Returning null here to allow caller to decide if it's an exception or just a
+                     // check
     }
 
-    public void viewAllStudents(GradeManager gm) { //The GradeManager used to calculate student averages.
+    public Student getStudent(String studentId) throws StudentNotFoundException {
+        Student student = findStudent(studentId);
+        if (student == null) {
+            throw new StudentNotFoundException(studentId);
+        }
+        return student;
+    }
+
+    public void viewAllStudents(GradeManager gm) {
         if (studentCount == 0) {
             System.out.println("No students found.");
             return;
@@ -54,7 +74,7 @@ public class StudentManager {
         System.out.printf("Average Class Grade: %.1f%%%n", getAverageClassGrade(gm));
 
         System.out.println("\nPress Enter to continue...");
-        new Scanner(System.in).nextLine(); //this pauses the program in you press enter
+        new Scanner(System.in).nextLine();
     }
 
     public double getAverageClassGrade(GradeManager gm) {

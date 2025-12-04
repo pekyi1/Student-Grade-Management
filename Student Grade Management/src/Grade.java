@@ -8,7 +8,12 @@ public class Grade implements Gradable {
     private double grade;
     private String date;
 
-    public Grade(String studentID, Subject subject, double grade) {
+    public Grade(String studentID, Subject subject, double grade){
+        // validate grade on creation; throw so callers (like App) can handle invalid input
+        if (!validateGrade(grade)) {
+            throw new IllegalArgumentException("Grade must be between 0 and 100.");
+        }
+
         this.gradeID = "GRD" + gradeCounter++;
         this.studentID = studentID;
         this.subject = subject;
@@ -17,36 +22,32 @@ public class Grade implements Gradable {
     }
 
     @Override
-    public boolean validateGrade(double grade) {
+    public boolean validateGrade(double grade){
         return grade >= 0 && grade <= 100;
     }
 
     @Override
-    public void recordGrade(double grade) {
-        if (validateGrade(grade)) {
+    public void recordGrade(double grade){
+        if(validateGrade(grade)){
             this.grade = grade;
-        } else {
+        }else {
             System.out.println("Invalid grade entered. Grade not recorded");
         }
     }
 
-    public String getGradeID() {
+    public String getGradeID(){
         return gradeID;
     }
-
-    public String getStudentID() {
+    public String getStudentID(){
         return studentID;
     }
-
-    public Subject getSubject() {
+    public Subject getSubject(){
         return subject;
     }
-
-    public double getGrade() {
+    public double getGrade(){
         return grade;
     }
-
-    public String getDate() {
+    public String getDate(){
         return date;
     }
 
@@ -58,17 +59,18 @@ public class Grade implements Gradable {
         System.out.println("Letter Grade: " + getLetterGrade());
     }
 
-    public String getLetterGrade() { // Calculates the letter grade based on the numerical score.
-        if (grade >= 80.0) {
+    public String getLetterGrade(){
+        if(grade >= 80.0){
             return "A";
         } else if (grade >= 60.0 && grade <= 79.9) {
             return "B";
-        } else if (grade >= 50.0 && grade <= 59.9) {
+        } else if (grade >= 50.0 && grade <= 59.9 ) {
             return "C";
         } else if (grade >= 40.0 && grade <= 49.0) {
             return "D";
         }
         return "F";
     }
+
 
 }

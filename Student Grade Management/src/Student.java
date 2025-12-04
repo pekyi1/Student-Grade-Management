@@ -8,16 +8,6 @@ public abstract class Student {
     private static int studentCounter = 1;
 
     public Student(String name, int age, String email, String phone, String status) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Student name cannot be empty."); //throws IllegalArgumentException if name is empty, age is invalid, or email is invalid.
-        }
-        if (age <= 0) {
-            throw new IllegalArgumentException("Age must be a positive number.");
-        }
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Invalid email address.");
-        }
-
         this.studentId = String.format("STU%03d", studentCounter++);
         this.name = name;
         this.age = age;
