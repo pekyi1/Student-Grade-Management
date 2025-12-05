@@ -1,0 +1,20 @@
+STUDENT GRADE REPORT - SUMMARY
+__________________________________________________
+Student: STU001 fred
+Type: Regular
+Status: Active
+__________________________________________________
+
+PERFORMANCE SUMMARY
+Total Grades: 1
+Core Subjects Average: 96.0%
+Elective Subjects Average: 0.0%
+Overall Average: 96.0%
+Passing: Yes
+
+__________________________________________________
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-05   | Mathematics     | Core       | 96.0    %
+__________________________________________________

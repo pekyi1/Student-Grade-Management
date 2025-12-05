@@ -131,4 +131,22 @@ public class GradeManager {
     public int getGradeCount() {
         return gradeCount;
     }
+
+    public Grade[] getGradesForStudent(String studentId) {
+        int count = 0;
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentID().equals(studentId)) {
+                count++;
+            }
+        }
+
+        Grade[] studentGrades = new Grade[count];
+        int index = 0;
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentID().equals(studentId)) {
+                studentGrades[index++] = grades[i];
+            }
+        }
+        return studentGrades;
+    }
 }

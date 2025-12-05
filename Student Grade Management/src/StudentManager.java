@@ -88,6 +88,12 @@ public class StudentManager {
         return totalAverage / studentCount;
     }
 
+    public Student[] getAllStudents() {
+        Student[] result = new Student[studentCount];
+        System.arraycopy(students, 0, result, 0, studentCount);
+        return result;
+    }
+
     public int getStudentCount() {
         return studentCount;
     }

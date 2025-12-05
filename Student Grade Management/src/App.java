@@ -8,6 +8,8 @@ import java.util.Scanner;
 public class App {
     private static StudentManager studentManager = new StudentManager();
     private static GradeManager gradeManager = new GradeManager();
+    private static ReportGenerator reportGenerator = new ReportGenerator();
+    private static FileExporter fileExporter = new FileExporter();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -31,6 +33,9 @@ public class App {
                         viewGradeReport();
                         break;
                     case 5:
+                        exportGradeReport();
+                        break;
+                    case 6:
                         running = false;
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
@@ -52,7 +57,8 @@ public class App {
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
-        System.out.println("5. Exit");
+        System.out.println("5. Export Grade Report");
+        System.out.println("6. Exit");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -92,112 +98,148 @@ public class App {
     private static void recordGrade() {
         System.out.println("\nRECORD GRADE");
         System.out.println("__________________________________________________________________________________");
-        try {
-            String studentId = getStringInput("Enter Student ID: ");
-            Student student = studentManager.getStudent(studentId);
+        boolean recording = true;
+        while (recording) {
+            try {
+                String studentId = getStringInput("Enter Student ID: ");
+                Student student = studentManager.getStudent(studentId);
 
-            System.out.println("\nStudent Details:");
-            System.out.println("Name: " + student.getName());
-            System.out.println("Type: " + student.getStudentType() + " Student");
-            System.out.printf("Current Average: %.1f%%%n", gradeManager.calculateOverallAverage(studentId));
+                System.out.println("\nStudent Details:");
+                System.out.println("Name: " + student.getName());
+                System.out.println("Type: " + student.getStudentType() + " Student");
+                System.out.printf("Current Average: %.1f%%%n", gradeManager.calculateOverallAverage(studentId));
 
-            System.out.println("\nSubject type:");
-            System.out.println("1. Core Subject (Mathematics, English, Science)");
-            System.out.println("2. Elective Subject (Music, Art, Physical Education)");
-            int subjectTypeChoice = getIntInput("\nSelect type (1-2): ");
+                System.out.println("\nSubject type:");
+                System.out.println("1. Core Subject (Mathematics, English, Science)");
+                System.out.println("2. Elective Subject (Music, Art, Physical Education)");
+                int subjectTypeChoice = getIntInput("\nSelect type (1-2): ");
 
-            Subject subject;
-            String subjectName = "";
-            String subjectCode = "";
+                Subject subject;
+                String subjectName = "";
+                String subjectCode = "";
 
-            if (subjectTypeChoice == 1) {
-                System.out.println("\nAvailable Core Subjects:");
-                System.out.println("1. Mathematics");
-                System.out.println("2. English");
-                System.out.println("3. Science");
-                int subjectChoice = getIntInput("\nSelect subject (1-3): ");
-                switch (subjectChoice) {
-                    case 1:
-                        subjectName = "Mathematics";
-                        subjectCode = "MAT101";
-                        break;
-                    case 2:
-                        subjectName = "English";
-                        subjectCode = "ENG101";
-                        break;
-                    case 3:
-                        subjectName = "Science";
-                        subjectCode = "SCI101";
-                        break;
-                    default:
-                        System.out.println("Invalid subject choice.");
-                        return;
+                if (subjectTypeChoice == 1) {
+                    System.out.println("\nAvailable Core Subjects:");
+                    System.out.println("1. Mathematics");
+                    System.out.println("2. English");
+                    System.out.println("3. Science");
+                    int subjectChoice = getIntInput("\nSelect subject (1-3): ");
+                    switch (subjectChoice) {
+                        case 1:
+                            subjectName = "Mathematics";
+                            subjectCode = "MAT101";
+                            break;
+                        case 2:
+                            subjectName = "English";
+                            subjectCode = "ENG101";
+                            break;
+                        case 3:
+                            subjectName = "Science";
+                            subjectCode = "SCI101";
+                            break;
+                        default:
+                            System.out.println("Invalid subject choice.");
+                            return;
+                    }
+                    subject = new CoreSubject(subjectName, subjectCode);
+                } else if (subjectTypeChoice == 2) {
+                    System.out.println("\nAvailable Elective Subjects:");
+                    System.out.println("1. Music");
+                    System.out.println("2. Art");
+                    System.out.println("3. Physical Education");
+                    int subjectChoice = getIntInput("\nSelect subject (1-3): ");
+                    switch (subjectChoice) {
+                        case 1:
+                            subjectName = "Music";
+                            subjectCode = "MUS101";
+                            break;
+                        case 2:
+                            subjectName = "Art";
+                            subjectCode = "ART101";
+                            break;
+                        case 3:
+                            subjectName = "Physical Education";
+                            subjectCode = "PE101";
+                            break;
+                        default:
+                            System.out.println("Invalid subject choice.");
+                            return;
+                    }
+                    subject = new ElectiveSubject(subjectName, subjectCode);
+                } else {
+                    System.out.println("Invalid subject type. Grade not recorded.");
+                    return;
                 }
-                subject = new CoreSubject(subjectName, subjectCode);
-            } else if (subjectTypeChoice == 2) {
-                System.out.println("\nAvailable Elective Subjects:");
-                System.out.println("1. Music");
-                System.out.println("2. Art");
-                System.out.println("3. Physical Education");
-                int subjectChoice = getIntInput("\nSelect subject (1-3): ");
-                switch (subjectChoice) {
-                    case 1:
-                        subjectName = "Music";
-                        subjectCode = "MUS101";
-                        break;
-                    case 2:
-                        subjectName = "Art";
-                        subjectCode = "ART101";
-                        break;
-                    case 3:
-                        subjectName = "Physical Education";
-                        subjectCode = "PE101";
-                        break;
-                    default:
-                        System.out.println("Invalid subject choice.");
-                        return;
+
+                boolean enteringGrade = true;
+                while (enteringGrade) {
+                    double gradeValue = 0;
+                    try {
+                        gradeValue = getDoubleInput("\nEnter grade (0-100): ");
+
+                        Grade grade = new Grade(studentId, subject, gradeValue);
+
+                        System.out.println("\nGRADE CONFIRMATION");
+                        System.out
+                                .println(
+                                        "__________________________________________________________________________________");
+                        System.out.println("Grade ID: " + grade.getGradeID());
+                        System.out.println("Student: " + studentId + " - " + student.getName());
+                        System.out.println("Subject: " + subjectName + " (" + subject.getSubjectType() + ")");
+                        System.out.printf("Grade: %.1f%%%n", gradeValue);
+                        System.out.println("Date: " + grade.getDate());
+                        System.out
+                                .println(
+                                        "__________________________________________________________________________________");
+
+                        String confirm = getStringInput("\nConfirm grade? (Y/N): ");
+
+                        if (confirm.equalsIgnoreCase("y")) {
+                            gradeManager.addGrade(grade);
+                            System.out.println("\nPress Enter to continue...");
+                            scanner.nextLine();
+                            System.out.println("✓ Grade recorded successfully!");
+                        } else {
+                            System.out.println("Grade recording cancelled.");
+                        }
+                        enteringGrade = false;
+                        recording = false; // Exit loop after successful recording or cancellation
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("\nX ERROR: InvalidGradeException");
+                        System.out.println(e.getMessage());
+                        System.out.println("You entered: " + gradeValue);
+
+                        String retry = getStringInput("\nTry again? (Y/N): ");
+                        if (!retry.equalsIgnoreCase("y")) {
+                            enteringGrade = false;
+                            recording = false;
+                        }
+                    }
                 }
-                subject = new ElectiveSubject(subjectName, subjectCode);
-            } else {
-                System.out.println("Invalid subject type. Grade not recorded.");
-                return;
+            } catch (StudentNotFoundException e) {
+                Logger.logError("Student not found", e);
+                System.out.println("X ERROR: " + e.getMessage());
+                for (Student s : studentManager.getAllStudents()) {
+                    System.out.println("Available student IDs: ");
+                    System.out.println("- ID: " + s.getStudentId() + ", Name: " + s.getName());
+                }
+                String retry = getStringInput("\nTry again? (Y/N): ");
+                if (!retry.equalsIgnoreCase("y")) {
+                    recording = false;
+                }
+            } catch (InvalidGradeException e) {
+                Logger.logError("Invalid grade", e);
+                System.out.println("X ERROR: " + e.getMessage());
+                recording = false;
+            } catch (InvalidDataException e) {
+                Logger.logError("Invalid data", e);
+                System.out.println("X ERROR: " + e.getMessage());
+                recording = false;
+            } catch (IllegalArgumentException e) {
+                Logger.logError("Illegal argument", e);
+                System.out.println("X ERROR: " + e.getMessage());
+                recording = false;
             }
-
-            double gradeValue = getDoubleInput("\nEnter grade (0-100): ");
-
-            Grade grade = new Grade(studentId, subject, gradeValue);
-
-            System.out.println("\nGRADE CONFIRMATION");
-            System.out.println("__________________________________________________________________________________");
-            System.out.println("Grade ID: " + grade.getGradeID());
-            System.out.println("Student: " + studentId + " - " + student.getName());
-            System.out.println("Subject: " + subjectName + " (" + subject.getSubjectType() + ")");
-            System.out.printf("Grade: %.1f%%%n", gradeValue);
-            System.out.println("Date: " + grade.getDate());
-            System.out.println("__________________________________________________________________________________");
-
-            String confirm = getStringInput("\nConfirm grade? (Y/N): ");
-
-            if (confirm.equalsIgnoreCase("y")) {
-                gradeManager.addGrade(grade);
-                System.out.println("\nPress Enter to continue...");
-                scanner.nextLine();
-            } else {
-                System.out.println("Grade recording cancelled.");
-            }
-        } catch (StudentNotFoundException e) {
-            Logger.logError("Student not found", e);
-            System.out.println("X ERROR: " + e.getMessage());
-            System.out.println("Available student IDs: (Implement listing if needed)");
-        } catch (InvalidGradeException e) {
-            Logger.logError("Invalid grade", e);
-            System.out.println("X ERROR: " + e.getMessage());
-        } catch (InvalidDataException e) {
-            Logger.logError("Invalid data", e);
-            System.out.println("X ERROR: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            Logger.logError("Illegal argument", e);
-            System.out.println("X ERROR: " + e.getMessage());
         }
     }
 
@@ -208,6 +250,53 @@ public class App {
             String studentId = getStringInput("\nEnter Student ID: ");
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
+        } catch (StudentNotFoundException e) {
+            Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        }
+    }
+
+    private static void exportGradeReport() {
+        System.out.println("\nEXPORT GRADE REPORT");
+        System.out.println("__________________________________________________________________________________");
+        try {
+            String studentId = getStringInput("Enter Student ID: ");
+            Student student = studentManager.getStudent(studentId);
+
+            System.out.println("\nStudent: " + studentId + " " + student.getName());
+            System.out.println("Type: " + student.getStudentType() + " Student");
+            System.out.println("Total Grades: " + gradeManager.getEnrolledSubjectCount(studentId));
+
+            System.out.println("\nExport options:");
+            System.out.println("1. Summary Report (overview only)");
+            System.out.println("2. Detailed Report (all grades)");
+            int option = getIntInput("\nSelect option (1-2): ");
+
+            String content = "";
+            if (option == 1) {
+                content = reportGenerator.generateSummaryReport(student, gradeManager);
+            } else if (option == 2) {
+                content = reportGenerator.generateDetailedReport(student, gradeManager);
+            } else {
+                System.out.println("Invalid option. Export cancelled.");
+                return;
+            }
+
+            String filename = getStringInput("\nEnter filename (without extension): ");
+            try {
+                String filePath = fileExporter.exportToFile(filename, content);
+                System.out.println("\n✓ Report exported successfully!");
+                System.out.println("File: " + new java.io.File(filePath).getName());
+                System.out.println("Location: " + filePath);
+                // Size calculation could be added here if needed, but keeping it simple for now
+            } catch (java.io.IOException e) {
+                Logger.logError("Export failed", e);
+                System.out.println("X ERROR: Failed to export report. " + e.getMessage());
+            }
+
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
