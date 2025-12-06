@@ -91,9 +91,39 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String name = getStringInput("Enter student name: ");
-            int age = getIntInput("Enter student age: ");
-            String email = getStringInput("Enter student email: ");
-            String phone = getStringInput("Enter student phone: ");
+
+            int age;
+            while (true) {
+                age = getIntInput("Enter student age: ");
+                try {
+                    utils.ValidationUtils.validateAge(age);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("Invalid age: " + e.getMessage());
+                }
+            }
+
+            String email;
+            while (true) {
+                email = getStringInput("Enter student email: ");
+                try {
+                    utils.ValidationUtils.validateEmail(email);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("Invalid email: " + e.getMessage());
+                }
+            }
+
+            String phone;
+            while (true) {
+                phone = getStringInput("Enter student phone (10 digits): ");
+                try {
+                    utils.ValidationUtils.validatePhone(phone);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("Invalid phone: " + e.getMessage());
+                }
+            }
 
             Student student = null;
             boolean selectingType = true;
@@ -103,19 +133,24 @@ public class App {
                 System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
                 int typeChoice = getIntInput("\nSelect type (1-2): ");
 
-                if (typeChoice == 1) {
-                    student = new RegularStudent(name, age, email, phone);
-                    selectingType = false;
-                } else if (typeChoice == 2) {
-                    student = new HonorsStudent(name, age, email, phone);
-                    selectingType = false;
-                } else {
-                    System.out.println("Invalid student type.");
-                    String retry = getStringInput("Try again? (Y/N): ");
-                    if (!retry.equalsIgnoreCase("y")) {
-                        System.out.println("Student not added.");
-                        return;
+                try {
+                    if (typeChoice == 1) {
+                        student = new RegularStudent(name, age, email, phone);
+                        selectingType = false;
+                    } else if (typeChoice == 2) {
+                        student = new HonorsStudent(name, age, email, phone);
+                        selectingType = false;
+                    } else {
+                        System.out.println("Invalid student type.");
+                        String retry = getStringInput("Try again? (Y/N): ");
+                        if (!retry.equalsIgnoreCase("y")) {
+                            System.out.println("Student not added.");
+                            return;
+                        }
                     }
+                } catch (InvalidDataException e) {
+                    System.out.println("Error creating student: " + e.getMessage());
+                    return; // Should not happen if inputs are validated, but good for safety
                 }
             }
 

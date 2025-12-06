@@ -7,7 +7,15 @@ public abstract class Student implements Exportable {
     private String status;
     private static int studentCounter = 1;
 
-    public Student(String name, int age, String email, String phone, String status) {
+    public Student(String name, int age, String email, String phone, String status)
+            throws exceptions.InvalidDataException {
+        if (name == null || name.trim().isEmpty()) {
+            throw new exceptions.InvalidDataException("Student name cannot be empty.");
+        }
+        utils.ValidationUtils.validateAge(age);
+        utils.ValidationUtils.validateEmail(email);
+        utils.ValidationUtils.validatePhone(phone);
+
         this.studentId = String.format("STU%03d", studentCounter++);
         this.name = name;
         this.age = age;
