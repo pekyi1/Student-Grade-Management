@@ -2,7 +2,7 @@ public class HonorsStudent extends Student {
     private double passingGrade = 60.0;
     private boolean honorsEligible;
 
-    public HonorsStudent(String name, int age, String email, String phone) {
+    public HonorsStudent(String name, int age, String email, String phone) throws exceptions.InvalidDataException {
         super(name, age, email, phone, "Active");
         this.honorsEligible = false;
     }

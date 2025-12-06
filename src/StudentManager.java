@@ -21,9 +21,10 @@ public class StudentManager implements Searchable {
         if (student.getName() == null || student.getName().trim().isEmpty()) {
             throw new InvalidDataException("Student name cannot be empty.");
         }
-        if (student.getAge() <= 0) {
-            throw new InvalidDataException("Student age must be greater than 0.");
-        }
+        utils.ValidationUtils.validateAge(student.getAge());
+        utils.ValidationUtils.validateEmail(student.getEmail());
+        utils.ValidationUtils.validatePhone(student.getPhone());
+
         if (findStudent(student.getStudentId()) != null) {
             throw new InvalidDataException("Student with ID " + student.getStudentId() + " already exists.");
         }

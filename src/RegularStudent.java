@@ -1,7 +1,7 @@
 public class RegularStudent extends Student {
     private final double passingGrade = 50.0;
 
-    public RegularStudent(String name, int age, String email, String phone) {
+    public RegularStudent(String name, int age, String email, String phone) throws exceptions.InvalidDataException {
         super(name, age, email, phone, "Active");
     }
 
