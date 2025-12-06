@@ -172,4 +172,12 @@ public class GradeManager {
         }
         return studentsWithGrades.size();
     }
+
+    public List<Grade> getAllGrades() {
+        List<Grade> allGrades = new ArrayList<>();
+        for (int i = 0; i < gradeCount; i++) {
+            allGrades.add(grades[i]);
+        }
+        return allGrades;
+    }
 }
