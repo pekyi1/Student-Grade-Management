@@ -1,5 +1,11 @@
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class GradeManager {
     private Grade[] grades;
@@ -61,8 +67,9 @@ public class GradeManager {
             System.out.println("\nPerformance Summary:");
             boolean allCorePassing = checkAllCoreSubjectsPassing(studentId, student.getPassingGrade());
             System.out.println((allCorePassing ? "Yes: " : "No: ") + " Passing all core subjects");
-            System.out.println((student.isPassing(currentAverage) ? "Yes: " : "No: ") + " Meeting passing grade requirement ("
-                    + (int) student.getPassingGrade() + "%)");
+            System.out.println(
+                    (student.isPassing(currentAverage) ? "Yes: " : "No: ") + " Meeting passing grade requirement ("
+                            + (int) student.getPassingGrade() + "%)");
         }
 
         System.out.println("\nPress Enter to continue...");
@@ -128,25 +135,41 @@ public class GradeManager {
         return count;
     }
 
-    public int getGradeCount() {
-        return gradeCount;
-    }
-
-    public Grade[] getGradesForStudent(String studentId) {
-        int count = 0;
+    public List<Grade> getGradesForStudent(String studentId) {
+        List<Grade> studentGrades = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {
             if (grades[i].getStudentID().equals(studentId)) {
-                count++;
-            }
-        }
-
-        Grade[] studentGrades = new Grade[count];
-        int index = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId)) {
-                studentGrades[index++] = grades[i];
+                studentGrades.add(grades[i]);
             }
         }
         return studentGrades;
+    }
+
+    public int calculateClassRank(String studentId) {
+        Map<String, Double> studentAverages = new HashMap<>();
+        // Calculate average for all students who have grades
+        for (int i = 0; i < gradeCount; i++) {
+            String id = grades[i].getStudentID();
+            if (!studentAverages.containsKey(id)) {
+                studentAverages.put(id, calculateOverallAverage(id));
+            }
+        }
+
+        double targetAverage = calculateOverallAverage(studentId);
+        int rank = 1;
+        for (double avg : studentAverages.values()) {
+            if (avg > targetAverage) {
+                rank++;
+            }
+        }
+        return rank;
+    }
+
+    public int getTotalStudentsWithGrades() {
+        Set<String> studentsWithGrades = new HashSet<>();
+        for (int i = 0; i < gradeCount; i++) {
+            studentsWithGrades.add(grades[i].getStudentID());
+        }
+        return studentsWithGrades.size();
     }
 }
