@@ -1,0 +1,13 @@
+STUDENT GRADE REPORT - SUMMARY
+__________________________________________________
+Student: STU001 Fred Pekyi
+Type: Regular
+Status: Active
+__________________________________________________
+
+PERFORMANCE SUMMARY
+Total Grades: 3
+Core Subjects Average: 87.3%
+Elective Subjects Average: 0.0%
+Overall Average: 87.3%
+Passing: Yes

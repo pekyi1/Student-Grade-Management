@@ -60,8 +60,8 @@ public class GradeManager {
 
             System.out.println("\nPerformance Summary:");
             boolean allCorePassing = checkAllCoreSubjectsPassing(studentId, student.getPassingGrade());
-            System.out.println((allCorePassing ? "✓" : "X") + " Passing all core subjects");
-            System.out.println((student.isPassing(currentAverage) ? "✓" : "X") + " Meeting passing grade requirement ("
+            System.out.println((allCorePassing ? "Yes: " : "No: ") + " Passing all core subjects");
+            System.out.println((student.isPassing(currentAverage) ? "Yes: " : "No: ") + " Meeting passing grade requirement ("
                     + (int) student.getPassingGrade() + "%)");
         }
 

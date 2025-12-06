@@ -25,10 +25,29 @@ public class ReportGenerator {
     public String generateDetailedReport(Student student, GradeManager gm) {
         StringBuilder sb = new StringBuilder();
         String studentId = student.getStudentId();
-        Grade[] grades = gm.getGradesForStudent(studentId);
+
+        sb.append("STUDENT GRADE REPORT - DETAILED\n");
+        sb.append("__________________________________________________\n");
+        sb.append("Student: ").append(studentId).append(" ").append(student.getName()).append("\n");
+        sb.append("__________________________________________________\n\n");
+
+        appendGradeList(sb, gm.getGradesForStudent(studentId));
+
+        return sb.toString();
+    }
+
+    public String generateBothReport(Student student, GradeManager gm) {
+        StringBuilder sb = new StringBuilder();
+        String studentId = student.getStudentId();
 
         sb.append(generateSummaryReport(student, gm));
         sb.append("\n__________________________________________________\n");
+        appendGradeList(sb, gm.getGradesForStudent(studentId));
+
+        return sb.toString();
+    }
+
+    private void appendGradeList(StringBuilder sb, Grade[] grades) {
         sb.append("DETAILED GRADE HISTORY\n");
         sb.append(String.format("%-12s | %-15s | %-10s | %-8s%n", "DATE", "SUBJECT", "TYPE", "GRADE"));
         sb.append("--------------------------------------------------\n");
@@ -41,7 +60,5 @@ public class ReportGenerator {
                     grade.getGrade()));
         }
         sb.append("__________________________________________________\n");
-
-        return sb.toString();
     }
 }
