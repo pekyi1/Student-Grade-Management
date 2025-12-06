@@ -1,4 +1,4 @@
-public abstract class Student {
+public abstract class Student implements Exportable {
     private String studentId;
     private String name;
     private int age;
@@ -57,5 +57,11 @@ public abstract class Student {
     public boolean isPassing(double currentAverage) { // This compares the current average with the passing grade and
                                                       // checks if the student meets the passing grade
         return currentAverage >= getPassingGrade();
+    }
+
+    @Override
+    public String toExportFormat() {
+        return String.format("%s,%s,%s,%d,%s,%s,%s",
+                studentId, name, getStudentType(), age, email, phone, status);
     }
 }
