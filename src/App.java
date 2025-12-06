@@ -12,7 +12,7 @@ public class App {
     private static ReportGenerator reportGenerator = new ReportGenerator();
     private static FileExporter fileExporter = new FileExporter();
     private static GPACalculator gpaCalculator = new GPACalculator();
-    private static BulkImportService bulkImportService = new BulkImportService();
+    private static BulkImportService bulkImportService = new BulkImportService(new SimpleCSVParser());
     private static ClassStatistics classStatistics = new ClassStatistics();
     private static StudentSearchService studentSearchService = new StudentSearchService();
     private static Scanner scanner = new Scanner(System.in);
@@ -498,7 +498,7 @@ public class App {
             System.out.println("4. By Student Type");
             System.out.println("5. Back to Main Menu");
             System.out.print("Select option (1-5): ");
-            
+
             String choice = scanner.nextLine().trim();
             switch (choice) {
                 case "1":

@@ -2,7 +2,10 @@ import exceptions.InvalidDataException;
 import exceptions.StudentNotFoundException;
 import java.util.Scanner;
 
-public class StudentManager {
+import java.util.ArrayList;
+import java.util.List;
+
+public class StudentManager implements Searchable {
     private Student[] students;
     private int studentCount;
 
@@ -44,6 +47,17 @@ public class StudentManager {
         }
         return null; // Returning null here to allow caller to decide if it's an exception or just a
                      // check
+    }
+
+    @Override
+    public List<Student> searchByName(String name) {
+        List<Student> results = new ArrayList<>();
+        for (int i = 0; i < studentCount; i++) {
+            if (students[i].getName().toLowerCase().contains(name.toLowerCase())) {
+                results.add(students[i]);
+            }
+        }
+        return results;
     }
 
     public Student getStudent(String studentId) throws StudentNotFoundException {

@@ -16,10 +16,17 @@ public class BulkImportService {
 
     private static final String IMPORT_DIR = "imports/";
     private static final String LOG_DIR = "logs/";
+    private CSVParser csvParser;
 
-    public BulkImportService() {
+    public BulkImportService(CSVParser csvParser) {
+        this.csvParser = csvParser;
         createDirectory(IMPORT_DIR);
         createDirectory(LOG_DIR);
+    }
+
+    // Default constructor for backward compatibility or default behavior
+    public BulkImportService() {
+        this(new SimpleCSVParser());
     }
 
     private void createDirectory(String path) {
@@ -49,15 +56,12 @@ public class BulkImportService {
         int failCount = 0;
         int totalRows = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            // Skip header
-            br.readLine();
-
-            while ((line = br.readLine()) != null) {
+        try {
+            List<String[]> records = csvParser.parse(file.getAbsolutePath());
+            for (String[] parts : records) {
                 totalRows++;
                 try {
-                    processRow(line, studentManager, gradeManager);
+                    processRow(parts, studentManager, gradeManager);
                     successCount++;
                 } catch (Exception e) {
                     failCount++;
@@ -74,9 +78,8 @@ public class BulkImportService {
         printSummary(successCount, failCount, totalRows);
     }
 
-    private void processRow(String line, StudentManager studentManager, GradeManager gradeManager)
+    private void processRow(String[] parts, StudentManager studentManager, GradeManager gradeManager)
             throws Exception {
-        String[] parts = line.split(",");
         if (parts.length != 4) {
             throw new InvalidDataException("Invalid CSV format. Expected 4 columns.");
         }
@@ -94,14 +97,7 @@ public class BulkImportService {
 
         Student student = studentManager.getStudent(studentId); // Throws StudentNotFoundException
 
-        Subject subject;
-        if (subjectType.equalsIgnoreCase("Core")) {
-            subject = new CoreSubject(subjectName, "IMP" + System.currentTimeMillis()); // Generate dummy code
-        } else if (subjectType.equalsIgnoreCase("Elective")) {
-            subject = new ElectiveSubject(subjectName, "IMP" + System.currentTimeMillis());
-        } else {
-            throw new InvalidDataException("Invalid subject type: " + subjectType);
-        }
+        Subject subject = SubjectFactory.createSubject(subjectName, subjectType);
 
         Grade grade = new Grade(studentId, subject, gradeValue); // Throws InvalidGradeException
         gradeManager.addGrade(grade);
