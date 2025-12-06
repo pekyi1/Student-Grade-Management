@@ -12,9 +12,13 @@ public class App {
     private static ReportGenerator reportGenerator = new ReportGenerator();
     private static FileExporter fileExporter = new FileExporter();
     private static GPACalculator gpaCalculator = new GPACalculator();
+    private static BulkImportService bulkImportService = new BulkImportService();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        // Seed data for testing
+        DataSeeder.seedStudents(studentManager);
+
         boolean running = true;
         while (running) {
             try {
@@ -41,6 +45,9 @@ public class App {
                         calculateStudentGPA();
                         break;
                     case 7:
+                        bulkImportGrades();
+                        break;
+                    case 8:
                         running = false;
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
@@ -64,7 +71,8 @@ public class App {
         System.out.println("4. View Grade Report");
         System.out.println("5. Export Grade Report");
         System.out.println("6. Calculate Student GPA");
-        System.out.println("7. Exit");
+        System.out.println("7. Bulk Import Grades");
+        System.out.println("8. Exit");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -436,5 +444,20 @@ public class App {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
+    }
+
+    private static void bulkImportGrades() {
+        System.out.println("\nBULK IMPORT GRADES");
+        System.out.println("__________________________________________________________________________________");
+        System.out.println("Place your CSV file in: imports/");
+        System.out.println("CSV Format Required:");
+        System.out.println("StudentID, SubjectName, Subject Type, Grade");
+        System.out.println("Example: STU001, Mathematics, Core, 85");
+
+        String filename = getStringInput("\nEnter filename (without extension): ");
+        bulkImportService.importGrades(filename, studentManager, gradeManager);
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }
