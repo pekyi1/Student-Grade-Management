@@ -1,3 +1,4 @@
+
 import exceptions.GradeManagementException;
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
@@ -279,8 +280,8 @@ public class App {
             } catch (StudentNotFoundException e) {
                 Logger.logError("Student not found", e);
                 System.out.println("X ERROR: " + e.getMessage());
+                System.out.println("Available student IDs: ");
                 for (Student s : studentManager.getAllStudents()) {
-                    System.out.println("Available student IDs: ");
                     System.out.println("- ID: " + s.getStudentId() + ", Name: " + s.getName());
                 }
                 String retry = getStringInput("\nTry again? (Y/N): ");
@@ -358,10 +359,11 @@ public class App {
             String filename = getStringInput("\nEnter filename (without extension): ");
             try {
                 String filePath = fileExporter.exportToFile(filename, content);
+                java.io.File file = new java.io.File(filePath);
                 System.out.println("\n✓ Report exported successfully!");
-                System.out.println("File: " + new java.io.File(filePath).getName());
+                System.out.println("File: " + file.getName());
                 System.out.println("Location: " + filePath);
-                // Size calculation could be added here if needed, but keeping it simple for now
+                System.out.println("Size: " + file.length() + " bytes");
             } catch (java.io.IOException e) {
                 Logger.logError("Export failed", e);
                 System.out.println("X ERROR: Failed to export report. " + e.getMessage());
