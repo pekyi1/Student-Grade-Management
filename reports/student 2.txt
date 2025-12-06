@@ -1,0 +1,22 @@
+STUDENT GRADE REPORT - SUMMARY
+__________________________________________________
+Student: STU002 Bob Smith
+Type: Honors
+Status: Active
+__________________________________________________
+
+PERFORMANCE SUMMARY
+Total Grades: 3
+Core Subjects Average: 89.0%
+Elective Subjects Average: 0.0%
+Overall Average: 89.0%
+Passing: Yes
+
+__________________________________________________
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-06   | English         | Core       | 92.0    %
+2025-12-06   | Mathematics     | Core       | 90.0    %
+2025-12-06   | History         | Core       | 85.0    %
+__________________________________________________

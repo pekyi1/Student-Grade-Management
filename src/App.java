@@ -16,6 +16,9 @@ public class App {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        // Seed data for testing
+        DataSeeder.seedStudents(studentManager);
+
         boolean running = true;
         while (running) {
             try {

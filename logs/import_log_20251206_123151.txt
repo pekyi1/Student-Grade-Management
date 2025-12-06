@@ -1,0 +1,29 @@
+IMPORT LOG - 2025-12-06T12:31:51.537366900
+__________________________________________________
+
+Total Rows Processed: 20
+Successfully Imported: 0
+Failed: 20
+__________________________________________________
+
+FAILED RECORDS:
+Row 2: Student with ID 'STU001' not found in the system.
+Row 3: Student with ID 'STU002' not found in the system.
+Row 4: Student with ID 'STU003' not found in the system.
+Row 5: Student with ID 'STU004' not found in the system.
+Row 6: Student with ID 'STU005' not found in the system.
+Row 7: Student with ID 'STU006' not found in the system.
+Row 8: Student with ID 'STU007' not found in the system.
+Row 9: Student with ID 'STU008' not found in the system.
+Row 10: Student with ID 'STU009' not found in the system.
+Row 11: Student with ID 'STU010' not found in the system.
+Row 12: Student with ID 'STU011' not found in the system.
+Row 13: Student with ID 'STU012' not found in the system.
+Row 14: Student with ID 'STU013' not found in the system.
+Row 15: Student with ID 'STU014' not found in the system.
+Row 16: Student with ID 'STU015' not found in the system.
+Row 17: Student with ID 'STU016' not found in the system.
+Row 18: Student with ID 'STU017' not found in the system.
+Row 19: Student with ID 'STU018' not found in the system.
+Row 20: Student with ID 'STU019' not found in the system.
+Row 21: Student with ID 'STU020' not found in the system.
