@@ -1,0 +1,21 @@
+StudentID, SubjectName, Subject Type, Grade
+STU001, Mathematics, Core, 85
+STU002, English, Core, 92
+STU003, Science, Core, 78
+STU004, History, Core, 88
+STU005, Music, Elective, 95
+STU006, Art, Elective, 82
+STU007, Physical Education, Elective, 90
+STU008, Mathematics, Core, 75
+STU009, English, Core, 89
+STU010, Science, Core, 94
+STU011, Computer Science, Elective, 88
+STU012, Physics, Core, 76
+STU013, Chemistry, Core, 85
+STU014, Biology, Core, 91
+STU015, Drama, Elective, 83
+STU016, Economics, Elective, 79
+STU017, Geography, Core, 87
+STU018, Literature, Core, 93
+STU019, French, Elective, 80
+STU020, Spanish, Elective, 86
