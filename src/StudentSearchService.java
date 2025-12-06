@@ -166,14 +166,11 @@ public class StudentSearchService {
         String filename = scanner.nextLine().trim();
         if (filename.isEmpty())
             filename = "search_results";
-        try (java.io.PrintWriter writer = new java.io.PrintWriter(
-                new java.io.FileWriter("reports/" + filename + ".txt"))) {
-            writer.println("SEARCH RESULTS EXPORT");
-            writer.println("__________________________________________________");
-            for (Student s : results) {
-                writer.printf("%s, %s, %s%n", s.getStudentId(), s.getName(), s.getStudentType());
-            }
-            System.out.println("Results exported to reports/" + filename + ".txt");
+
+        try {
+            FileExporter exporter = new FileExporter();
+            String path = exporter.exportList(results, filename);
+            System.out.println("Results exported to: " + path);
         } catch (java.io.IOException e) {
             System.out.println("Error exporting results: " + e.getMessage());
         }

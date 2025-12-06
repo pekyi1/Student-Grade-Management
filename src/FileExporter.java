@@ -22,4 +22,16 @@ public class FileExporter {
 
         return file.getAbsolutePath();
     }
+
+    public String export(Exportable item, String filename) throws IOException {
+        return exportToFile(filename, item.toExportFormat());
+    }
+
+    public String exportList(java.util.List<? extends Exportable> items, String filename) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (Exportable item : items) {
+            sb.append(item.toExportFormat()).append("\n");
+        }
+        return exportToFile(filename, sb.toString());
+    }
 }
