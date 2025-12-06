@@ -11,6 +11,7 @@ public class App {
     private static GradeManager gradeManager = new GradeManager();
     private static ReportGenerator reportGenerator = new ReportGenerator();
     private static FileExporter fileExporter = new FileExporter();
+    private static GPACalculator gpaCalculator = new GPACalculator();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -37,6 +38,9 @@ public class App {
                         exportGradeReport();
                         break;
                     case 6:
+                        calculateStudentGPA();
+                        break;
+                    case 7:
                         running = false;
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
@@ -59,7 +63,8 @@ public class App {
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
         System.out.println("5. Export Grade Report");
-        System.out.println("6. Exit");
+        System.out.println("6. Calculate Student GPA");
+        System.out.println("7. Exit");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -402,6 +407,34 @@ public class App {
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
             }
+        }
+    }
+
+    private static void calculateStudentGPA() {
+        System.out.println("\nCALCULATE STUDENT GPA");
+        System.out.println("__________________________________________________________________________________");
+        try {
+            String studentId = getStringInput("Enter Student ID: ");
+            Student student = studentManager.getStudent(studentId);
+
+            System.out.println("\nStudent: " + studentId + " " + student.getName());
+            System.out.println("Type: " + student.getStudentType() + " Student");
+            double overallAverage = gradeManager.calculateOverallAverage(studentId);
+            System.out.printf("Overall Average: %.1f%%%n", overallAverage);
+
+            java.util.List<Grade> grades = gradeManager.getGradesForStudent(studentId);
+            int rank = gradeManager.calculateClassRank(studentId);
+            int totalStudents = gradeManager.getTotalStudentsWithGrades();
+
+            String report = gpaCalculator.generateGPAReport(student, grades, rank, totalStudents, overallAverage);
+            System.out.println(report);
+
+            System.out.println("Press Enter to continue...");
+            scanner.nextLine();
+
+        } catch (StudentNotFoundException e) {
+            Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
         }
     }
 }

@@ -47,7 +47,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
-    private void appendGradeList(StringBuilder sb, Grade[] grades) {
+    private void appendGradeList(StringBuilder sb, java.util.List<Grade> grades) {
         sb.append("DETAILED GRADE HISTORY\n");
         sb.append(String.format("%-12s | %-15s | %-10s | %-8s%n", "DATE", "SUBJECT", "TYPE", "GRADE"));
         sb.append("--------------------------------------------------\n");
