@@ -1,0 +1,14 @@
+SEARCH RESULTS EXPORT
+__________________________________________________
+STU001, Alice Johnson, Regular
+STU003, Charlie Brown, Regular
+STU005, Evan Wright, Regular
+STU006, Fiona Green, Regular
+STU008, Hannah White, Regular
+STU010, Julia Roberts, Regular
+STU011, Kevin Hart, Regular
+STU013, Mike Ross, Regular
+STU015, Oscar Wilde, Regular
+STU016, Paul Rudd, Regular
+STU018, Rachel Green, Regular
+STU020, Tony Stark, Regular

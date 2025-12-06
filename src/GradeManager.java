@@ -35,7 +35,7 @@ public class GradeManager {
         System.out.println("Type: " + student.getStudentType() + " Student");
         double currentAverage = calculateOverallAverage(studentId);
         System.out.printf("Current Average: %.1f%%%n", currentAverage);
-        System.out.println("Status: " + (student.isPassing(currentAverage) ? "PASSING ✓" : "FAILING"));
+        System.out.println("Status: " + (student.isPassing(currentAverage) ? "PASSING ✓" : "FAILING ✗"));
 
         System.out.println("\nGRADE HISTORY");
         System.out.println("__________________________________________________________________________________");

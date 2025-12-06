@@ -14,6 +14,7 @@ public class App {
     private static GPACalculator gpaCalculator = new GPACalculator();
     private static BulkImportService bulkImportService = new BulkImportService();
     private static ClassStatistics classStatistics = new ClassStatistics();
+    private static StudentSearchService studentSearchService = new StudentSearchService();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -52,6 +53,9 @@ public class App {
                         viewClassStatistics();
                         break;
                     case 9:
+                        searchStudents();
+                        break;
+                    case 10:
                         running = false;
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
@@ -77,7 +81,8 @@ public class App {
         System.out.println("6. Calculate Student GPA");
         System.out.println("7. Bulk Import Grades");
         System.out.println("8. View Class Statistics");
-        System.out.println("9. Exit");
+        System.out.println("9. Search Students");
+        System.out.println("10. Exit");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -479,5 +484,41 @@ public class App {
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
+    }
+
+    private static void searchStudents() {
+        boolean searching = true;
+        while (searching) {
+            System.out.println("\nSEARCH STUDENTS");
+            System.out.println("__________________________________________________");
+            System.out.println("Search options:");
+            System.out.println("1. By Student ID");
+            System.out.println("2. By Name (partial match)");
+            System.out.println("3. By Grade Range");
+            System.out.println("4. By Student Type");
+            System.out.println("5. Back to Main Menu");
+            System.out.print("Select option (1-5): ");
+            
+            String choice = scanner.nextLine().trim();
+            switch (choice) {
+                case "1":
+                    studentSearchService.searchById(scanner, studentManager, gradeManager);
+                    break;
+                case "2":
+                    studentSearchService.searchByName(scanner, studentManager, gradeManager);
+                    break;
+                case "3":
+                    studentSearchService.searchByGradeRange(scanner, studentManager, gradeManager);
+                    break;
+                case "4":
+                    studentSearchService.searchByType(scanner, studentManager, gradeManager);
+                    break;
+                case "5":
+                    searching = false;
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
     }
 }
