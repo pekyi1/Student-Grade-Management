@@ -1,0 +1,12 @@
+IMPORT LOG - 2025-12-07T23:04:41.785741800
+__________________________________________________
+
+Total Rows Processed: 3
+Successfully Imported: 0
+Failed: 3
+__________________________________________________
+
+FAILED RECORDS:
+Row 2: Invalid grade format:  Core
+Row 3: Invalid grade format:  Core
+Row 4: Invalid grade format:  Elective

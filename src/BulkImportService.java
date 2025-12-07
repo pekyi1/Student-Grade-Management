@@ -1,6 +1,7 @@
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
+import exceptions.InvalidFileFormatException;
 import utils.Logger;
 import java.io.BufferedReader;
 import java.io.File;
@@ -75,6 +76,10 @@ public class BulkImportService {
         } catch (IOException e) {
             System.out.println("X ERROR: Error reading file: " + e.getMessage());
             Logger.logError("File read error", e);
+            return;
+        } catch (InvalidFileFormatException e) {
+            System.out.println("X ERROR: " + e.getMessage());
+            Logger.logError("Invalid file format", e);
             return;
         }
 
