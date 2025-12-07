@@ -1,0 +1,21 @@
+STUDENT GRADE REPORT - SUMMARY
+__________________________________________________
+Student: STU002 Samuel Pekyi
+Type: Honors
+Status: Active
+__________________________________________________
+
+PERFORMANCE SUMMARY
+Total Grades: 2
+Core Subjects Average: 0.0%
+Elective Subjects Average: 88.0%
+Overall Average: 88.0%
+Passing: Yes
+
+__________________________________________________
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-06   | Music           | Elective   | 98.0    %
+2025-12-06   | Physical Education | Elective   | 78.0    %
+__________________________________________________

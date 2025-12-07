@@ -1,0 +1,69 @@
+IMPORT LOG - 2025-12-07T22:31:02.822623700
+__________________________________________________
+
+Total Rows Processed: 60
+Successfully Imported: 0
+Failed: 60
+__________________________________________________
+
+FAILED RECORDS:
+Row 2: Student with ID 'STU001' not found in the system.
+Row 3: Student with ID 'STU002' not found in the system.
+Row 4: Student with ID 'STU003' not found in the system.
+Row 5: Student with ID 'STU004' not found in the system.
+Row 6: Student with ID 'STU005' not found in the system.
+Row 7: Student with ID 'STU006' not found in the system.
+Row 8: Student with ID 'STU007' not found in the system.
+Row 9: Student with ID 'STU008' not found in the system.
+Row 10: Student with ID 'STU009' not found in the system.
+Row 11: Student with ID 'STU010' not found in the system.
+Row 12: Student with ID 'STU011' not found in the system.
+Row 13: Student with ID 'STU012' not found in the system.
+Row 14: Student with ID 'STU013' not found in the system.
+Row 15: Student with ID 'STU014' not found in the system.
+Row 16: Student with ID 'STU015' not found in the system.
+Row 17: Student with ID 'STU016' not found in the system.
+Row 18: Student with ID 'STU017' not found in the system.
+Row 19: Student with ID 'STU018' not found in the system.
+Row 20: Student with ID 'STU019' not found in the system.
+Row 21: Student with ID 'STU020' not found in the system.
+Row 22: Student with ID 'STU001' not found in the system.
+Row 23: Student with ID 'STU002' not found in the system.
+Row 24: Student with ID 'STU003' not found in the system.
+Row 25: Student with ID 'STU004' not found in the system.
+Row 26: Student with ID 'STU005' not found in the system.
+Row 27: Student with ID 'STU006' not found in the system.
+Row 28: Student with ID 'STU007' not found in the system.
+Row 29: Student with ID 'STU008' not found in the system.
+Row 30: Student with ID 'STU009' not found in the system.
+Row 31: Student with ID 'STU010' not found in the system.
+Row 32: Student with ID 'STU011' not found in the system.
+Row 33: Student with ID 'STU012' not found in the system.
+Row 34: Student with ID 'STU013' not found in the system.
+Row 35: Student with ID 'STU014' not found in the system.
+Row 36: Student with ID 'STU015' not found in the system.
+Row 37: Student with ID 'STU016' not found in the system.
+Row 38: Student with ID 'STU017' not found in the system.
+Row 39: Student with ID 'STU018' not found in the system.
+Row 40: Student with ID 'STU019' not found in the system.
+Row 41: Student with ID 'STU020' not found in the system.
+Row 42: Student with ID 'STU001' not found in the system.
+Row 43: Student with ID 'STU002' not found in the system.
+Row 44: Student with ID 'STU003' not found in the system.
+Row 45: Student with ID 'STU004' not found in the system.
+Row 46: Student with ID 'STU005' not found in the system.
+Row 47: Student with ID 'STU006' not found in the system.
+Row 48: Student with ID 'STU007' not found in the system.
+Row 49: Student with ID 'STU008' not found in the system.
+Row 50: Student with ID 'STU009' not found in the system.
+Row 51: Student with ID 'STU010' not found in the system.
+Row 52: Student with ID 'STU011' not found in the system.
+Row 53: Student with ID 'STU012' not found in the system.
+Row 54: Student with ID 'STU013' not found in the system.
+Row 55: Student with ID 'STU014' not found in the system.
+Row 56: Student with ID 'STU015' not found in the system.
+Row 57: Student with ID 'STU016' not found in the system.
+Row 58: Student with ID 'STU017' not found in the system.
+Row 59: Student with ID 'STU018' not found in the system.
+Row 60: Student with ID 'STU019' not found in the system.
+Row 61: Student with ID 'STU020' not found in the system.
