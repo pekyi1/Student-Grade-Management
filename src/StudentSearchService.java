@@ -3,8 +3,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+// This class handles student search operations and result processing
 public class StudentSearchService {
 
+    // This method searches for a student by their exact ID
     public void searchById(Scanner scanner, StudentManager sm, GradeManager gm) {
         System.out.print("Enter Student ID: ");
         String id = scanner.nextLine().trim();
@@ -19,23 +21,31 @@ public class StudentSearchService {
         }
     }
 
+    // This method searches for students by a partial name match
     public void searchByName(Scanner scanner, StudentManager sm, GradeManager gm) {
         System.out.print("Enter name (partial or full): ");
         String nameFragment = scanner.nextLine().trim().toLowerCase();
 
-        Student[] allStudents = sm.getAllStudents();
-        List<Student> results = new ArrayList<>();
-        for (Student s : allStudents) {
-            if (s.getName().toLowerCase().contains(nameFragment)) {
-                results.add(s);
-            }
-        }
+        List<Student> results = findStudentsByName(sm.getAllStudents(), nameFragment);
+
         displaySearchResults(results, gm);
         if (!results.isEmpty()) {
             handleSearchActions(results, scanner, sm, gm);
         }
     }
 
+    public List<Student> findStudentsByName(Student[] allStudents, String nameFragment) {
+        List<Student> results = new ArrayList<>();
+        String search = nameFragment.toLowerCase();
+        for (Student s : allStudents) {
+            if (s.getName().toLowerCase().contains(search)) {
+                results.add(s);
+            }
+        }
+        return results;
+    }
+
+    // This method searches for students whose average grade falls within a range
     public void searchByGradeRange(Scanner scanner, StudentManager sm, GradeManager gm) {
         while (true) {
             try {
@@ -74,6 +84,7 @@ public class StudentSearchService {
         }
     }
 
+    // This method filters students by their type (Regular or Honors)
     public void searchByType(Scanner scanner, StudentManager sm, GradeManager gm) {
         System.out.println("Select Student Type:");
         System.out.println("1. Regular");
@@ -87,17 +98,22 @@ public class StudentSearchService {
             return;
         }
 
-        Student[] allStudents = sm.getAllStudents();
+        List<Student> results = findStudentsByType(sm.getAllStudents(), type);
+
+        displaySearchResults(results, gm);
+        if (!results.isEmpty()) {
+            handleSearchActions(results, scanner, sm, gm);
+        }
+    }
+
+    public List<Student> findStudentsByType(Student[] allStudents, String type) {
         List<Student> results = new ArrayList<>();
         for (Student s : allStudents) {
             if (s.getStudentType().equalsIgnoreCase(type)) {
                 results.add(s);
             }
         }
-        displaySearchResults(results, gm);
-        if (!results.isEmpty()) {
-            handleSearchActions(results, scanner, sm, gm);
-        }
+        return results;
     }
 
     private void displaySearchResults(List<Student> results, GradeManager gm) {
@@ -121,6 +137,7 @@ public class StudentSearchService {
         System.out.println("__________________________________________________");
     }
 
+    // This method processes user actions on search results (view details, export)
     private void handleSearchActions(List<Student> results, Scanner scanner, StudentManager sm, GradeManager gm) {
         System.out.println("\nActions:");
         System.out.println("1. View full details for a student");
@@ -161,6 +178,7 @@ public class StudentSearchService {
         }
     }
 
+    // This method exports search results to a file
     private void exportSearchResults(List<Student> results, Scanner scanner) {
         System.out.print("Enter filename for export (without extension): ");
         String filename = scanner.nextLine().trim();

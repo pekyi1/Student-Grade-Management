@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>App.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Student-Grade-Management</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">App.java</span></div><h1>App.java</h1><pre class="source lang-java linenums">
+import exceptions.GradeManagementException;
+import exceptions.InvalidDataException;
+import exceptions.InvalidGradeException;
+import exceptions.StudentNotFoundException;
+import utils.Logger;
+import java.util.Scanner;
+
+// This class is the main entry point for the Student Grade Management System
+<span class="nc" id="L10">public class App {</span>
+<span class="nc" id="L11">    private static StudentManager studentManager = new StudentManager();</span>
+<span class="nc" id="L12">    private static GradeManager gradeManager = new GradeManager();</span>
+<span class="nc" id="L13">    private static ReportGenerator reportGenerator = new ReportGenerator();</span>
+<span class="nc" id="L14">    private static FileExporter fileExporter = new FileExporter();</span>
+<span class="nc" id="L15">    private static GPACalculator gpaCalculator = new GPACalculator();</span>
+<span class="nc" id="L16">    private static BulkImportService bulkImportService = new BulkImportService(new SimpleCSVParser());</span>
+<span class="nc" id="L17">    private static ClassStatistics classStatistics = new ClassStatistics();</span>
+<span class="nc" id="L18">    private static StudentSearchService studentSearchService = new StudentSearchService();</span>
+<span class="nc" id="L19">    private static Scanner scanner = new Scanner(System.in);</span>
+
+    // This method starts the application and handles the main menu loop
+    public static void main(String[] args) {
+        // Seed data for testing
+<span class="nc" id="L24">        DataSeeder.seedStudents(studentManager);</span>
+
+<span class="nc" id="L26">        boolean running = true;</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        while (running) {</span>
+            try {
+<span class="nc" id="L29">                printMenu();</span>
+<span class="nc" id="L30">                int choice = getIntInput(&quot;Enter choice: &quot;);</span>
+
+<span class="nc bnc" id="L32" title="All 11 branches missed.">                switch (choice) {</span>
+                    case 1:
+<span class="nc" id="L34">                        addNewStudent();</span>
+<span class="nc" id="L35">                        break;</span>
+                    case 2:
+<span class="nc" id="L37">                        studentManager.viewAllStudents(gradeManager);</span>
+<span class="nc" id="L38">                        break;</span>
+                    case 3:
+<span class="nc" id="L40">                        recordGrade();</span>
+<span class="nc" id="L41">                        break;</span>
+                    case 4:
+<span class="nc" id="L43">                        viewGradeReport();</span>
+<span class="nc" id="L44">                        break;</span>
+                    case 5:
+<span class="nc" id="L46">                        exportGradeReport();</span>
+<span class="nc" id="L47">                        break;</span>
+                    case 6:
+<span class="nc" id="L49">                        calculateStudentGPA();</span>
+<span class="nc" id="L50">                        break;</span>
+                    case 7:
+<span class="nc" id="L52">                        bulkImportGrades();</span>
+<span class="nc" id="L53">                        break;</span>
+                    case 8:
+<span class="nc" id="L55">                        viewClassStatistics();</span>
+<span class="nc" id="L56">                        break;</span>
+                    case 9:
+<span class="nc" id="L58">                        searchStudents();</span>
+<span class="nc" id="L59">                        break;</span>
+                    case 10:
+<span class="nc" id="L61">                        running = false;</span>
+<span class="nc" id="L62">                        System.out.println(&quot;Thank you for using the Student Grade Management System. Goodbye!&quot;);</span>
+<span class="nc" id="L63">                        break;</span>
+                    default:
+<span class="nc" id="L65">                        System.out.println(&quot;Invalid choice. Please try again.&quot;);</span>
+                }
+<span class="nc" id="L67">            } catch (Exception e) {</span>
+<span class="nc" id="L68">                Logger.logError(&quot;An unexpected error occurred.&quot;, e);</span>
+<span class="nc" id="L69">                System.out.println(&quot;Recovering from error... Please try again.&quot;);</span>
+<span class="nc" id="L70">            }</span>
+        }
+<span class="nc" id="L72">        scanner.close();</span>
+<span class="nc" id="L73">    }</span>
+
+    // This method displays the main menu options to the user
+    private static void printMenu() {
+<span class="nc" id="L77">        System.out.println(&quot;\nSTUDENT GRADE MANAGEMENT SYSTEM&quot;);</span>
+<span class="nc" id="L78">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L79">        System.out.println(&quot;1. Add Student&quot;);</span>
+<span class="nc" id="L80">        System.out.println(&quot;2. View Students&quot;);</span>
+<span class="nc" id="L81">        System.out.println(&quot;3. Record Grade&quot;);</span>
+<span class="nc" id="L82">        System.out.println(&quot;4. View Grade Report&quot;);</span>
+<span class="nc" id="L83">        System.out.println(&quot;5. Export Grade Report&quot;);</span>
+<span class="nc" id="L84">        System.out.println(&quot;6. Calculate Student GPA&quot;);</span>
+<span class="nc" id="L85">        System.out.println(&quot;7. Bulk Import Grades&quot;);</span>
+<span class="nc" id="L86">        System.out.println(&quot;8. View Class Statistics&quot;);</span>
+<span class="nc" id="L87">        System.out.println(&quot;9. Search Students&quot;);</span>
+<span class="nc" id="L88">        System.out.println(&quot;10. Exit&quot;);</span>
+<span class="nc" id="L89">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L90">    }</span>
+
+    // This method handles the logic for adding a new student to the system
+    private static void addNewStudent() {
+<span class="nc" id="L94">        System.out.println(&quot;\nADD STUDENT&quot;);</span>
+<span class="nc" id="L95">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+        try {
+<span class="nc" id="L97">            String name = getStringInput(&quot;Enter student name: &quot;);</span>
+
+            int age;
+            while (true) {
+<span class="nc" id="L101">                age = getIntInput(&quot;Enter student age: &quot;);</span>
+                try {
+<span class="nc" id="L103">                    utils.ValidationUtils.validateAge(age);</span>
+<span class="nc" id="L104">                    break;</span>
+<span class="nc" id="L105">                } catch (InvalidDataException e) {</span>
+<span class="nc" id="L106">                    System.out.println(&quot;Invalid age: &quot; + e.getMessage());</span>
+<span class="nc" id="L107">                }</span>
+            }
+
+            String email;
+            while (true) {
+<span class="nc" id="L112">                email = getStringInput(&quot;Enter student email: &quot;);</span>
+                try {
+<span class="nc" id="L114">                    utils.ValidationUtils.validateEmail(email);</span>
+<span class="nc" id="L115">                    break;</span>
+<span class="nc" id="L116">                } catch (InvalidDataException e) {</span>
+<span class="nc" id="L117">                    System.out.println(&quot;Invalid email: &quot; + e.getMessage());</span>
+<span class="nc" id="L118">                }</span>
+            }
+
+            String phone;
+            while (true) {
+<span class="nc" id="L123">                phone = getStringInput(&quot;Enter student phone (10 digits): &quot;);</span>
+                try {
+<span class="nc" id="L125">                    utils.ValidationUtils.validatePhone(phone);</span>
+<span class="nc" id="L126">                    break;</span>
+<span class="nc" id="L127">                } catch (InvalidDataException e) {</span>
+<span class="nc" id="L128">                    System.out.println(&quot;Invalid phone: &quot; + e.getMessage());</span>
+<span class="nc" id="L129">                }</span>
+            }
+
+<span class="nc" id="L132">            Student student = null;</span>
+<span class="nc" id="L133">            boolean selectingType = true;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            while (selectingType) {</span>
+<span class="nc" id="L135">                System.out.println(&quot;\nStudent type:&quot;);</span>
+<span class="nc" id="L136">                System.out.println(&quot;1. Regular Student (Passing grade: 50%)&quot;);</span>
+<span class="nc" id="L137">                System.out.println(&quot;2. Honors Student (Passing grade: 60%, honors recognition)&quot;);</span>
+<span class="nc" id="L138">                int typeChoice = getIntInput(&quot;\nSelect type (1-2): &quot;);</span>
+
+                try {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                    if (typeChoice == 1) {</span>
+<span class="nc" id="L142">                        student = new RegularStudent(name, age, email, phone);</span>
+<span class="nc" id="L143">                        selectingType = false;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                    } else if (typeChoice == 2) {</span>
+<span class="nc" id="L145">                        student = new HonorsStudent(name, age, email, phone);</span>
+<span class="nc" id="L146">                        selectingType = false;</span>
+                    } else {
+<span class="nc" id="L148">                        System.out.println(&quot;Invalid student type.&quot;);</span>
+<span class="nc" id="L149">                        String retry = getStringInput(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                        if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L151">                            System.out.println(&quot;Student not added.&quot;);</span>
+<span class="nc" id="L152">                            return;</span>
+                        }
+                    }
+<span class="nc" id="L155">                } catch (InvalidDataException e) {</span>
+<span class="nc" id="L156">                    System.out.println(&quot;Error creating student: &quot; + e.getMessage());</span>
+<span class="nc" id="L157">                    return; // Should not happen if inputs are validated, but good for safety</span>
+<span class="nc" id="L158">                }</span>
+<span class="nc" id="L159">            }</span>
+
+<span class="nc" id="L161">            studentManager.addStudent(student);</span>
+<span class="nc" id="L162">            System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L163">            scanner.nextLine();</span>
+<span class="nc" id="L164">        } catch (InvalidDataException e) {</span>
+<span class="nc" id="L165">            Logger.logError(&quot;Failed to add student&quot;, e);</span>
+<span class="nc" id="L166">            System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L167">        }</span>
+<span class="nc" id="L168">    }</span>
+
+    // This method allows users to record a grade for a specific student and subject
+    private static void recordGrade() {
+<span class="nc" id="L172">        System.out.println(&quot;\nRECORD GRADE&quot;);</span>
+<span class="nc" id="L173">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L174">        boolean recording = true;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        while (recording) {</span>
+            try {
+<span class="nc" id="L177">                String studentId = getStringInput(&quot;Enter Student ID: &quot;);</span>
+<span class="nc" id="L178">                Student student = studentManager.getStudent(studentId);</span>
+
+<span class="nc" id="L180">                System.out.println(&quot;\nStudent Details:&quot;);</span>
+<span class="nc" id="L181">                System.out.println(&quot;Name: &quot; + student.getName());</span>
+<span class="nc" id="L182">                System.out.println(&quot;Type: &quot; + student.getStudentType() + &quot; Student&quot;);</span>
+<span class="nc" id="L183">                System.out.printf(&quot;Current Average: %.1f%%%n&quot;, gradeManager.calculateOverallAverage(studentId));</span>
+
+<span class="nc" id="L185">                Subject subject = null;</span>
+<span class="nc" id="L186">                String subjectName = &quot;&quot;;</span>
+<span class="nc" id="L187">                String subjectCode = &quot;&quot;;</span>
+<span class="nc" id="L188">                boolean selectingSubject = true;</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                while (selectingSubject) {</span>
+<span class="nc" id="L191">                    System.out.println(&quot;\nSubject type:&quot;);</span>
+<span class="nc" id="L192">                    System.out.println(&quot;1. Core Subject (Mathematics, English, Science)&quot;);</span>
+<span class="nc" id="L193">                    System.out.println(&quot;2. Elective Subject (Music, Art, Physical Education)&quot;);</span>
+<span class="nc" id="L194">                    int subjectTypeChoice = getIntInput(&quot;\nSelect type (1-2): &quot;);</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                    if (subjectTypeChoice == 1) {</span>
+<span class="nc" id="L197">                        boolean selectingCore = true;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                        while (selectingCore) {</span>
+<span class="nc" id="L199">                            System.out.println(&quot;\nAvailable Core Subjects:&quot;);</span>
+<span class="nc" id="L200">                            System.out.println(&quot;1. Mathematics&quot;);</span>
+<span class="nc" id="L201">                            System.out.println(&quot;2. English&quot;);</span>
+<span class="nc" id="L202">                            System.out.println(&quot;3. Science&quot;);</span>
+<span class="nc" id="L203">                            int subjectChoice = getIntInput(&quot;\nSelect subject (1-3): &quot;);</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">                            switch (subjectChoice) {</span>
+                                case 1:
+<span class="nc" id="L206">                                    subjectName = &quot;Mathematics&quot;;</span>
+<span class="nc" id="L207">                                    subjectCode = &quot;MAT101&quot;;</span>
+<span class="nc" id="L208">                                    selectingCore = false;</span>
+<span class="nc" id="L209">                                    break;</span>
+                                case 2:
+<span class="nc" id="L211">                                    subjectName = &quot;English&quot;;</span>
+<span class="nc" id="L212">                                    subjectCode = &quot;ENG101&quot;;</span>
+<span class="nc" id="L213">                                    selectingCore = false;</span>
+<span class="nc" id="L214">                                    break;</span>
+                                case 3:
+<span class="nc" id="L216">                                    subjectName = &quot;Science&quot;;</span>
+<span class="nc" id="L217">                                    subjectCode = &quot;SCI101&quot;;</span>
+<span class="nc" id="L218">                                    selectingCore = false;</span>
+<span class="nc" id="L219">                                    break;</span>
+                                default:
+<span class="nc" id="L221">                                    System.out.println(&quot;Invalid subject choice.&quot;);</span>
+<span class="nc" id="L222">                                    String retry = getStringInput(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                                    if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L224">                                        selectingCore = false;</span>
+                                        // Go back to subject type selection or exit?
+                                        // User request implies &quot;try again&quot; for exception/invalid option.
+                                        // If they say no, we should probably break out of subject selection entirely or
+                                        // go back to type.
+                                        // Let's assume breaking out of specific selection loop, effectively cancelling
+                                        // if they say no to retry.
+                                        // But here we are inside selectingCore.
+                                    }
+                            }
+<span class="nc" id="L234">                        }</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                        if (!subjectName.isEmpty()) {</span>
+<span class="nc" id="L236">                            subject = new CoreSubject(subjectName, subjectCode);</span>
+<span class="nc" id="L237">                            selectingSubject = false;</span>
+                        } else {
+                            // If we exited selectingCore without a subject, ask if they want to retry
+                            // subject type or exit
+<span class="nc" id="L241">                            String retry = getStringInput(&quot;Try selecting subject type again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                            if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L243">                                return;</span>
+                            }
+                        }
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">                    } else if (subjectTypeChoice == 2) {</span>
+<span class="nc" id="L248">                        boolean selectingElective = true;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                        while (selectingElective) {</span>
+<span class="nc" id="L250">                            System.out.println(&quot;\nAvailable Elective Subjects:&quot;);</span>
+<span class="nc" id="L251">                            System.out.println(&quot;1. Music&quot;);</span>
+<span class="nc" id="L252">                            System.out.println(&quot;2. Art&quot;);</span>
+<span class="nc" id="L253">                            System.out.println(&quot;3. Physical Education&quot;);</span>
+<span class="nc" id="L254">                            int subjectChoice = getIntInput(&quot;\nSelect subject (1-3): &quot;);</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">                            switch (subjectChoice) {</span>
+                                case 1:
+<span class="nc" id="L257">                                    subjectName = &quot;Music&quot;;</span>
+<span class="nc" id="L258">                                    subjectCode = &quot;MUS101&quot;;</span>
+<span class="nc" id="L259">                                    selectingElective = false;</span>
+<span class="nc" id="L260">                                    break;</span>
+                                case 2:
+<span class="nc" id="L262">                                    subjectName = &quot;Art&quot;;</span>
+<span class="nc" id="L263">                                    subjectCode = &quot;ART101&quot;;</span>
+<span class="nc" id="L264">                                    selectingElective = false;</span>
+<span class="nc" id="L265">                                    break;</span>
+                                case 3:
+<span class="nc" id="L267">                                    subjectName = &quot;Physical Education&quot;;</span>
+<span class="nc" id="L268">                                    subjectCode = &quot;PE101&quot;;</span>
+<span class="nc" id="L269">                                    selectingElective = false;</span>
+<span class="nc" id="L270">                                    break;</span>
+                                default:
+<span class="nc" id="L272">                                    System.out.println(&quot;Invalid subject choice.&quot;);</span>
+<span class="nc" id="L273">                                    String retry = getStringInput(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">                                    if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L275">                                        selectingElective = false;</span>
+                                    }
+                            }
+<span class="nc" id="L278">                        }</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                        if (!subjectName.isEmpty()) {</span>
+<span class="nc" id="L280">                            subject = new ElectiveSubject(subjectName, subjectCode);</span>
+<span class="nc" id="L281">                            selectingSubject = false;</span>
+                        } else {
+<span class="nc" id="L283">                            String retry = getStringInput(&quot;Try selecting subject type again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">                            if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L285">                                return;</span>
+                            }
+                        }
+<span class="nc" id="L288">                    } else {</span>
+<span class="nc" id="L289">                        System.out.println(&quot;Invalid subject type.&quot;);</span>
+<span class="nc" id="L290">                        String retry = getStringInput(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">                        if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L292">                            System.out.println(&quot;Grade not recorded.&quot;);</span>
+<span class="nc" id="L293">                            return;</span>
+                        }
+                    }
+<span class="nc" id="L296">                }</span>
+
+<span class="nc" id="L298">                boolean enteringGrade = true;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                while (enteringGrade) {</span>
+<span class="nc" id="L300">                    double gradeValue = 0;</span>
+                    try {
+<span class="nc" id="L302">                        gradeValue = getDoubleInput(&quot;\nEnter grade (0-100): &quot;);</span>
+
+<span class="nc" id="L304">                        Grade grade = new Grade(studentId, subject, gradeValue);</span>
+
+<span class="nc" id="L306">                        System.out.println(&quot;\nGRADE CONFIRMATION&quot;);</span>
+<span class="nc" id="L307">                        System.out</span>
+<span class="nc" id="L308">                                .println(</span>
+                                        &quot;__________________________________________________________________________________&quot;);
+<span class="nc" id="L310">                        System.out.println(&quot;Grade ID: &quot; + grade.getGradeID());</span>
+<span class="nc" id="L311">                        System.out.println(&quot;Student: &quot; + studentId + &quot; - &quot; + student.getName());</span>
+<span class="nc" id="L312">                        System.out.println(&quot;Subject: &quot; + subjectName + &quot; (&quot; + subject.getSubjectType() + &quot;)&quot;);</span>
+<span class="nc" id="L313">                        System.out.printf(&quot;Grade: %.1f%%%n&quot;, gradeValue);</span>
+<span class="nc" id="L314">                        System.out.println(&quot;Date: &quot; + grade.getDate());</span>
+<span class="nc" id="L315">                        System.out</span>
+<span class="nc" id="L316">                                .println(</span>
+                                        &quot;__________________________________________________________________________________&quot;);
+
+<span class="nc" id="L319">                        String confirm = getStringInput(&quot;\nConfirm grade? (Y/N): &quot;);</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                        if (confirm.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L322">                            gradeManager.addGrade(grade);</span>
+<span class="nc" id="L323">                            System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L324">                            scanner.nextLine();</span>
+<span class="nc" id="L325">                            System.out.println(&quot;✓ Grade recorded successfully!&quot;);</span>
+                        } else {
+<span class="nc" id="L327">                            System.out.println(&quot;Grade recording cancelled.&quot;);</span>
+                        }
+<span class="nc" id="L329">                        enteringGrade = false;</span>
+<span class="nc" id="L330">                        recording = false; // Exit loop after successful recording or cancellation</span>
+<span class="nc" id="L331">                    } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L332">                        System.out.println(&quot;\nX ERROR: InvalidGradeException&quot;);</span>
+<span class="nc" id="L333">                        System.out.println(e.getMessage());</span>
+<span class="nc" id="L334">                        System.out.println(&quot;You entered: &quot; + gradeValue);</span>
+
+<span class="nc" id="L336">                        String retry = getStringInput(&quot;\nTry again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">                        if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L338">                            enteringGrade = false;</span>
+<span class="nc" id="L339">                            recording = false;</span>
+                        }
+<span class="nc" id="L341">                    }</span>
+<span class="nc" id="L342">                }</span>
+<span class="nc" id="L343">            } catch (StudentNotFoundException e) {</span>
+<span class="nc" id="L344">                Logger.logError(&quot;Student not found&quot;, e);</span>
+<span class="nc" id="L345">                System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L346">                System.out.println(&quot;Available student IDs: &quot;);</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">                for (Student s : studentManager.getAllStudents()) {</span>
+<span class="nc" id="L348">                    System.out.println(&quot;- ID: &quot; + s.getStudentId() + &quot;, Name: &quot; + s.getName());</span>
+                }
+<span class="nc" id="L350">                String retry = getStringInput(&quot;\nTry again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">                if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L352">                    recording = false;</span>
+                }
+<span class="nc" id="L354">            } catch (InvalidGradeException e) {</span>
+<span class="nc" id="L355">                Logger.logError(&quot;Invalid grade&quot;, e);</span>
+<span class="nc" id="L356">                System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L357">                recording = false;</span>
+<span class="nc" id="L358">            } catch (InvalidDataException e) {</span>
+<span class="nc" id="L359">                Logger.logError(&quot;Invalid data&quot;, e);</span>
+<span class="nc" id="L360">                System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L361">                recording = false;</span>
+<span class="nc" id="L362">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L363">                Logger.logError(&quot;Illegal argument&quot;, e);</span>
+<span class="nc" id="L364">                System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L365">                recording = false;</span>
+<span class="nc" id="L366">            }</span>
+        }
+<span class="nc" id="L368">    }</span>
+
+    // This method displays a grade report for a specific student
+    private static void viewGradeReport() {
+<span class="nc" id="L372">        System.out.println(&quot;\nVIEW GRADE REPORT&quot;);</span>
+<span class="nc" id="L373">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+        try {
+<span class="nc" id="L375">            String studentId = getStringInput(&quot;\nEnter Student ID: &quot;);</span>
+<span class="nc" id="L376">            Student student = studentManager.getStudent(studentId);</span>
+<span class="nc" id="L377">            gradeManager.viewGradesByStudent(student);</span>
+<span class="nc" id="L378">        } catch (StudentNotFoundException e) {</span>
+<span class="nc" id="L379">            Logger.logError(&quot;Student not found&quot;, e);</span>
+<span class="nc" id="L380">            System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L381">        }</span>
+<span class="nc" id="L382">    }</span>
+
+    // This method exports a student's grade report to a file
+    private static void exportGradeReport() {
+<span class="nc" id="L386">        System.out.println(&quot;\nEXPORT GRADE REPORT&quot;);</span>
+<span class="nc" id="L387">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+        try {
+<span class="nc" id="L389">            String studentId = getStringInput(&quot;Enter Student ID: &quot;);</span>
+<span class="nc" id="L390">            Student student = studentManager.getStudent(studentId);</span>
+
+<span class="nc" id="L392">            System.out.println(&quot;\nStudent: &quot; + studentId + &quot; &quot; + student.getName());</span>
+<span class="nc" id="L393">            System.out.println(&quot;Type: &quot; + student.getStudentType() + &quot; Student&quot;);</span>
+<span class="nc" id="L394">            System.out.println(&quot;Total Grades: &quot; + gradeManager.getEnrolledSubjectCount(studentId));</span>
+
+<span class="nc" id="L396">            boolean selectingOption = true;</span>
+<span class="nc" id="L397">            String content = &quot;&quot;;</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">            while (selectingOption) {</span>
+<span class="nc" id="L399">                System.out.println(&quot;\nExport options:&quot;);</span>
+<span class="nc" id="L400">                System.out.println(&quot;1. Summary Report (overview only)&quot;);</span>
+<span class="nc" id="L401">                System.out.println(&quot;2. Detailed Report (all grades)&quot;);</span>
+<span class="nc" id="L402">                System.out.println(&quot;3. Both&quot;);</span>
+<span class="nc" id="L403">                int option = getIntInput(&quot;\nSelect option (1-3): &quot;);</span>
+
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                if (option == 1) {</span>
+<span class="nc" id="L406">                    content = reportGenerator.generateSummaryReport(student, gradeManager);</span>
+<span class="nc" id="L407">                    selectingOption = false;</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">                } else if (option == 2) {</span>
+<span class="nc" id="L409">                    content = reportGenerator.generateDetailedReport(student, gradeManager);</span>
+<span class="nc" id="L410">                    selectingOption = false;</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                } else if (option == 3) {</span>
+<span class="nc" id="L412">                    content = reportGenerator.generateBothReport(student, gradeManager);</span>
+<span class="nc" id="L413">                    selectingOption = false;</span>
+                } else {
+<span class="nc" id="L415">                    System.out.println(&quot;Invalid option.&quot;);</span>
+<span class="nc" id="L416">                    String retry = getStringInput(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">                    if (!retry.equalsIgnoreCase(&quot;y&quot;)) {</span>
+<span class="nc" id="L418">                        System.out.println(&quot;Export cancelled.&quot;);</span>
+<span class="nc" id="L419">                        return;</span>
+                    }
+                }
+<span class="nc" id="L422">            }</span>
+
+<span class="nc" id="L424">            String filename = getStringInput(&quot;\nEnter filename (without extension): &quot;);</span>
+            try {
+<span class="nc" id="L426">                String filePath = fileExporter.exportToFile(filename, content);</span>
+<span class="nc" id="L427">                java.io.File file = new java.io.File(filePath);</span>
+<span class="nc" id="L428">                System.out.println(&quot;\n✓ Report exported successfully!&quot;);</span>
+<span class="nc" id="L429">                System.out.println(&quot;File: &quot; + file.getName());</span>
+<span class="nc" id="L430">                System.out.println(&quot;Location: &quot; + filePath);</span>
+<span class="nc" id="L431">                System.out.println(&quot;Size: &quot; + file.length() + &quot; bytes&quot;);</span>
+<span class="nc" id="L432">            } catch (java.io.IOException e) {</span>
+<span class="nc" id="L433">                Logger.logError(&quot;Export failed&quot;, e);</span>
+<span class="nc" id="L434">                System.out.println(&quot;X ERROR: Failed to export report. &quot; + e.getMessage());</span>
+<span class="nc" id="L435">            }</span>
+
+<span class="nc" id="L437">            System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L438">            scanner.nextLine();</span>
+
+<span class="nc" id="L440">        } catch (StudentNotFoundException e) {</span>
+<span class="nc" id="L441">            Logger.logError(&quot;Student not found&quot;, e);</span>
+<span class="nc" id="L442">            System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L443">        }</span>
+<span class="nc" id="L444">    }</span>
+
+    private static String getStringInput(String prompt) {
+<span class="nc" id="L447">        System.out.print(prompt);</span>
+<span class="nc" id="L448">        return scanner.nextLine();</span>
+    }
+
+    private static int getIntInput(String prompt) {
+        while (true) {
+<span class="nc" id="L453">            System.out.print(prompt);</span>
+            try {
+<span class="nc" id="L455">                return Integer.parseInt(scanner.nextLine());</span>
+<span class="nc" id="L456">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L457">                System.out.println(&quot;Invalid input. Please enter a number.&quot;);</span>
+<span class="nc" id="L458">            }</span>
+        }
+    }
+
+    private static double getDoubleInput(String prompt) {
+        while (true) {
+<span class="nc" id="L464">            System.out.print(prompt);</span>
+            try {
+<span class="nc" id="L466">                return Double.parseDouble(scanner.nextLine());</span>
+<span class="nc" id="L467">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L468">                System.out.println(&quot;Invalid input. Please enter a number.&quot;);</span>
+<span class="nc" id="L469">            }</span>
+        }
+    }
+
+    // This method calculates and displays a student's GPA and class rank
+    private static void calculateStudentGPA() {
+<span class="nc" id="L475">        System.out.println(&quot;\nCALCULATE STUDENT GPA&quot;);</span>
+<span class="nc" id="L476">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+        try {
+<span class="nc" id="L478">            String studentId = getStringInput(&quot;Enter Student ID: &quot;);</span>
+<span class="nc" id="L479">            Student student = studentManager.getStudent(studentId);</span>
+
+<span class="nc" id="L481">            System.out.println(&quot;\nStudent: &quot; + studentId + &quot; &quot; + student.getName());</span>
+<span class="nc" id="L482">            System.out.println(&quot;Type: &quot; + student.getStudentType() + &quot; Student&quot;);</span>
+<span class="nc" id="L483">            double overallAverage = gradeManager.calculateOverallAverage(studentId);</span>
+<span class="nc" id="L484">            System.out.printf(&quot;Overall Average: %.1f%%%n&quot;, overallAverage);</span>
+
+<span class="nc" id="L486">            java.util.List&lt;Grade&gt; grades = gradeManager.getGradesForStudent(studentId);</span>
+<span class="nc" id="L487">            int rank = gradeManager.calculateClassRank(studentId);</span>
+<span class="nc" id="L488">            int totalStudents = gradeManager.getTotalStudentsWithGrades();</span>
+
+<span class="nc" id="L490">            String report = gpaCalculator.generateGPAReport(student, grades, rank, totalStudents, overallAverage);</span>
+<span class="nc" id="L491">            System.out.println(report);</span>
+
+<span class="nc" id="L493">            System.out.println(&quot;Press Enter to continue...&quot;);</span>
+<span class="nc" id="L494">            scanner.nextLine();</span>
+
+<span class="nc" id="L496">        } catch (StudentNotFoundException e) {</span>
+<span class="nc" id="L497">            Logger.logError(&quot;Student not found&quot;, e);</span>
+<span class="nc" id="L498">            System.out.println(&quot;X ERROR: &quot; + e.getMessage());</span>
+<span class="nc" id="L499">        }</span>
+<span class="nc" id="L500">    }</span>
+
+    // This method imports grades in bulk from a CSV file
+    private static void bulkImportGrades() {
+<span class="nc" id="L504">        System.out.println(&quot;\nBULK IMPORT GRADES&quot;);</span>
+<span class="nc" id="L505">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L506">        System.out.println(&quot;Place your CSV file in: imports/&quot;);</span>
+<span class="nc" id="L507">        System.out.println(&quot;CSV Format Required:&quot;);</span>
+<span class="nc" id="L508">        System.out.println(&quot;StudentID, SubjectName, Subject Type, Grade&quot;);</span>
+<span class="nc" id="L509">        System.out.println(&quot;Example: STU001, Mathematics, Core, 85&quot;);</span>
+
+<span class="nc" id="L511">        String filename = getStringInput(&quot;\nEnter filename (without extension): &quot;);</span>
+<span class="nc" id="L512">        bulkImportService.importGrades(filename, studentManager, gradeManager);</span>
+
+<span class="nc" id="L514">        System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L515">        scanner.nextLine();</span>
+<span class="nc" id="L516">    }</span>
+
+    // This method views statistics for the entire class
+    private static void viewClassStatistics() {
+<span class="nc" id="L520">        System.out.println(&quot;\nVIEW CLASS STATISTICS&quot;);</span>
+<span class="nc" id="L521">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+
+<span class="nc" id="L523">        java.util.List&lt;Grade&gt; allGrades = gradeManager.getAllGrades();</span>
+<span class="nc" id="L524">        Student[] studentsArray = studentManager.getAllStudents();</span>
+<span class="nc" id="L525">        java.util.List&lt;Student&gt; allStudents = java.util.Arrays.asList(studentsArray);</span>
+
+<span class="nc" id="L527">        String report = classStatistics.generateClassStatisticsReport(allGrades, allStudents);</span>
+<span class="nc" id="L528">        System.out.println(report);</span>
+
+<span class="nc" id="L530">        System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L531">        scanner.nextLine();</span>
+<span class="nc" id="L532">    }</span>
+
+    // This method allows searching for students by various criteria
+    private static void searchStudents() {
+<span class="nc" id="L536">        boolean searching = true;</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">        while (searching) {</span>
+<span class="nc" id="L538">            System.out.println(&quot;\nSEARCH STUDENTS&quot;);</span>
+<span class="nc" id="L539">            System.out.println(&quot;__________________________________________________&quot;);</span>
+<span class="nc" id="L540">            System.out.println(&quot;Search options:&quot;);</span>
+<span class="nc" id="L541">            System.out.println(&quot;1. By Student ID&quot;);</span>
+<span class="nc" id="L542">            System.out.println(&quot;2. By Name (partial match)&quot;);</span>
+<span class="nc" id="L543">            System.out.println(&quot;3. By Grade Range&quot;);</span>
+<span class="nc" id="L544">            System.out.println(&quot;4. By Student Type&quot;);</span>
+<span class="nc" id="L545">            System.out.println(&quot;5. Back to Main Menu&quot;);</span>
+<span class="nc" id="L546">            System.out.print(&quot;Select option (1-5): &quot;);</span>
+
+<span class="nc" id="L548">            String choice = scanner.nextLine().trim();</span>
+<span class="nc bnc" id="L549" title="All 6 branches missed.">            switch (choice) {</span>
+                case &quot;1&quot;:
+<span class="nc" id="L551">                    studentSearchService.searchById(scanner, studentManager, gradeManager);</span>
+<span class="nc" id="L552">                    break;</span>
+                case &quot;2&quot;:
+<span class="nc" id="L554">                    studentSearchService.searchByName(scanner, studentManager, gradeManager);</span>
+<span class="nc" id="L555">                    break;</span>
+                case &quot;3&quot;:
+<span class="nc" id="L557">                    studentSearchService.searchByGradeRange(scanner, studentManager, gradeManager);</span>
+<span class="nc" id="L558">                    break;</span>
+                case &quot;4&quot;:
+<span class="nc" id="L560">                    studentSearchService.searchByType(scanner, studentManager, gradeManager);</span>
+<span class="nc" id="L561">                    break;</span>
+                case &quot;5&quot;:
+<span class="nc" id="L563">                    searching = false;</span>
+<span class="nc" id="L564">                    break;</span>
+                default:
+<span class="nc" id="L566">                    System.out.println(&quot;Invalid choice. Please try again.&quot;);</span>
+            }
+<span class="nc" id="L568">        }</span>
+<span class="nc" id="L569">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

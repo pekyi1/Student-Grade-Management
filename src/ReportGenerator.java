@@ -1,5 +1,7 @@
+// This class handles the formatting and string generation for grade reports
 public class ReportGenerator {
 
+    // This method generates a text-based summary of a student's performance
     public String generateSummaryReport(Student student, GradeManager gm) {
         StringBuilder sb = new StringBuilder();
         String studentId = student.getStudentId();
@@ -22,6 +24,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
+    // This method generates a detailed report listing all grades for a student
     public String generateDetailedReport(Student student, GradeManager gm) {
         StringBuilder sb = new StringBuilder();
         String studentId = student.getStudentId();
@@ -36,6 +39,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
+    // This method combines both summary and detailed reports
     public String generateBothReport(Student student, GradeManager gm) {
         StringBuilder sb = new StringBuilder();
         String studentId = student.getStudentId();
@@ -47,6 +51,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
+    // This helper method formats the list of grades into a table
     private void appendGradeList(StringBuilder sb, java.util.List<Grade> grades) {
         sb.append("DETAILED GRADE HISTORY\n");
         sb.append(String.format("%-12s | %-15s | %-10s | %-8s%n", "DATE", "SUBJECT", "TYPE", "GRADE"));

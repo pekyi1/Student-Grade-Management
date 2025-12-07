@@ -1,3 +1,4 @@
+// This abstract class serves as the base for all student types
 public abstract class Student implements Exportable {
     private String studentId;
     private String name;
@@ -52,21 +53,25 @@ public abstract class Student implements Exportable {
         this.status = status;
     }
 
+    // This method prints the full details of the student
     public abstract void displayStudentDetails(double currentAverage, int enrolledSubjects);
 
     public abstract String getStudentType();
 
     public abstract double getPassingGrade();
 
+    // This method calculates the student's average grade using the grade manager
     public double calculateAverageGrade(GradeManager gm) {
         return gm.calculateOverallAverage(this.studentId);
     }
 
+    // This method checks if the student's average meets the passing requirements
     public boolean isPassing(double currentAverage) { // This compares the current average with the passing grade and
                                                       // checks if the student meets the passing grade
         return currentAverage >= getPassingGrade();
     }
 
+    // This method formats the student's data as a CSV string
     @Override
     public String toExportFormat() {
         return String.format("%s,%s,%s,%d,%s,%s,%s",

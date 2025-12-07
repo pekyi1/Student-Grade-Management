@@ -1,3 +1,5 @@
+//I have created this class to create some seed data so that 
+//I dont have to always add a new student when i update the code
 public class DataSeeder {
     public static void seedStudents(StudentManager studentManager) {
         try {

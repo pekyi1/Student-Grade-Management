@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+// This class handles the bulk import of grades from CSV files
 public class BulkImportService {
 
     private static final String IMPORT_DIR = "imports/";
@@ -29,6 +30,7 @@ public class BulkImportService {
         this(new SimpleCSVParser());
     }
 
+    // This helper method creates a directory if it does not already exist
     private void createDirectory(String path) {
         File directory = new File(path);
         if (!directory.exists()) {
@@ -36,6 +38,8 @@ public class BulkImportService {
         }
     }
 
+    // This method orchestrates the reading, parsing, and processing of the import
+    // file
     public void importGrades(String filename, StudentManager studentManager, GradeManager gradeManager) {
         File file = new File(IMPORT_DIR + filename);
         if (!file.exists()) {
@@ -78,6 +82,7 @@ public class BulkImportService {
         printSummary(successCount, failCount, totalRows);
     }
 
+    // This method parses a single CSV row and adds the grade to the system
     private void processRow(String[] parts, StudentManager studentManager, GradeManager gradeManager)
             throws Exception {
         if (parts.length != 4) {
@@ -103,6 +108,8 @@ public class BulkImportService {
         gradeManager.addGrade(grade);
     }
 
+    // This method generates a log file detailing the results of the import
+    // operation
     private void generateImportLog(List<String> errors, int successCount, int failCount, int totalRows) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String logFilename = LOG_DIR + "import_log_" + timestamp + ".txt";
@@ -132,6 +139,7 @@ public class BulkImportService {
         }
     }
 
+    // This method prints a summary of the import results to the console
     private void printSummary(int successCount, int failCount, int totalRows) {
         System.out.println("\nIMPORT SUMMARY");
         System.out.println("__________________________________________________");

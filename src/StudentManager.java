@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
 
+// This class manages the collection of students and deals with adding or finding them
 public class StudentManager implements Searchable {
     private Student[] students;
     private int studentCount;
@@ -14,6 +15,7 @@ public class StudentManager implements Searchable {
         this.studentCount = 0;
     }
 
+    // This method adds a new student to the system after validation
     public void addStudent(Student student) throws InvalidDataException {
         if (studentCount >= students.length) {
             throw new InvalidDataException("Cannot add student. Maximum capacity reached.");
@@ -40,6 +42,7 @@ public class StudentManager implements Searchable {
         System.out.println("  Status: " + student.getStatus());
     }
 
+    // This method attempts to locate a student by their unique ID
     public Student findStudent(String studentId) {
         for (int i = 0; i < studentCount; i++) {
             if (students[i].getStudentId().equals(studentId)) {
@@ -50,6 +53,7 @@ public class StudentManager implements Searchable {
                      // check
     }
 
+    // This method finds all students whose names match the search string
     @Override
     public List<Student> searchByName(String name) {
         List<Student> results = new ArrayList<>();
@@ -61,6 +65,7 @@ public class StudentManager implements Searchable {
         return results;
     }
 
+    // This method retrieves a student by ID but throws an exception if not found
     public Student getStudent(String studentId) throws StudentNotFoundException {
         Student student = findStudent(studentId);
         if (student == null) {
@@ -69,6 +74,7 @@ public class StudentManager implements Searchable {
         return student;
     }
 
+    // This method prints a list of all students and their summary details
     public void viewAllStudents(GradeManager gm) {
         if (studentCount == 0) {
             System.out.println("No students found.");
@@ -92,6 +98,7 @@ public class StudentManager implements Searchable {
         new Scanner(System.in).nextLine();
     }
 
+    // This method calculates the average grade across all students in the class
     public double getAverageClassGrade(GradeManager gm) {
         if (studentCount == 0)
             return 0.0;

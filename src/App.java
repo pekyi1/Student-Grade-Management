@@ -6,6 +6,7 @@ import exceptions.StudentNotFoundException;
 import utils.Logger;
 import java.util.Scanner;
 
+// This class is the main entry point for the Student Grade Management System
 public class App {
     private static StudentManager studentManager = new StudentManager();
     private static GradeManager gradeManager = new GradeManager();
@@ -17,6 +18,7 @@ public class App {
     private static StudentSearchService studentSearchService = new StudentSearchService();
     private static Scanner scanner = new Scanner(System.in);
 
+    // This method starts the application and handles the main menu loop
     public static void main(String[] args) {
         // Seed data for testing
         DataSeeder.seedStudents(studentManager);
@@ -70,6 +72,7 @@ public class App {
         scanner.close();
     }
 
+    // This method displays the main menu options to the user
     private static void printMenu() {
         System.out.println("\nSTUDENT GRADE MANAGEMENT SYSTEM");
         System.out.println("__________________________________________________________________________________");
@@ -86,6 +89,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
     }
 
+    // This method handles the logic for adding a new student to the system
     private static void addNewStudent() {
         System.out.println("\nADD STUDENT");
         System.out.println("__________________________________________________________________________________");
@@ -163,6 +167,7 @@ public class App {
         }
     }
 
+    // This method allows users to record a grade for a specific student and subject
     private static void recordGrade() {
         System.out.println("\nRECORD GRADE");
         System.out.println("__________________________________________________________________________________");
@@ -362,6 +367,7 @@ public class App {
         }
     }
 
+    // This method displays a grade report for a specific student
     private static void viewGradeReport() {
         System.out.println("\nVIEW GRADE REPORT");
         System.out.println("__________________________________________________________________________________");
@@ -375,6 +381,7 @@ public class App {
         }
     }
 
+    // This method exports a student's grade report to a file
     private static void exportGradeReport() {
         System.out.println("\nEXPORT GRADE REPORT");
         System.out.println("__________________________________________________________________________________");
@@ -463,6 +470,7 @@ public class App {
         }
     }
 
+    // This method calculates and displays a student's GPA and class rank
     private static void calculateStudentGPA() {
         System.out.println("\nCALCULATE STUDENT GPA");
         System.out.println("__________________________________________________________________________________");
@@ -491,6 +499,7 @@ public class App {
         }
     }
 
+    // This method imports grades in bulk from a CSV file
     private static void bulkImportGrades() {
         System.out.println("\nBULK IMPORT GRADES");
         System.out.println("__________________________________________________________________________________");
@@ -506,6 +515,7 @@ public class App {
         scanner.nextLine();
     }
 
+    // This method views statistics for the entire class
     private static void viewClassStatistics() {
         System.out.println("\nVIEW CLASS STATISTICS");
         System.out.println("__________________________________________________________________________________");
@@ -521,6 +531,7 @@ public class App {
         scanner.nextLine();
     }
 
+    // This method allows searching for students by various criteria
     private static void searchStudents() {
         boolean searching = true;
         while (searching) {

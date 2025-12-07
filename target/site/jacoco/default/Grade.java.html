@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Grade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Student-Grade-Management</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">Grade.java</span></div><h1>Grade.java</h1><pre class="source lang-java linenums">import java.time.LocalDate;
+
+public class Grade implements Gradable, Exportable, Calculable {
+    public static int gradeCounter;
+    private String gradeID;
+    private String studentID;
+    private Subject subject;
+    private double grade;
+    private String date;
+
+<span class="fc" id="L11">    public Grade(String studentID, Subject subject, double grade) {</span>
+        // validate grade on creation; throw so callers (like App) can handle invalid
+        // input
+<span class="pc bpc" id="L14" title="1 of 2 branches missed.">        if (!validateGrade(grade)) {</span>
+<span class="nc" id="L15">            throw new IllegalArgumentException(&quot;Grade must be between 0 and 100.&quot;);</span>
+        }
+
+<span class="fc" id="L18">        this.gradeID = &quot;GRD&quot; + gradeCounter++;</span>
+<span class="fc" id="L19">        this.studentID = studentID;</span>
+<span class="fc" id="L20">        this.subject = subject;</span>
+<span class="fc" id="L21">        this.grade = grade;</span>
+<span class="fc" id="L22">        this.date = LocalDate.now().toString();</span>
+<span class="fc" id="L23">    }</span>
+
+    @Override
+    public boolean validateGrade(double grade) {
+<span class="pc bpc" id="L27" title="2 of 4 branches missed.">        return grade &gt;= 0 &amp;&amp; grade &lt;= 100;</span>
+    }
+
+    @Override
+    public void recordGrade(double grade) {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if (validateGrade(grade)) {</span>
+<span class="nc" id="L33">            this.grade = grade;</span>
+        } else {
+<span class="nc" id="L35">            System.out.println(&quot;Invalid grade entered. Grade not recorded&quot;);</span>
+        }
+<span class="nc" id="L37">    }</span>
+
+    public String getGradeID() {
+<span class="nc" id="L40">        return gradeID;</span>
+    }
+
+    public String getStudentID() {
+<span class="fc" id="L44">        return studentID;</span>
+    }
+
+    public Subject getSubject() {
+<span class="fc" id="L48">        return subject;</span>
+    }
+
+    public double getGrade() {
+<span class="fc" id="L52">        return grade;</span>
+    }
+
+    public String getDate() {
+<span class="nc" id="L56">        return date;</span>
+    }
+
+    public void displayGradeDetails() {
+<span class="nc" id="L60">        System.out.println(&quot;Grade ID: &quot; + gradeID);</span>
+<span class="nc" id="L61">        System.out.println(&quot;Date: &quot; + date);</span>
+<span class="nc" id="L62">        System.out.println(&quot;Subject: &quot; + subject.getSubjectName() + &quot; (&quot; + subject.getSubjectType() + &quot;)&quot;);</span>
+<span class="nc" id="L63">        System.out.println(&quot;Grade: &quot; + grade);</span>
+<span class="nc" id="L64">        System.out.println(&quot;Letter Grade: &quot; + getLetterGrade());</span>
+<span class="nc" id="L65">    }</span>
+
+    public String getLetterGrade() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (grade &gt;= 80.0) {</span>
+<span class="nc" id="L69">            return &quot;A&quot;;</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        } else if (grade &gt;= 60.0 &amp;&amp; grade &lt;= 79.9) {</span>
+<span class="nc" id="L71">            return &quot;B&quot;;</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">        } else if (grade &gt;= 50.0 &amp;&amp; grade &lt;= 59.9) {</span>
+<span class="nc" id="L73">            return &quot;C&quot;;</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">        } else if (grade &gt;= 40.0 &amp;&amp; grade &lt;= 49.0) {</span>
+<span class="nc" id="L75">            return &quot;D&quot;;</span>
+        }
+<span class="nc" id="L77">        return &quot;F&quot;;</span>
+    }
+
+    @Override
+    public String toExportFormat() {
+<span class="nc" id="L82">        return String.format(&quot;%s,%s,%s,%.2f&quot;,</span>
+<span class="nc" id="L83">                studentID, subject.getSubjectName(), subject.getSubjectType(), grade);</span>
+    }
+
+    @Override
+    public double calculate() {
+<span class="nc" id="L88">        return grade;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
