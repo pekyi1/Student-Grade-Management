@@ -39,8 +39,14 @@ public class BulkImportService {
         }
     }
 
-    // This method orchestrates the reading, parsing, and processing of the import
-    // file
+    /**
+     * Orchestrates the reading, parsing, and processing of the import file.
+     *
+     * @param filename       The name of the CSV file to import (located in imports/
+     *                       directory).
+     * @param studentManager The StudentManager instance to validate students.
+     * @param gradeManager   The GradeManager instance to add grades.
+     */
     public void importGrades(String filename, StudentManager studentManager, GradeManager gradeManager) {
         File file = new File(IMPORT_DIR + filename);
         if (!file.exists()) {

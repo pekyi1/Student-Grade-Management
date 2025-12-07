@@ -15,7 +15,14 @@ public class StudentManager implements Searchable {
         this.studentCount = 0;
     }
 
-    // This method adds a new student to the system after validation
+    /**
+     * Adds a new student to the system after performing validation checks.
+     *
+     * @param student The student object to be added.
+     * @throws InvalidDataException If the student data is invalid (e.g., empty
+     *                              name, invalid age/email/phone) or capacity is
+     *                              reached.
+     */
     public void addStudent(Student student) throws InvalidDataException {
         if (studentCount >= students.length) {
             throw new InvalidDataException("Cannot add student. Maximum capacity reached.");
@@ -42,7 +49,12 @@ public class StudentManager implements Searchable {
         System.out.println("  Status: " + student.getStatus());
     }
 
-    // This method attempts to locate a student by their unique ID
+    /**
+     * Attempts to locate a student by their unique ID.
+     *
+     * @param studentId The unique identifier of the student.
+     * @return The Student object if found, or null if not found.
+     */
     public Student findStudent(String studentId) {
         for (int i = 0; i < studentCount; i++) {
             if (students[i].getStudentId().equals(studentId)) {
@@ -65,7 +77,13 @@ public class StudentManager implements Searchable {
         return results;
     }
 
-    // This method retrieves a student by ID but throws an exception if not found
+    /**
+     * Retrieves a student by their ID, throwing an exception if not found.
+     *
+     * @param studentId The unique identifier of the student.
+     * @return The Student object.
+     * @throws StudentNotFoundException If no student matches the provided ID.
+     */
     public Student getStudent(String studentId) throws StudentNotFoundException {
         Student student = findStudent(studentId);
         if (student == null) {
@@ -98,7 +116,13 @@ public class StudentManager implements Searchable {
         new Scanner(System.in).nextLine();
     }
 
-    // This method calculates the average grade across all students in the class
+    /**
+     * Calculates the average grade across all students in the class.
+     *
+     * @param gm The GradeManager instance used to calculate individual student
+     *           averages.
+     * @return The class-wide average grade percentage.
+     */
     public double getAverageClassGrade(GradeManager gm) {
         if (studentCount == 0)
             return 0.0;

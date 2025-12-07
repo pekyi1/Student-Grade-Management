@@ -18,7 +18,12 @@ public class App {
     private static StudentSearchService studentSearchService = new StudentSearchService();
     private static Scanner scanner = new Scanner(System.in);
 
-    // This method starts the application and handles the main menu loop
+    /**
+     * The main entry point for the Student Grade Management System.
+     * Initializes services and handles the main application loop.
+     *
+     * @param args Command line arguments (not used).
+     */
     public static void main(String[] args) {
         // Seed data for testing
         DataSeeder.seedStudents(studentManager);
@@ -72,7 +77,9 @@ public class App {
         scanner.close();
     }
 
-    // This method displays the main menu options to the user
+    /**
+     * Displays the main menu options to the user.
+     */
     private static void printMenu() {
         System.out.println("\nSTUDENT GRADE MANAGEMENT SYSTEM");
         System.out.println("__________________________________________________________________________________");
@@ -89,7 +96,10 @@ public class App {
         System.out.println("__________________________________________________________________________________");
     }
 
-    // This method handles the logic for adding a new student to the system
+    /**
+     * Handles the logic for adding a new student to the system.
+     * Prompts for user input and validates data before creating a student.
+     */
     private static void addNewStudent() {
         System.out.println("\nADD STUDENT");
         System.out.println("__________________________________________________________________________________");
@@ -167,7 +177,10 @@ public class App {
         }
     }
 
-    // This method allows users to record a grade for a specific student and subject
+    /**
+     * Allows users to record a grade for a specific student and subject.
+     * Validates student ID and subject before saving.
+     */
     private static void recordGrade() {
         System.out.println("\nRECORD GRADE");
         System.out.println("__________________________________________________________________________________");
@@ -367,7 +380,9 @@ public class App {
         }
     }
 
-    // This method displays a grade report for a specific student
+    /**
+     * Displays a detailed grade report for a specific student.
+     */
     private static void viewGradeReport() {
         System.out.println("\nVIEW GRADE REPORT");
         System.out.println("__________________________________________________________________________________");
@@ -381,7 +396,10 @@ public class App {
         }
     }
 
-    // This method exports a student's grade report to a file
+    /**
+     * Exports a student's grade report to a text file.
+     * Prompts for report type (Summary/Detailed) and filename.
+     */
     private static void exportGradeReport() {
         System.out.println("\nEXPORT GRADE REPORT");
         System.out.println("__________________________________________________________________________________");
@@ -470,7 +488,10 @@ public class App {
         }
     }
 
-    // This method calculates and displays a student's GPA and class rank
+    /**
+     * Calculates and displays a student's GPA and class rank.
+     * Uses a 4.0 scale for GPA calculation.
+     */
     private static void calculateStudentGPA() {
         System.out.println("\nCALCULATE STUDENT GPA");
         System.out.println("__________________________________________________________________________________");
@@ -499,7 +520,10 @@ public class App {
         }
     }
 
-    // This method imports grades in bulk from a CSV file
+    /**
+     * Imports grades in bulk from a CSV file.
+     * Requires a CSV file in the 'imports/' directory with specific format.
+     */
     private static void bulkImportGrades() {
         System.out.println("\nBULK IMPORT GRADES");
         System.out.println("__________________________________________________________________________________");
@@ -515,7 +539,10 @@ public class App {
         scanner.nextLine();
     }
 
-    // This method views statistics for the entire class
+    /**
+     * Views statistics for the entire class, including averages and grade
+     * distribution.
+     */
     private static void viewClassStatistics() {
         System.out.println("\nVIEW CLASS STATISTICS");
         System.out.println("__________________________________________________________________________________");
@@ -531,7 +558,10 @@ public class App {
         scanner.nextLine();
     }
 
-    // This method allows searching for students by various criteria
+    /**
+     * Allows searching for students by various criteria (ID, Name, Grade Range,
+     * Type).
+     */
     private static void searchStudents() {
         boolean searching = true;
         while (searching) {

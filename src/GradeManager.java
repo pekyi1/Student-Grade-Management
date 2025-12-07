@@ -17,7 +17,13 @@ public class GradeManager {
         this.gradeCount = 0;
     }
 
-    // This method adds a grade to the system after validating it
+    /**
+     * Adds a grade to the system after validating it.
+     *
+     * @param grade The Grade object to be added.
+     * @throws InvalidGradeException If the grade value is not between 0 and 100.
+     * @throws InvalidDataException  If the storage capacity has been reached.
+     */
     public void addGrade(Grade grade) throws InvalidGradeException, InvalidDataException {
         if (gradeCount >= grades.length) {
             throw new InvalidDataException("Cannot add grade. Maximum capacity reached.");
@@ -154,7 +160,12 @@ public class GradeManager {
         return studentGrades;
     }
 
-    // This method determines a student's rank in the class based on their average
+    /**
+     * Determines a student's rank in the class based on their overall average.
+     *
+     * @param studentId The ID of the student to rank.
+     * @return The student's rank (1-based), or -1 if the student has no grades.
+     */
     public int calculateClassRank(String studentId) {
         Map<String, Double> studentAverages = new HashMap<>();
         // Calculate average for all students who have grades
@@ -179,7 +190,11 @@ public class GradeManager {
         return rank;
     }
 
-    // This method counts the total number of unique students who have grades
+    /**
+     * Counts the total number of unique students who have recorded grades.
+     *
+     * @return The count of students with at least one grade.
+     */
     public int getTotalStudentsWithGrades() {
         Set<String> studentsWithGrades = new HashSet<>();
         for (int i = 0; i < gradeCount; i++) {
@@ -188,7 +203,11 @@ public class GradeManager {
         return studentsWithGrades.size();
     }
 
-    // This method returns all grades recorded in the system
+    /**
+     * Retrieves a list of all grades recorded in the system.
+     *
+     * @return A list of all Grade objects.
+     */
     public List<Grade> getAllGrades() {
         List<Grade> allGrades = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {

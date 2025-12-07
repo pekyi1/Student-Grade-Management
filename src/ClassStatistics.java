@@ -1,5 +1,5 @@
 import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +42,6 @@ public class ClassStatistics {
         // High/Low
         Grade highest = allGrades.stream().max((g1, g2) -> Double.compare(g1.getGrade(), g2.getGrade())).orElse(null);
         Grade lowest = allGrades.stream().min((g1, g2) -> Double.compare(g1.getGrade(), g2.getGrade())).orElse(null);
-
-        Map<String, String> studentNames = allStudents.stream()
-                .collect(Collectors.toMap(Student::getStudentId, Student::getName));
 
         if (highest != null) {
             sb.append(String.format("\nHighest Grade:       %.0f%% (%s - %s)%n",
