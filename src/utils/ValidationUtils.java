@@ -9,7 +9,7 @@ public class ValidationUtils {
 
     public static void validateEmail(String email) throws InvalidDataException {
         if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new InvalidDataException("Invalid email format.");
+            throw new InvalidDataException("Invalid email format. (Example: alice@example.com)");
         }
     }
 
