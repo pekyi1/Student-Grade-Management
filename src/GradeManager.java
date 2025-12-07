@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// This class handles the storage and calculation of grades for all students
 public class GradeManager {
     private Grade[] grades;
     private int gradeCount;
@@ -16,6 +17,13 @@ public class GradeManager {
         this.gradeCount = 0;
     }
 
+    /**
+     * Adds a grade to the system after validating it.
+     *
+     * @param grade The Grade object to be added.
+     * @throws InvalidGradeException If the grade value is not between 0 and 100.
+     * @throws InvalidDataException  If the storage capacity has been reached.
+     */
     public void addGrade(Grade grade) throws InvalidGradeException, InvalidDataException {
         if (gradeCount >= grades.length) {
             throw new InvalidDataException("Cannot add grade. Maximum capacity reached.");
@@ -27,6 +35,7 @@ public class GradeManager {
         System.out.println("\n✓ Grade recorded successfully!");
     }
 
+    // This method prints a detailed grade history for a specific student
     public void viewGradesByStudent(Student student) {
         String studentId = student.getStudentId();
         boolean found = false;
@@ -88,6 +97,7 @@ public class GradeManager {
         return true;
     }
 
+    // This method calculates the average of all core subject grades for a student
     public double calculateCoreAverage(String studentId) {
         double sum = 0;
         int count = 0;
@@ -100,6 +110,8 @@ public class GradeManager {
         return count == 0 ? 0.0 : sum / count;
     }
 
+    // This method calculates the average of all elective subject grades for a
+    // student
     public double calculateElectiveAverage(String studentId) {
         double sum = 0;
         int count = 0;
@@ -113,6 +125,7 @@ public class GradeManager {
         return count == 0 ? 0.0 : sum / count;
     }
 
+    // This method calculates the overall average of all grades for a student
     public double calculateOverallAverage(String studentId) {
         double sum = 0;
         int count = 0;
@@ -125,6 +138,7 @@ public class GradeManager {
         return count == 0 ? 0.0 : sum / count;
     }
 
+    // This method counts how many subjects a student has received grades for
     public int getEnrolledSubjectCount(String studentId) {
         int count = 0;
         for (int i = 0; i < gradeCount; i++) {
@@ -135,6 +149,7 @@ public class GradeManager {
         return count;
     }
 
+    // This method retrieves a list of all grades belonging to a specific student
     public List<Grade> getGradesForStudent(String studentId) {
         List<Grade> studentGrades = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {
@@ -145,6 +160,12 @@ public class GradeManager {
         return studentGrades;
     }
 
+    /**
+     * Determines a student's rank in the class based on their overall average.
+     *
+     * @param studentId The ID of the student to rank.
+     * @return The student's rank (1-based), or -1 if the student has no grades.
+     */
     public int calculateClassRank(String studentId) {
         Map<String, Double> studentAverages = new HashMap<>();
         // Calculate average for all students who have grades
@@ -153,6 +174,10 @@ public class GradeManager {
             if (!studentAverages.containsKey(id)) {
                 studentAverages.put(id, calculateOverallAverage(id));
             }
+        }
+
+        if (!studentAverages.containsKey(studentId)) {
+            return -1;
         }
 
         double targetAverage = calculateOverallAverage(studentId);
@@ -165,6 +190,11 @@ public class GradeManager {
         return rank;
     }
 
+    /**
+     * Counts the total number of unique students who have recorded grades.
+     *
+     * @return The count of students with at least one grade.
+     */
     public int getTotalStudentsWithGrades() {
         Set<String> studentsWithGrades = new HashSet<>();
         for (int i = 0; i < gradeCount; i++) {
@@ -173,6 +203,11 @@ public class GradeManager {
         return studentsWithGrades.size();
     }
 
+    /**
+     * Retrieves a list of all grades recorded in the system.
+     *
+     * @return A list of all Grade objects.
+     */
     public List<Grade> getAllGrades() {
         List<Grade> allGrades = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {

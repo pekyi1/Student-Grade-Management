@@ -1,12 +1,14 @@
 import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// This class calculates various statistical metrics for the class grades
 public class ClassStatistics {
 
+    // This method generates a comprehensive statistical report for all class grades
     public String generateClassStatisticsReport(List<Grade> allGrades, List<Student> allStudents) {
         if (allGrades == null || allGrades.isEmpty()) {
             return "No grades available for statistics.";
@@ -40,14 +42,6 @@ public class ClassStatistics {
         // High/Low
         Grade highest = allGrades.stream().max((g1, g2) -> Double.compare(g1.getGrade(), g2.getGrade())).orElse(null);
         Grade lowest = allGrades.stream().min((g1, g2) -> Double.compare(g1.getGrade(), g2.getGrade())).orElse(null);
-
-        // Need student names for high/low, but Grade only has ID.
-        // We can look up student name from allStudents list or assume Grade object has
-        // enough info if we join.
-        // For now, let's just show ID and Subject as per Grade object.
-        // To get Name, we'd need a map or lookup. Let's do a quick lookup map.
-        Map<String, String> studentNames = allStudents.stream()
-                .collect(Collectors.toMap(Student::getStudentId, Student::getName));
 
         if (highest != null) {
             sb.append(String.format("\nHighest Grade:       %.0f%% (%s - %s)%n",
@@ -86,22 +80,35 @@ public class ClassStatistics {
             else
                 counts[4]++;
         }
-
         String[] labels = { "90-100% (A):", "80-89%  (B):", "70-79%  (C):", "60-69%  (D):", "0-59%   (F):" };
         int total = grades.size();
 
         for (int i = 0; i < 5; i++) {
             double percent = (double) counts[i] / total * 100;
             int barLength = (int) (percent / 2); // Scale down for display
-            String bar = "█".repeat(barLength) + "░".repeat(50 - barLength);
+            String bar = repeatString("█", barLength) + repeatString("░", 50 - barLength);
             sb.append(String.format("%-15s %s %.1f%% (%d grades)%n", labels[i], bar, percent, counts[i]));
         }
     }
 
+    // Helper method for Java 8 compatibility
+    private String repeatString(String str, int count) {
+        if (count <= 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(str.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(str);
+        }
+        return sb.toString();
+    }
+
+    // This method calculates the arithmetic mean of a list of values
     private double calculateMean(List<Double> values) {
         return values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 
+    // This method finds the median value in a list of numbers
     private double calculateMedian(List<Double> values) {
         int size = values.size();
         if (size == 0)
@@ -113,6 +120,7 @@ public class ClassStatistics {
         }
     }
 
+    // This method finds the most frequent value (mode) in a list
     private double calculateMode(List<Double> values) {
         Map<Double, Integer> counts = new HashMap<>();
         for (Double v : values) {
@@ -129,6 +137,7 @@ public class ClassStatistics {
         return mode;
     }
 
+    // This method calculates the standard deviation of a list of values
     private double calculateStandardDeviation(List<Double> values) {
         double mean = calculateMean(values);
         double sumSquaredDiff = values.stream().mapToDouble(v -> Math.pow(v - mean, 2)).sum();

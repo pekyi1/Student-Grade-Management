@@ -1,0 +1,12 @@
+IMPORT LOG - 2025-12-07T23:17:30.658070800
+__________________________________________________
+
+Total Rows Processed: 5
+Successfully Imported: 2
+Failed: 3
+__________________________________________________
+
+FAILED RECORDS:
+Row 2: Grade must be between 0 and 100.
+Row 3: Grade must be between 0 and 100.
+Row 5: Student with ID 'STU044' not found in the system.

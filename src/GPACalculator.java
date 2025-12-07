@@ -1,7 +1,9 @@
 import java.util.List;
 
+// This class provides utility methods for converting percentage grades to GPA scales
 public class GPACalculator {
 
+    // This method converts a percentage score to a 4.0 scale GPA
     public double convertToGPA(double percentage) {
         if (percentage >= 93)
             return 4.0;
@@ -26,6 +28,7 @@ public class GPACalculator {
         return 0.0;
     }
 
+    // This method converts a percentage score to a letter grade
     public String getLetter(double percentage) {
         if (percentage >= 93)
             return "A";
@@ -50,6 +53,7 @@ public class GPACalculator {
         return "F";
     }
 
+    // This method calculates the cumulative GPA from a list of grades
     public double calculateCumulativeGPA(List<Grade> grades) {
         if (grades == null || grades.isEmpty()) {
             return 0.0;
@@ -61,6 +65,7 @@ public class GPACalculator {
         return totalGPA / grades.size();
     }
 
+    // This method generates a formatted string report of the student's GPA
     public String generateGPAReport(Student student, List<Grade> grades, int rank, int totalStudents,
             double overallAverage) {
         StringBuilder sb = new StringBuilder();
