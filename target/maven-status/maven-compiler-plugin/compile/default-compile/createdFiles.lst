@@ -19,6 +19,7 @@ StudentSearchService.class
 ElectiveSubject.class
 GPACalculator.class
 GradeManager.class
+exceptions\InvalidFileFormatException.class
 ReportGenerator.class
 HonorsStudent.class
 Searchable.class

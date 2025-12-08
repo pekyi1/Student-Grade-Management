@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GradeManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Student-Grade-Management</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">GradeManager.java</span></div><h1>GradeManager.java</h1><pre class="source lang-java linenums">import exceptions.InvalidDataException;
+import exceptions.InvalidGradeException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+// This class handles the storage and calculation of grades for all students
+public class GradeManager {
+    private Grade[] grades;
+    private int gradeCount;
+
+<span class="fc" id="L15">    public GradeManager() {</span>
+<span class="fc" id="L16">        this.grades = new Grade[200];</span>
+<span class="fc" id="L17">        this.gradeCount = 0;</span>
+<span class="fc" id="L18">    }</span>
+
+    /**
+     * Adds a grade to the system after validating it.
+     *
+     * @param grade The Grade object to be added.
+     * @throws InvalidGradeException If the grade value is not between 0 and 100.
+     * @throws InvalidDataException  If the storage capacity has been reached.
+     */
+    public void addGrade(Grade grade) throws InvalidGradeException, InvalidDataException {
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (gradeCount &gt;= grades.length) {</span>
+<span class="nc" id="L29">            throw new InvalidDataException(&quot;Cannot add grade. Maximum capacity reached.&quot;);</span>
+        }
+<span class="pc bpc" id="L31" title="2 of 4 branches missed.">        if (grade.getGrade() &lt; 0 || grade.getGrade() &gt; 100) {</span>
+<span class="nc" id="L32">            throw new InvalidGradeException(grade.getGrade());</span>
+        }
+<span class="fc" id="L34">        grades[gradeCount++] = grade;</span>
+<span class="fc" id="L35">        System.out.println(&quot;\n✓ Grade recorded successfully!&quot;);</span>
+<span class="fc" id="L36">    }</span>
+
+    // This method prints a detailed grade history for a specific student
+    public void viewGradesByStudent(Student student) {
+<span class="nc" id="L40">        String studentId = student.getStudentId();</span>
+<span class="nc" id="L41">        boolean found = false;</span>
+
+<span class="nc" id="L43">        System.out.println(&quot;\nStudent: &quot; + studentId + &quot; - &quot; + student.getName());</span>
+<span class="nc" id="L44">        System.out.println(&quot;Type: &quot; + student.getStudentType() + &quot; Student&quot;);</span>
+<span class="nc" id="L45">        double currentAverage = calculateOverallAverage(studentId);</span>
+<span class="nc" id="L46">        System.out.printf(&quot;Current Average: %.1f%%%n&quot;, currentAverage);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        System.out.println(&quot;Status: &quot; + (student.isPassing(currentAverage) ? &quot;PASSING ✓&quot; : &quot;FAILING ✗&quot;));</span>
+
+<span class="nc" id="L49">        System.out.println(&quot;\nGRADE HISTORY&quot;);</span>
+<span class="nc" id="L50">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L51">        System.out.printf(&quot;%-8s | %-12s | %-15s | %-10s | %-8s%n&quot;, &quot;GRD ID&quot;, &quot;DATE&quot;, &quot;SUBJECT&quot;, &quot;TYPE&quot;, &quot;GRADE&quot;);</span>
+<span class="nc" id="L52">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+
+        // Display in reverse chronological order
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        for (int i = gradeCount - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (grades[i].getStudentID().equals(studentId)) {</span>
+<span class="nc" id="L57">                System.out.printf(&quot;%-8s | %-12s | %-15s | %-10s | %-8.1f%%%n&quot;,</span>
+<span class="nc" id="L58">                        grades[i].getGradeID(),</span>
+<span class="nc" id="L59">                        grades[i].getDate(),</span>
+<span class="nc" id="L60">                        grades[i].getSubject().getSubjectName(),</span>
+<span class="nc" id="L61">                        grades[i].getSubject().getSubjectType(),</span>
+<span class="nc" id="L62">                        grades[i].getGrade());</span>
+<span class="nc" id="L63">                found = true;</span>
+            }
+        }
+<span class="nc" id="L66">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (!found) {</span>
+<span class="nc" id="L69">            System.out.println(&quot;No grades recorded for this student.&quot;);</span>
+        } else {
+<span class="nc" id="L71">            System.out.println(&quot;\nTotal Grades: &quot; + getEnrolledSubjectCount(studentId));</span>
+<span class="nc" id="L72">            System.out.printf(&quot;Core Subjects Average: %.1f%%%n&quot;, calculateCoreAverage(studentId));</span>
+<span class="nc" id="L73">            System.out.printf(&quot;Elective Subjects Average: %.1f%%%n&quot;, calculateElectiveAverage(studentId));</span>
+<span class="nc" id="L74">            System.out.printf(&quot;Overall Average: %.1f%%%n&quot;, currentAverage);</span>
+
+<span class="nc" id="L76">            System.out.println(&quot;\nPerformance Summary:&quot;);</span>
+<span class="nc" id="L77">            boolean allCorePassing = checkAllCoreSubjectsPassing(studentId, student.getPassingGrade());</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            System.out.println((allCorePassing ? &quot;Yes: &quot; : &quot;No: &quot;) + &quot; Passing all core subjects&quot;);</span>
+<span class="nc" id="L79">            System.out.println(</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                    (student.isPassing(currentAverage) ? &quot;Yes: &quot; : &quot;No: &quot;) + &quot; Meeting passing grade requirement (&quot;</span>
+<span class="nc" id="L81">                            + (int) student.getPassingGrade() + &quot;%)&quot;);</span>
+        }
+
+<span class="nc" id="L84">        System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L85">        new java.util.Scanner(System.in).nextLine();</span>
+<span class="nc" id="L86">    }</span>
+
+    private boolean checkAllCoreSubjectsPassing(String studentId, double passingGrade) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (grades[i].getStudentID().equals(studentId) &amp;&amp;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                    grades[i].getSubject().getSubjectType().equals(&quot;Core&quot;)) {</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                if (grades[i].getGrade() &lt; passingGrade) {</span>
+<span class="nc" id="L93">                    return false;</span>
+                }
+            }
+        }
+<span class="nc" id="L97">        return true;</span>
+    }
+
+    // This method calculates the average of all core subject grades for a student
+    public double calculateCoreAverage(String studentId) {
+<span class="fc" id="L102">        double sum = 0;</span>
+<span class="fc" id="L103">        int count = 0;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="pc bpc" id="L105" title="2 of 4 branches missed.">            if (grades[i].getStudentID().equals(studentId) &amp;&amp; grades[i].getSubject().getSubjectType().equals(&quot;Core&quot;)) {</span>
+<span class="fc" id="L106">                sum += grades[i].getGrade();</span>
+<span class="fc" id="L107">                count++;</span>
+            }
+        }
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        return count == 0 ? 0.0 : sum / count;</span>
+    }
+
+    // This method calculates the average of all elective subject grades for a
+    // student
+    public double calculateElectiveAverage(String studentId) {
+<span class="fc" id="L116">        double sum = 0;</span>
+<span class="fc" id="L117">        int count = 0;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (grades[i].getStudentID().equals(studentId)</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                    &amp;&amp; grades[i].getSubject().getSubjectType().equals(&quot;Elective&quot;)) {</span>
+<span class="nc" id="L121">                sum += grades[i].getGrade();</span>
+<span class="nc" id="L122">                count++;</span>
+            }
+        }
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        return count == 0 ? 0.0 : sum / count;</span>
+    }
+
+    // This method calculates the overall average of all grades for a student
+    public double calculateOverallAverage(String studentId) {
+<span class="fc" id="L130">        double sum = 0;</span>
+<span class="fc" id="L131">        int count = 0;</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (grades[i].getStudentID().equals(studentId)) {</span>
+<span class="fc" id="L134">                sum += grades[i].getGrade();</span>
+<span class="fc" id="L135">                count++;</span>
+            }
+        }
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        return count == 0 ? 0.0 : sum / count;</span>
+    }
+
+    // This method counts how many subjects a student has received grades for
+    public int getEnrolledSubjectCount(String studentId) {
+<span class="fc" id="L143">        int count = 0;</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if (grades[i].getStudentID().equals(studentId)) {</span>
+<span class="fc" id="L146">                count++;</span>
+            }
+        }
+<span class="fc" id="L149">        return count;</span>
+    }
+
+    // This method retrieves a list of all grades belonging to a specific student
+    public List&lt;Grade&gt; getGradesForStudent(String studentId) {
+<span class="fc" id="L154">        List&lt;Grade&gt; studentGrades = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            if (grades[i].getStudentID().equals(studentId)) {</span>
+<span class="fc" id="L157">                studentGrades.add(grades[i]);</span>
+            }
+        }
+<span class="fc" id="L160">        return studentGrades;</span>
+    }
+
+    /**
+     * Determines a student's rank in the class based on their overall average.
+     *
+     * @param studentId The ID of the student to rank.
+     * @return The student's rank (1-based), or -1 if the student has no grades.
+     */
+    public int calculateClassRank(String studentId) {
+<span class="fc" id="L170">        Map&lt;String, Double&gt; studentAverages = new HashMap&lt;&gt;();</span>
+        // Calculate average for all students who have grades
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="fc" id="L173">            String id = grades[i].getStudentID();</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">            if (!studentAverages.containsKey(id)) {</span>
+<span class="fc" id="L175">                studentAverages.put(id, calculateOverallAverage(id));</span>
+            }
+        }
+
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (!studentAverages.containsKey(studentId)) {</span>
+<span class="fc" id="L180">            return -1;</span>
+        }
+
+<span class="fc" id="L183">        double targetAverage = calculateOverallAverage(studentId);</span>
+<span class="fc" id="L184">        int rank = 1;</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        for (double avg : studentAverages.values()) {</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            if (avg &gt; targetAverage) {</span>
+<span class="fc" id="L187">                rank++;</span>
+            }
+<span class="fc" id="L189">        }</span>
+<span class="fc" id="L190">        return rank;</span>
+    }
+
+    /**
+     * Counts the total number of unique students who have recorded grades.
+     *
+     * @return The count of students with at least one grade.
+     */
+    public int getTotalStudentsWithGrades() {
+<span class="nc" id="L199">        Set&lt;String&gt; studentsWithGrades = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="nc" id="L201">            studentsWithGrades.add(grades[i].getStudentID());</span>
+        }
+<span class="nc" id="L203">        return studentsWithGrades.size();</span>
+    }
+
+    /**
+     * Retrieves a list of all grades recorded in the system.
+     *
+     * @return A list of all Grade objects.
+     */
+    public List&lt;Grade&gt; getAllGrades() {
+<span class="nc" id="L212">        List&lt;Grade&gt; allGrades = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">        for (int i = 0; i &lt; gradeCount; i++) {</span>
+<span class="nc" id="L214">            allGrades.add(grades[i]);</span>
+        }
+<span class="nc" id="L216">        return allGrades;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

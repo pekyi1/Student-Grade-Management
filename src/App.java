@@ -342,7 +342,7 @@ public class App {
                         enteringGrade = false;
                         recording = false; // Exit loop after successful recording or cancellation
                     } catch (IllegalArgumentException e) {
-                        System.out.println("\nX ERROR: InvalidGradeException");
+                        System.out.println("\nX ERROR: Invalid grade entered");
                         System.out.println(e.getMessage());
                         System.out.println("You entered: " + gradeValue);
 
@@ -355,7 +355,6 @@ public class App {
                 }
             } catch (StudentNotFoundException e) {
                 Logger.logError("Student not found", e);
-                System.out.println("X ERROR: " + e.getMessage());
                 System.out.println("Available student IDs: ");
                 for (Student s : studentManager.getAllStudents()) {
                     System.out.println("- ID: " + s.getStudentId() + ", Name: " + s.getName());

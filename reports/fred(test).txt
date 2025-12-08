@@ -1,0 +1,14 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU021 Fred Pekyi
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-08   | Mathematics     | Core       | 89.0    %
+2025-12-08   | English         | Core       | 87.0    %
+2025-12-08   | Science         | Core       | 99.0    %
+2025-12-08   | Art             | Elective   | 57.0    %
+2025-12-08   | Physical Education | Elective   | 77.0    %
+__________________________________________________

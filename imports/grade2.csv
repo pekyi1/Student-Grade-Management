@@ -1,4 +1,4 @@
 StudentID, SubjectName, Subject Type, Grade
-STU003, Science, 78, Core
+STU003, Science, 78, Core, something
 STU004, History, 98, Core
-STU005, Music, 95, Elective
+STU005, Music, 95

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Student-Grade-Management</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">StudentManager.java</span></div><h1>StudentManager.java</h1><pre class="source lang-java linenums">import exceptions.InvalidDataException;
+import exceptions.StudentNotFoundException;
+import java.util.Scanner;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// This class manages the collection of students and deals with adding or finding them
+public class StudentManager implements Searchable {
+    private Student[] students;
+    private int studentCount;
+
+<span class="fc" id="L13">    public StudentManager() {</span>
+<span class="fc" id="L14">        this.students = new Student[50];</span>
+<span class="fc" id="L15">        this.studentCount = 0;</span>
+<span class="fc" id="L16">    }</span>
+
+    /**
+     * Adds a new student to the system after performing validation checks.
+     *
+     * @param student The student object to be added.
+     * @throws InvalidDataException If the student data is invalid (e.g., empty
+     *                              name, invalid age/email/phone) or capacity is
+     *                              reached.
+     */
+    public void addStudent(Student student) throws InvalidDataException {
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (studentCount &gt;= students.length) {</span>
+<span class="nc" id="L28">            throw new InvalidDataException(&quot;Cannot add student. Maximum capacity reached.&quot;);</span>
+        }
+<span class="pc bpc" id="L30" title="2 of 4 branches missed.">        if (student.getName() == null || student.getName().trim().isEmpty()) {</span>
+<span class="nc" id="L31">            throw new InvalidDataException(&quot;Student name cannot be empty.&quot;);</span>
+        }
+<span class="fc" id="L33">        utils.ValidationUtils.validateAge(student.getAge());</span>
+<span class="fc" id="L34">        utils.ValidationUtils.validateEmail(student.getEmail());</span>
+<span class="fc" id="L35">        utils.ValidationUtils.validatePhone(student.getPhone());</span>
+
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (findStudent(student.getStudentId()) != null) {</span>
+<span class="nc" id="L38">            throw new InvalidDataException(&quot;Student with ID &quot; + student.getStudentId() + &quot; already exists.&quot;);</span>
+        }
+
+<span class="fc" id="L41">        students[studentCount++] = student;</span>
+<span class="fc" id="L42">        System.out.println(&quot;\n-&gt; Student added successfully!&quot;);</span>
+<span class="fc" id="L43">        System.out.println(&quot;  Student ID: &quot; + student.getStudentId());</span>
+<span class="fc" id="L44">        System.out.println(&quot;  Name: &quot; + student.getName());</span>
+<span class="fc" id="L45">        System.out.println(&quot;  Type: &quot; + student.getStudentType());</span>
+<span class="fc" id="L46">        System.out.println(&quot;  Age: &quot; + student.getAge());</span>
+<span class="fc" id="L47">        System.out.println(&quot;  Email: &quot; + student.getEmail());</span>
+<span class="fc" id="L48">        System.out.printf(&quot;  Passing Grade: %.0f%%%n&quot;, student.getPassingGrade());</span>
+<span class="fc" id="L49">        System.out.println(&quot;  Status: &quot; + student.getStatus());</span>
+<span class="fc" id="L50">    }</span>
+
+    /**
+     * Attempts to locate a student by their unique ID.
+     *
+     * @param studentId The unique identifier of the student.
+     * @return The Student object if found, or null if not found.
+     */
+    public Student findStudent(String studentId) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (int i = 0; i &lt; studentCount; i++) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (students[i].getStudentId().equals(studentId)) {</span>
+<span class="fc" id="L61">                return students[i];</span>
+            }
+        }
+<span class="fc" id="L64">        return null; // Returning null here to allow caller to decide if it's an exception or just a</span>
+                     // check
+    }
+
+    // This method finds all students whose names match the search string
+    @Override
+    public List&lt;Student&gt; searchByName(String name) {
+<span class="nc" id="L71">        List&lt;Student&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        for (int i = 0; i &lt; studentCount; i++) {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (students[i].getName().toLowerCase().contains(name.toLowerCase())) {</span>
+<span class="nc" id="L74">                results.add(students[i]);</span>
+            }
+        }
+<span class="nc" id="L77">        return results;</span>
+    }
+
+    /**
+     * Retrieves a student by their ID, throwing an exception if not found.
+     *
+     * @param studentId The unique identifier of the student.
+     * @return The Student object.
+     * @throws StudentNotFoundException If no student matches the provided ID.
+     */
+    public Student getStudent(String studentId) throws StudentNotFoundException {
+<span class="fc" id="L88">        Student student = findStudent(studentId);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (student == null) {</span>
+<span class="fc" id="L90">            throw new StudentNotFoundException(studentId);</span>
+        }
+<span class="fc" id="L92">        return student;</span>
+    }
+
+    // This method prints a list of all students and their summary details
+    public void viewAllStudents(GradeManager gm) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (studentCount == 0) {</span>
+<span class="nc" id="L98">            System.out.println(&quot;No students found.&quot;);</span>
+<span class="nc" id="L99">            return;</span>
+        }
+<span class="nc" id="L101">        System.out.println(&quot;\nSTUDENT LISTING&quot;);</span>
+<span class="nc" id="L102">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+<span class="nc" id="L103">        System.out.printf(&quot;%-8s | %-15s | %-10s | %-9s | %-10s%n&quot;, &quot;STU ID&quot;, &quot;NAME&quot;, &quot;TYPE&quot;, &quot;AVG GRADE&quot;, &quot;STATUS&quot;);</span>
+<span class="nc" id="L104">        System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (int i = 0; i &lt; studentCount; i++) {</span>
+<span class="nc" id="L107">            double avg = gm.calculateOverallAverage(students[i].getStudentId());</span>
+<span class="nc" id="L108">            int enrolledSubjects = gm.getEnrolledSubjectCount(students[i].getStudentId());</span>
+<span class="nc" id="L109">            students[i].displayStudentDetails(avg, enrolledSubjects);</span>
+<span class="nc" id="L110">            System.out.println(&quot;__________________________________________________________________________________&quot;);</span>
+        }
+<span class="nc" id="L112">        System.out.println(&quot;\nTotal Students: &quot; + studentCount);</span>
+<span class="nc" id="L113">        System.out.printf(&quot;Average Class Grade: %.1f%%%n&quot;, getAverageClassGrade(gm));</span>
+
+<span class="nc" id="L115">        System.out.println(&quot;\nPress Enter to continue...&quot;);</span>
+<span class="nc" id="L116">        new Scanner(System.in).nextLine();</span>
+<span class="nc" id="L117">    }</span>
+
+    /**
+     * Calculates the average grade across all students in the class.
+     *
+     * @param gm The GradeManager instance used to calculate individual student
+     *           averages.
+     * @return The class-wide average grade percentage.
+     */
+    public double getAverageClassGrade(GradeManager gm) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (studentCount == 0)</span>
+<span class="nc" id="L128">            return 0.0;</span>
+
+<span class="nc" id="L130">        double totalAverage = 0.0;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        for (int i = 0; i &lt; studentCount; i++) {</span>
+<span class="nc" id="L132">            totalAverage += gm.calculateOverallAverage(students[i].getStudentId());</span>
+        }
+<span class="nc" id="L134">        return totalAverage / studentCount;</span>
+    }
+
+    public Student[] getAllStudents() {
+<span class="fc" id="L138">        Student[] result = new Student[studentCount];</span>
+<span class="fc" id="L139">        System.arraycopy(students, 0, result, 0, studentCount);</span>
+<span class="fc" id="L140">        return result;</span>
+    }
+
+    public int getStudentCount() {
+<span class="nc" id="L144">        return studentCount;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -32,10 +32,6 @@ public class ClassStatisticsTest {
         // Note: Students are not linked to grades by object ref, but by ID potentially
         // if report uses lookup.
         // Grade objects have studentId. Student objects have studentId
-        // (auto-generated).
-        // Testing might be tricky if IDs don't match.
-        // Grade constructor takes StudentID string.
-        // I need to ensure Grade objects are created with IDs from Student objects.
 
         Grade realG1 = new Grade(s1.getStudentId(), math, 90.0);
         Grade realG2 = new Grade(s2.getStudentId(), math, 80.0);

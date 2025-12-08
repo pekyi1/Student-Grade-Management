@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentSearchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Student-Grade-Management</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">StudentSearchService.java</span></div><h1>StudentSearchService.java</h1><pre class="source lang-java linenums">import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+
+// This class handles student search operations and result processing
+<span class="fc" id="L7">public class StudentSearchService {</span>
+
+    // This method searches for a student by their exact ID
+    public void searchById(Scanner scanner, StudentManager sm, GradeManager gm) {
+<span class="nc" id="L11">        System.out.print(&quot;Enter Student ID: &quot;);</span>
+<span class="nc" id="L12">        String id = scanner.nextLine().trim();</span>
+<span class="nc" id="L13">        Student student = sm.findStudent(id);</span>
+<span class="nc" id="L14">        List&lt;Student&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L15" title="All 2 branches missed.">        if (student != null) {</span>
+<span class="nc" id="L16">            results.add(student);</span>
+        }
+<span class="nc" id="L18">        displaySearchResults(results, gm);</span>
+<span class="nc bnc" id="L19" title="All 2 branches missed.">        if (!results.isEmpty()) {</span>
+<span class="nc" id="L20">            handleSearchActions(results, scanner, sm, gm);</span>
+        }
+<span class="nc" id="L22">    }</span>
+
+    // This method searches for students by a partial name match
+    public void searchByName(Scanner scanner, StudentManager sm, GradeManager gm) {
+<span class="nc" id="L26">        System.out.print(&quot;Enter name (partial or full): &quot;);</span>
+<span class="nc" id="L27">        String nameFragment = scanner.nextLine().trim().toLowerCase();</span>
+
+<span class="nc" id="L29">        List&lt;Student&gt; results = findStudentsByName(sm.getAllStudents(), nameFragment);</span>
+
+<span class="nc" id="L31">        displaySearchResults(results, gm);</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if (!results.isEmpty()) {</span>
+<span class="nc" id="L33">            handleSearchActions(results, scanner, sm, gm);</span>
+        }
+<span class="nc" id="L35">    }</span>
+
+    public List&lt;Student&gt; findStudentsByName(Student[] allStudents, String nameFragment) {
+<span class="fc" id="L38">        List&lt;Student&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L39">        String search = nameFragment.toLowerCase();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for (Student s : allStudents) {</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            if (s.getName().toLowerCase().contains(search)) {</span>
+<span class="fc" id="L42">                results.add(s);</span>
+            }
+        }
+<span class="fc" id="L45">        return results;</span>
+    }
+
+    // This method searches for students whose average grade falls within a range
+    public void searchByGradeRange(Scanner scanner, StudentManager sm, GradeManager gm) {
+        while (true) {
+            try {
+<span class="nc" id="L52">                double min = getDoubleInput(scanner, &quot;Enter minimum grade: &quot;);</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">                if (min &lt; 0 || min &gt; 100) {</span>
+<span class="nc" id="L54">                    throw new exceptions.InvalidGradeException(min);</span>
+                }
+
+<span class="nc" id="L57">                double max = getDoubleInput(scanner, &quot;Enter maximum grade: &quot;);</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">                if (max &lt; 0 || max &gt; 100) {</span>
+<span class="nc" id="L59">                    throw new exceptions.InvalidGradeException(max);</span>
+                }
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (min &gt; max) {</span>
+<span class="nc" id="L63">                    System.out.println(&quot;Error: Minimum grade cannot be greater than maximum grade. Please try again.&quot;);</span>
+<span class="nc" id="L64">                    continue;</span>
+                }
+
+<span class="nc" id="L67">                Student[] allStudents = sm.getAllStudents();</span>
+<span class="nc" id="L68">                List&lt;Student&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                for (Student s : allStudents) {</span>
+<span class="nc" id="L70">                    double avg = gm.calculateOverallAverage(s.getStudentId());</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">                    if (avg &gt;= min &amp;&amp; avg &lt;= max) {</span>
+<span class="nc" id="L72">                        results.add(s);</span>
+                    }
+                }
+<span class="nc" id="L75">                displaySearchResults(results, gm);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                if (!results.isEmpty()) {</span>
+<span class="nc" id="L77">                    handleSearchActions(results, scanner, sm, gm);</span>
+                }
+<span class="nc" id="L79">                break; // Exit loop after successful search</span>
+<span class="nc" id="L80">            } catch (exceptions.InvalidGradeException e) {</span>
+<span class="nc" id="L81">                System.out.println(&quot;Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L82">                System.out.println(&quot;Please try again.&quot;);</span>
+<span class="nc" id="L83">            }</span>
+        }
+<span class="nc" id="L85">    }</span>
+
+    // This method filters students by their type (Regular or Honors)
+    public void searchByType(Scanner scanner, StudentManager sm, GradeManager gm) {
+<span class="nc" id="L89">        System.out.println(&quot;Select Student Type:&quot;);</span>
+<span class="nc" id="L90">        System.out.println(&quot;1. Regular&quot;);</span>
+<span class="nc" id="L91">        System.out.println(&quot;2. Honors&quot;);</span>
+<span class="nc" id="L92">        System.out.print(&quot;Select option (1-2): &quot;);</span>
+<span class="nc" id="L93">        String choice = scanner.nextLine().trim();</span>
+<span class="nc bnc" id="L94" title="All 4 branches missed.">        String type = choice.equals(&quot;1&quot;) ? &quot;Regular&quot; : (choice.equals(&quot;2&quot;) ? &quot;Honors&quot; : &quot;&quot;);</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (type.isEmpty()) {</span>
+<span class="nc" id="L97">            System.out.println(&quot;Invalid type selected.&quot;);</span>
+<span class="nc" id="L98">            return;</span>
+        }
+
+<span class="nc" id="L101">        List&lt;Student&gt; results = findStudentsByType(sm.getAllStudents(), type);</span>
+
+<span class="nc" id="L103">        displaySearchResults(results, gm);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (!results.isEmpty()) {</span>
+<span class="nc" id="L105">            handleSearchActions(results, scanner, sm, gm);</span>
+        }
+<span class="nc" id="L107">    }</span>
+
+    public List&lt;Student&gt; findStudentsByType(Student[] allStudents, String type) {
+<span class="fc" id="L110">        List&lt;Student&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (Student s : allStudents) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (s.getStudentType().equalsIgnoreCase(type)) {</span>
+<span class="fc" id="L113">                results.add(s);</span>
+            }
+        }
+<span class="fc" id="L116">        return results;</span>
+    }
+
+    private void displaySearchResults(List&lt;Student&gt; results, GradeManager gm) {
+<span class="nc" id="L120">        System.out.println(&quot;\nSEARCH RESULTS (&quot; + results.size() + &quot; found)&quot;);</span>
+<span class="nc" id="L121">        System.out.println(&quot;__________________________________________________&quot;);</span>
+<span class="nc" id="L122">        System.out.printf(&quot;%-8s | %-20s | %-10s | %s%n&quot;, &quot;STU ID&quot;, &quot;NAME&quot;, &quot;TYPE&quot;, &quot;AVG&quot;);</span>
+<span class="nc" id="L123">        System.out.println(&quot;__________________________________________________&quot;);</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (results.isEmpty()) {</span>
+<span class="nc" id="L126">            System.out.println(&quot;No students found matching criteria.&quot;);</span>
+        } else {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            for (Student s : results) {</span>
+<span class="nc" id="L129">                double avg = gm.calculateOverallAverage(s.getStudentId());</span>
+<span class="nc" id="L130">                System.out.printf(&quot;%-8s | %-20s | %-10s | %.1f%%%n&quot;,</span>
+<span class="nc" id="L131">                        s.getStudentId(),</span>
+<span class="nc" id="L132">                        truncate(s.getName(), 20),</span>
+<span class="nc" id="L133">                        s.getStudentType(),</span>
+<span class="nc" id="L134">                        avg);</span>
+<span class="nc" id="L135">            }</span>
+        }
+<span class="nc" id="L137">        System.out.println(&quot;__________________________________________________&quot;);</span>
+<span class="nc" id="L138">    }</span>
+
+    // This method processes user actions on search results (view details, export)
+    private void handleSearchActions(List&lt;Student&gt; results, Scanner scanner, StudentManager sm, GradeManager gm) {
+<span class="nc" id="L142">        System.out.println(&quot;\nActions:&quot;);</span>
+<span class="nc" id="L143">        System.out.println(&quot;1. View full details for a student&quot;);</span>
+<span class="nc" id="L144">        System.out.println(&quot;2. Export search results&quot;);</span>
+<span class="nc" id="L145">        System.out.println(&quot;3. New search&quot;);</span>
+<span class="nc" id="L146">        System.out.println(&quot;4. Return to main menu&quot;);</span>
+<span class="nc" id="L147">        System.out.print(&quot;\nEnter choice: &quot;);</span>
+
+<span class="nc" id="L149">        String choice = scanner.nextLine().trim();</span>
+<span class="nc bnc" id="L150" title="All 5 branches missed.">        switch (choice) {</span>
+            case &quot;1&quot;:
+                while (true) {
+<span class="nc" id="L153">                    System.out.print(&quot;Enter Student ID from list (or '0' to cancel): &quot;);</span>
+<span class="nc" id="L154">                    String id = scanner.nextLine().trim();</span>
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                    if (id.equals(&quot;0&quot;)) {</span>
+<span class="nc" id="L157">                        break;</span>
+                    }
+
+<span class="nc" id="L160">                    Student s = sm.findStudent(id);</span>
+<span class="nc bnc" id="L161" title="All 4 branches missed.">                    if (s != null &amp;&amp; results.contains(s)) {</span>
+<span class="nc" id="L162">                        gm.viewGradesByStudent(s);</span>
+<span class="nc" id="L163">                        break;</span>
+                    } else {
+<span class="nc" id="L165">                        System.out.println(&quot;Student not found in search results. Please try again.&quot;);</span>
+                    }
+<span class="nc" id="L167">                }</span>
+                break;
+            case &quot;2&quot;:
+<span class="nc" id="L170">                exportSearchResults(results, scanner);</span>
+<span class="nc" id="L171">                break;</span>
+            case &quot;3&quot;:
+<span class="nc" id="L173">                break;</span>
+            case &quot;4&quot;:
+<span class="nc" id="L175">                return;</span>
+            default:
+<span class="nc" id="L177">                System.out.println(&quot;Invalid choice.&quot;);</span>
+        }
+<span class="nc" id="L179">    }</span>
+
+    // This method exports search results to a file
+    private void exportSearchResults(List&lt;Student&gt; results, Scanner scanner) {
+<span class="nc" id="L183">        System.out.print(&quot;Enter filename for export (without extension): &quot;);</span>
+<span class="nc" id="L184">        String filename = scanner.nextLine().trim();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (filename.isEmpty())</span>
+<span class="nc" id="L186">            filename = &quot;search_results&quot;;</span>
+
+        try {
+<span class="nc" id="L189">            FileExporter exporter = new FileExporter();</span>
+<span class="nc" id="L190">            String path = exporter.exportList(results, filename);</span>
+<span class="nc" id="L191">            System.out.println(&quot;Results exported to: &quot; + path);</span>
+<span class="nc" id="L192">        } catch (java.io.IOException e) {</span>
+<span class="nc" id="L193">            System.out.println(&quot;Error exporting results: &quot; + e.getMessage());</span>
+<span class="nc" id="L194">        }</span>
+<span class="nc" id="L195">    }</span>
+
+    private double getDoubleInput(Scanner scanner, String prompt) {
+        while (true) {
+            try {
+<span class="nc" id="L200">                System.out.print(prompt);</span>
+<span class="nc" id="L201">                return Double.parseDouble(scanner.nextLine().trim());</span>
+<span class="nc" id="L202">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L203">                System.out.println(&quot;Invalid input. Please enter a number.&quot;);</span>
+<span class="nc" id="L204">            }</span>
+        }
+    }
+
+    private String truncate(String str, int width) {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (str.length() &gt; width) {</span>
+<span class="nc" id="L210">            return str.substring(0, width - 3) + &quot;...&quot;;</span>
+        }
+<span class="nc" id="L212">        return str;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
