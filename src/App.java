@@ -1,4 +1,3 @@
-
 import exceptions.GradeManagementException;
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
@@ -26,7 +25,7 @@ public class App {
      */
     public static void main(String[] args) {
         // Seed data for testing
-        DataSeeder.seedStudents(studentManager);
+        DataSeeder.seedStudents(studentManager, gradeManager);
 
         boolean running = true;
         while (running) {
@@ -342,7 +341,7 @@ public class App {
                         enteringGrade = false;
                         recording = false; // Exit loop after successful recording or cancellation
                     } catch (IllegalArgumentException e) {
-                        System.out.println("\nX ERROR: InvalidGradeException");
+                        System.out.println("\nX ERROR: You entered an invalid grade value");
                         System.out.println(e.getMessage());
                         System.out.println("You entered: " + gradeValue);
 

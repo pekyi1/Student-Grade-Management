@@ -1,7 +1,7 @@
 //I have created this class to create some seed data so that 
 //I dont have to always add a new student when i update the code
 public class DataSeeder {
-    public static void seedStudents(StudentManager studentManager) {
+    public static void seedStudents(StudentManager studentManager, GradeManager gradeManager) {
         try {
             studentManager.addStudent(new RegularStudent("Alice Johnson", 18, "alice@example.com", "5555550101")); // STU001
             studentManager.addStudent(new HonorsStudent("Bob Smith", 19, "bob@example.com", "5555550102")); // STU002
@@ -25,6 +25,45 @@ public class DataSeeder {
             studentManager.addStudent(new RegularStudent("Tony Stark", 19, "tony@example.com", "5555550120")); // STU020
 
             System.out.println("✓ Seeded 20 students (STU001 - STU020)");
+
+            // Now add some sample grades for Bob Smith (STU002) if gradeManager is provided
+            if (gradeManager != null) {
+                // find Bob Smith by name from the student manager
+                Student bob = null;
+                for (Student s : studentManager.getAllStudents()) {
+                    if (s.getName().equalsIgnoreCase("Bob Smith")) {
+                        bob = s;
+                        break;
+                    }
+                }
+
+                if (bob != null) {
+                    String bobId = bob.getStudentId();
+                    try {
+                        // Core subjects
+                        Subject math = new CoreSubject("Mathematics", "MAT101");
+                        Subject english = new CoreSubject("English", "ENG101");
+                        Subject science = new CoreSubject("Science", "SCI101");
+
+                        // Electives
+                        Subject music = new ElectiveSubject("Music", "MUS101");
+                        Subject art = new ElectiveSubject("Art", "ART101");
+
+                        gradeManager.addGrade(new Grade(bobId, math, 88.5));
+                        gradeManager.addGrade(new Grade(bobId, english, 76.0));
+                        gradeManager.addGrade(new Grade(bobId, science, 69.5));
+                        gradeManager.addGrade(new Grade(bobId, music, 92.0));
+                        gradeManager.addGrade(new Grade(bobId, art, 81.0));
+
+                        System.out.println("✓ Seeded sample grades for Bob Smith (STU002)");
+                    } catch (Exception ex) {
+                        System.out.println("Error seeding grades for Bob Smith: " + ex.getMessage());
+                    }
+                } else {
+                    System.out.println("Could not find Bob Smith to seed grades.");
+                }
+            }
+
         } catch (Exception e) {
             System.out.println("Error seeding data: " + e.getMessage());
         }
