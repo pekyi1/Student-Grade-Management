@@ -3,6 +3,8 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import models.*;
+import services.GPACalculator;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GPACalculatorTest {

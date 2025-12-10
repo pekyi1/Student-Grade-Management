@@ -4,6 +4,9 @@ import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
 import utils.Logger;
 import java.util.Scanner;
+import models.*;
+import services.*;
+import interfaces.*;
 
 // This class is the main entry point for the Student Grade Management System
 public class App {
