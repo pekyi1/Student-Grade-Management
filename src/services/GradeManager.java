@@ -29,12 +29,32 @@ public class GradeManager {
      * @throws InvalidDataException  If the storage capacity has been reached.
      */
     public void addGrade(Grade grade) throws InvalidGradeException, InvalidDataException {
-        if (gradeCount >= grades.length) {
-            throw new InvalidDataException("Cannot add grade. Maximum capacity reached.");
-        }
         if (grade.getGrade() < 0 || grade.getGrade() > 100) {
             throw new InvalidGradeException(grade.getGrade());
         }
+
+        // Check for existing grade for this student and subject
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentID().equals(grade.getStudentID()) &&
+                    grades[i].getSubject().equals(grade.getSubject())) {
+
+                // Update existing grade
+                grades[i].recordGrade(grade.getGrade());
+                // grades[i].setDate(grade.getDate()); // Date setter not available, but logic
+                // implies update.
+                // Since Grade date is set on creation/modification, we might want to update it
+                // if possible,
+                // but Grade.java only has recordGrade which updates the value.
+                // For now, updating value is the critical request.
+                System.out.println("\n✓ Grade updated successfully!");
+                return;
+            }
+        }
+
+        if (gradeCount >= grades.length) {
+            throw new InvalidDataException("Cannot add grade. Maximum capacity reached.");
+        }
+
         grades[gradeCount++] = grade;
         System.out.println("\n✓ Grade recorded successfully!");
     }

@@ -82,7 +82,7 @@ public class BulkImportService {
                     successCount++;
                 } catch (Exception e) {
                     failCount++;
-                    errors.add("Row " + (totalRows + 1) + ": " + e.getMessage());
+                    errors.add("Row " + totalRows + ": " + e.getMessage());
                 }
             }
         } catch (IOException e) {
