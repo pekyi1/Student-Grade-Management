@@ -1,4 +1,9 @@
-StudentID, SubjectName, Subject Type, Grade
-STU003, Science, 78, Core
-STU004, History, 98, Core
-STU005, Music, 95, Elective
+STU003, Science, Core, 78
+STU004, History, Core, 98
+STU005, Music, Elective, 95
+STU006, Art, Elective, 85
+STU007, Physical Education, Core, 88
+STU008, Chemistry, Core, 92
+STU009, Biology, Core, 87
+STU010, Physics, 90
+STU011, Computer Science, Elective, 85

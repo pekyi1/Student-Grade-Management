@@ -219,4 +219,17 @@ public class GradeManager {
         }
         return allGrades;
     }
+
+    /**
+     * Retrieves a list of all unique subjects currently recorded in the system.
+     *
+     * @return A list of unique Subject objects.
+     */
+    public List<models.Subject> getAllUniqueSubjects() {
+        Set<models.Subject> subjects = new HashSet<>();
+        for (int i = 0; i < gradeCount; i++) {
+            subjects.add(grades[i].getSubject());
+        }
+        return new ArrayList<>(subjects);
+    }
 }

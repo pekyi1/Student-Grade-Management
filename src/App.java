@@ -3,7 +3,12 @@ import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
 import utils.Logger;
+import utils.Logger;
 import java.util.Scanner;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import models.*;
 import services.*;
 import interfaces.*;
@@ -204,108 +209,77 @@ public class App {
 
                 while (selectingSubject) {
                     System.out.println("\nSubject type:");
-                    System.out.println("1. Core Subject (Mathematics, English, Science)");
-                    System.out.println("2. Elective Subject (Music, Art, Physical Education)");
+                    System.out.println("1. Core Subject");
+                    System.out.println("2. Elective Subject");
                     int subjectTypeChoice = getIntInput("\nSelect type (1-2): ");
 
+                    String selectedType = "";
                     if (subjectTypeChoice == 1) {
-                        boolean selectingCore = true;
-                        while (selectingCore) {
-                            System.out.println("\nAvailable Core Subjects:");
-                            System.out.println("1. Mathematics");
-                            System.out.println("2. English");
-                            System.out.println("3. Science");
-                            int subjectChoice = getIntInput("\nSelect subject (1-3): ");
-                            switch (subjectChoice) {
-                                case 1:
-                                    subjectName = "Mathematics";
-                                    subjectCode = "MAT101";
-                                    selectingCore = false;
-                                    break;
-                                case 2:
-                                    subjectName = "English";
-                                    subjectCode = "ENG101";
-                                    selectingCore = false;
-                                    break;
-                                case 3:
-                                    subjectName = "Science";
-                                    subjectCode = "SCI101";
-                                    selectingCore = false;
-                                    break;
-                                default:
-                                    System.out.println("Invalid subject choice.");
-                                    String retry = getStringInput("Try again? (Y/N): ");
-                                    if (!retry.equalsIgnoreCase("y")) {
-                                        selectingCore = false;
-                                        // Go back to subject type selection or exit?
-                                        // User request implies "try again" for exception/invalid option.
-                                        // If they say no, we should probably break out of subject selection entirely or
-                                        // go back to type.
-                                        // Let's assume breaking out of specific selection loop, effectively cancelling
-                                        // if they say no to retry.
-                                        // But here we are inside selectingCore.
-                                    }
-                            }
-                        }
-                        if (!subjectName.isEmpty()) {
-                            subject = new CoreSubject(subjectName, subjectCode);
-                            selectingSubject = false;
-                        } else {
-                            // If we exited selectingCore without a subject, ask if they want to retry
-                            // subject type or exit
-                            String retry = getStringInput("Try selecting subject type again? (Y/N): ");
-                            if (!retry.equalsIgnoreCase("y")) {
-                                return;
-                            }
-                        }
-
+                        selectedType = "Core";
                     } else if (subjectTypeChoice == 2) {
-                        boolean selectingElective = true;
-                        while (selectingElective) {
-                            System.out.println("\nAvailable Elective Subjects:");
-                            System.out.println("1. Music");
-                            System.out.println("2. Art");
-                            System.out.println("3. Physical Education");
-                            int subjectChoice = getIntInput("\nSelect subject (1-3): ");
-                            switch (subjectChoice) {
-                                case 1:
-                                    subjectName = "Music";
-                                    subjectCode = "MUS101";
-                                    selectingElective = false;
-                                    break;
-                                case 2:
-                                    subjectName = "Art";
-                                    subjectCode = "ART101";
-                                    selectingElective = false;
-                                    break;
-                                case 3:
-                                    subjectName = "Physical Education";
-                                    subjectCode = "PE101";
-                                    selectingElective = false;
-                                    break;
-                                default:
-                                    System.out.println("Invalid subject choice.");
-                                    String retry = getStringInput("Try again? (Y/N): ");
-                                    if (!retry.equalsIgnoreCase("y")) {
-                                        selectingElective = false;
-                                    }
-                            }
-                        }
-                        if (!subjectName.isEmpty()) {
-                            subject = new ElectiveSubject(subjectName, subjectCode);
-                            selectingSubject = false;
-                        } else {
-                            String retry = getStringInput("Try selecting subject type again? (Y/N): ");
-                            if (!retry.equalsIgnoreCase("y")) {
-                                return;
-                            }
-                        }
+                        selectedType = "Elective";
                     } else {
                         System.out.println("Invalid subject type.");
                         String retry = getStringInput("Try again? (Y/N): ");
                         if (!retry.equalsIgnoreCase("y")) {
                             System.out.println("Grade not recorded.");
                             return;
+                        }
+                        continue;
+                    }
+
+                    // Dynamic Listing
+                    List<Subject> uniqueSubjects = gradeManager.getAllUniqueSubjects();
+                    List<Subject> filteredSubjects = new ArrayList<>();
+                    for (Subject s : uniqueSubjects) {
+                        if (s.getSubjectType().equalsIgnoreCase(selectedType)) {
+                            filteredSubjects.add(s);
+                        }
+                    }
+                    // Sort by name
+                    Collections.sort(filteredSubjects, new Comparator<Subject>() {
+                        @Override
+                        public int compare(Subject s1, Subject s2) {
+                            return s1.getSubjectName().compareToIgnoreCase(s2.getSubjectName());
+                        }
+                    });
+
+                    System.out.println("\nAvailable " + selectedType + " Subjects:");
+                    int i = 0;
+                    for (Subject s : filteredSubjects) {
+                        System.out.println((i + 1) + ". " + s.getSubjectName());
+                        i++;
+                    }
+                    int otherIndex = i + 1;
+                    System.out.println(otherIndex + ". Other (Add New)");
+
+                    int subjectChoice = getIntInput("\nSelect subject (1-" + otherIndex + "): ");
+
+                    if (subjectChoice > 0 && subjectChoice <= filteredSubjects.size()) {
+                        subject = filteredSubjects.get(subjectChoice - 1);
+                        subjectName = subject.getSubjectName();
+                        subjectCode = subject.getSubjectCode();
+                        selectingSubject = false;
+                    } else if (subjectChoice == otherIndex) {
+                        System.out.println("\nEnter New Subject Details:");
+                        subjectName = getStringInput("Subject Name: ");
+                        subjectCode = getStringInput("Subject Code: ");
+                        if (subjectName.trim().isEmpty() || subjectCode.trim().isEmpty()) {
+                            System.out.println("Name and Code cannot be empty.");
+                            continue;
+                        }
+
+                        if (selectedType.equals("Core")) {
+                            subject = new CoreSubject(subjectName, subjectCode);
+                        } else {
+                            subject = new ElectiveSubject(subjectName, subjectCode);
+                        }
+                        selectingSubject = false;
+                    } else {
+                        System.out.println("Invalid subject choice.");
+                        String retry = getStringInput("Try again? (Y/N): ");
+                        if (!retry.equalsIgnoreCase("y")) {
+                            // Loop continues
                         }
                     }
                 }

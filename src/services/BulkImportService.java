@@ -92,7 +92,7 @@ public class BulkImportService {
         } catch (InvalidFileFormatException e) {
             System.out.println("X ERROR: " + e.getMessage());
             Logger.logError("Invalid file format", e);
-            return;
+            errors.add("Fatal Error: " + e.getMessage());
         }
 
         generateImportLog(errors, successCount, failCount, totalRows);
