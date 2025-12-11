@@ -1,0 +1,13 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU011 Kevin Hart
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-10   | Computer Science | Elective   | 85.0    %
+2025-12-10   | Computer Science | Elective   | 88.0    %
+2025-12-10   | Physical Education | Elective   | 95.0    %
+2025-12-10   | Music           | Elective   | 85.0    %
+__________________________________________________

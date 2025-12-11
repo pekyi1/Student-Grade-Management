@@ -3,6 +3,9 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import models.*;
+import services.StudentSearchService;
+import services.StudentManager;
 import exceptions.InvalidDataException;
 import static org.junit.jupiter.api.Assertions.*;
 

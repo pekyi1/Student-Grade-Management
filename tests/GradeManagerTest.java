@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import java.util.List;
+import models.*;
+import services.GradeManager;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GradeManagerTest {

@@ -1,0 +1,14 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU002 Bob Smith
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-10   | Mathematics     | Core       | 88.5    %
+2025-12-10   | English         | Core       | 76.0    %
+2025-12-10   | Science         | Core       | 69.5    %
+2025-12-10   | Music           | Elective   | 92.0    %
+2025-12-10   | Art             | Elective   | 81.0    %
+__________________________________________________
