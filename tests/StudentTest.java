@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test;
+import models.*;
 import exceptions.InvalidDataException;
 import static org.junit.jupiter.api.Assertions.*;
 
