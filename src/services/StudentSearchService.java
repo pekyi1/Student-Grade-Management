@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import models.Student;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 // This class handles student search operations and result processing
 public class StudentSearchService {
@@ -13,14 +12,19 @@ public class StudentSearchService {
     public void searchById(Scanner scanner, StudentManager sm, GradeManager gm) {
         System.out.print("Enter Student ID: ");
         String id = scanner.nextLine().trim();
-        Student student = sm.findStudent(id);
-        List<Student> results = new ArrayList<>();
-        if (student != null) {
-            results.add(student);
-        }
-        displaySearchResults(results, gm);
-        if (!results.isEmpty()) {
-            handleSearchActions(results, scanner, sm, gm);
+        try {
+            utils.ValidationUtils.validateStudentId(id);
+            Student student = sm.findStudent(id);
+            List<Student> results = new ArrayList<>();
+            if (student != null) {
+                results.add(student);
+            }
+            displaySearchResults(results, gm);
+            if (!results.isEmpty()) {
+                handleSearchActions(results, scanner, sm, gm);
+            }
+        } catch (exceptions.InvalidDataException e) {
+            System.out.println("X VALIDATION ERROR: " + e.getMessage());
         }
     }
 

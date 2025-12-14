@@ -1,9 +1,9 @@
-import exceptions.GradeManagementException;
+
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
 import utils.Logger;
-import utils.Logger;
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import models.*;
 import services.*;
-import interfaces.*;
 
 // This class is the main entry point for the Student Grade Management System
 public class App {
@@ -117,58 +116,83 @@ public class App {
      * Prompts for user input and validates data before creating a student.
      */
     private static void addNewStudent() {
-        System.out.println("\nADD STUDENT");
+        System.out.println("\nADD STUDENT (with validation)");
         System.out.println("__________________________________________________________________________________");
         try {
-            String name = getStringInput("Enter student name: ");
+            String name;
+            while (true) {
+                name = getStringInput("Enter Student Name: ");
+                try {
+                    utils.ValidationUtils.validateName(name);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: Only letters, spaces, hyphens, and apostrophes");
+                }
+            }
 
             int age;
             while (true) {
-                age = getIntInput("Enter student age: ");
+                age = getIntInput("Enter Student Age: ");
                 try {
                     utils.ValidationUtils.validateAge(age);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid age: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
                 }
             }
 
             String email;
             while (true) {
-                email = getStringInput("Enter student email: ");
+                email = getStringInput("Enter Email Address: ");
                 try {
                     utils.ValidationUtils.validateEmail(email);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid email: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: username@domain.extension");
                 }
             }
 
             String phone;
             while (true) {
-                phone = getStringInput("Enter student phone (10 digits): ");
+                phone = getStringInput("Enter Phone Number: ");
                 try {
                     utils.ValidationUtils.validatePhone(phone);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid phone: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out
+                            .println("  Accepted patterns: (123) 456-7890, 123-456-7890, +1-123-456-7890, 1234567890");
+                }
+            }
+
+            String enrollmentDate;
+            while (true) {
+                enrollmentDate = getStringInput("Enter Enrollment Date (YYYY-MM-DD): ");
+                try {
+                    utils.ValidationUtils.validateDate(enrollmentDate);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: YYYY-MM-DD (e.g. 2024-11-03)");
                 }
             }
 
             Student student = null;
             boolean selectingType = true;
             while (selectingType) {
-                System.out.println("\nStudent type:");
-                System.out.println("1. Regular Student (Passing grade: 50%)");
-                System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
+                System.out.println("\nStudent Type:");
+                System.out.println("1. Regular Student");
+                System.out.println("2. Honors Student");
                 int typeChoice = getIntInput("\nSelect type (1-2): ");
 
                 try {
                     if (typeChoice == 1) {
-                        student = new RegularStudent(name, age, email, phone);
+                        student = new RegularStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else if (typeChoice == 2) {
-                        student = new HonorsStudent(name, age, email, phone);
+                        student = new HonorsStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else {
                         System.out.println("Invalid student type.");
@@ -180,14 +204,21 @@ public class App {
                     }
                 } catch (InvalidDataException e) {
                     System.out.println("Error creating student: " + e.getMessage());
-                    return; // Should not happen if inputs are validated, but good for safety
+                    return;
                 }
             }
 
             studentManager.addStudent(student);
+            System.out.println("\n✓ Student added successfully!");
+            System.out.println("  All inputs validated with regex patterns");
+            System.out.println("  Student ID: " + student.getStudentId());
+            System.out.println("  Name: " + student.getName());
+            System.out.println("  Email: " + student.getEmail());
+            System.out.println("  Enrolled: " + student.getEnrollmentDate());
+
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
-        } catch (InvalidDataException e) {
+        } catch (Exception e) { // Catch generic to be safe
             Logger.logError("Failed to add student", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
@@ -204,6 +235,7 @@ public class App {
         while (recording) {
             try {
                 String studentId = getStringInput("Enter Student ID: ");
+                utils.ValidationUtils.validateStudentId(studentId);
                 Student student = studentManager.getStudent(studentId);
 
                 System.out.println("\nStudent Details:");
@@ -373,10 +405,14 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("\nEnter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -390,6 +426,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " - " + student.getName());
@@ -451,6 +488,9 @@ public class App {
 
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -517,6 +557,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " " + student.getName());
@@ -536,6 +577,9 @@ public class App {
 
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }

@@ -3,9 +3,9 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
+
 import models.*;
-import services.*;
+
 import exceptions.InvalidDataException;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,9 +23,9 @@ public class ClassStatisticsTest {
         Subject math = new CoreSubject("Math", "MTH101");
 
         // Need Students list for mapping types
-        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1234567890");
-        Student s2 = new RegularStudent("Bob", 20, "bob@test.com", "1234567890");
-        Student s3 = new RegularStudent("Charlie", 20, "charlie@test.com", "1234567890");
+        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1234567890", "2024-01-01");
+        Student s2 = new RegularStudent("Bob", 20, "bob@test.com", "1234567890", "2024-01-01");
+        Student s3 = new RegularStudent("Charlie", 20, "charlie@test.com", "1234567890", "2024-01-01");
         // Note: Students are not linked to grades by object ref, but by ID potentially
 
         Grade realG1 = new Grade(s1.getStudentId(), math, 90.0);

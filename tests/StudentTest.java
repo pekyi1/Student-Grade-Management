@@ -8,7 +8,7 @@ public class StudentTest {
     @Test
     public void testRegularStudentCreation() {
         assertDoesNotThrow(() -> {
-            RegularStudent student = new RegularStudent("Alice", 20, "alice@example.com", "1234567890");
+            RegularStudent student = new RegularStudent("Alice", 20, "alice@example.com", "1234567890", "2024-01-01");
             assertEquals("Regular", student.getStudentType());
             assertEquals(50.0, student.getPassingGrade());
             assertEquals("Active", student.getStatus());
@@ -18,7 +18,7 @@ public class StudentTest {
     @Test
     public void testHonorsStudentCreation() {
         assertDoesNotThrow(() -> {
-            HonorsStudent student = new HonorsStudent("Bob", 22, "bob@example.com", "0987654321");
+            HonorsStudent student = new HonorsStudent("Bob", 22, "bob@example.com", "0987654321", "2024-01-01");
             assertEquals("Honors", student.getStudentType());
             assertEquals(60.0, student.getPassingGrade());
         });
@@ -27,7 +27,7 @@ public class StudentTest {
     @Test
     public void testHonorsEligibility() {
         assertDoesNotThrow(() -> {
-            HonorsStudent student = new HonorsStudent("Charlie", 21, "charlie@example.com", "1122334455");
+            HonorsStudent student = new HonorsStudent("Charlie", 21, "charlie@example.com", "1122334455", "2024-01-01");
             assertFalse(student.checkHonorsEligibility(80.0));
             assertTrue(student.checkHonorsEligibility(85.0));
             assertTrue(student.checkHonorsEligibility(90.0));
@@ -37,17 +37,21 @@ public class StudentTest {
     @Test
     public void testStudentValidationFailure() {
         // Name validation
-        assertThrows(InvalidDataException.class, () -> new RegularStudent(null, 20, "valid@email.com", "1234567890"));
-        assertThrows(InvalidDataException.class, () -> new RegularStudent("", 20, "valid@email.com", "1234567890"));
+        assertThrows(InvalidDataException.class,
+                () -> new RegularStudent(null, 20, "valid@email.com", "1234567890", "2024-01-01"));
+        assertThrows(InvalidDataException.class,
+                () -> new RegularStudent("", 20, "valid@email.com", "1234567890", "2024-01-01"));
 
         // Age validation
         assertThrows(InvalidDataException.class,
-                () -> new RegularStudent("David", -1, "valid@email.com", "1234567890"));
+                () -> new RegularStudent("David", -1, "valid@email.com", "1234567890", "2024-01-01"));
 
         // Email validation
-        assertThrows(InvalidDataException.class, () -> new RegularStudent("David", 20, "invalid", "1234567890"));
+        assertThrows(InvalidDataException.class,
+                () -> new RegularStudent("David", 20, "invalid", "1234567890", "2024-01-01"));
 
         // Phone validation
-        assertThrows(InvalidDataException.class, () -> new RegularStudent("David", 20, "valid@email.com", "123"));
+        assertThrows(InvalidDataException.class,
+                () -> new RegularStudent("David", 20, "valid@email.com", "123", "2024-01-01"));
     }
 }

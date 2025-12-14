@@ -3,8 +3,9 @@ package models;
 public class RegularStudent extends Student {
     private final double passingGrade = 50.0;
 
-    public RegularStudent(String name, int age, String email, String phone) throws exceptions.InvalidDataException {
-        super(name, age, email, phone, "Active");
+    public RegularStudent(String name, int age, String email, String phone, String enrollmentDate)
+            throws exceptions.InvalidDataException {
+        super(name, age, email, phone, enrollmentDate, "Active");
     }
 
     @Override

@@ -14,7 +14,6 @@ import models.Grade;
 import models.Subject;
 import services.SubjectFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,7 +38,7 @@ public class FileOperationsTest {
 
     @Test
     public void testExportToCSV() throws Exception {
-        Student s = new RegularStudent("Test User", 20, "test@test.com", "1234567890");
+        Student s = new RegularStudent("Test User", 20, "test@test.com", "1234567890", "2024-01-01");
         String filename = "test_export";
         String path = exporter.exportToCSV(s, filename);
 
@@ -53,7 +52,7 @@ public class FileOperationsTest {
 
     @Test
     public void testExportToJSON() throws Exception {
-        Student s = new RegularStudent("Json User", 21, "json@test.com", "0987654321");
+        Student s = new RegularStudent("Json User", 21, "json@test.com", "0987654321", "2024-01-01");
         String filename = "test_json";
         String path = exporter.exportToJSON(s, filename);
 
@@ -93,7 +92,7 @@ public class FileOperationsTest {
 
         // Create dummy student
         StudentManager sm = new StudentManager();
-        Student s = new RegularStudent("Import User", 22, "import@test.com", "1122334455");
+        Student s = new RegularStudent("Import User", 22, "import@test.com", "1122334455", "2024-01-01");
         // We need to inject this student into SM so import works
         try {
             sm.addStudent(s);
