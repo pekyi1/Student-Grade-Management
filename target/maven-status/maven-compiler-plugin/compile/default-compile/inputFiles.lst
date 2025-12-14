@@ -17,6 +17,8 @@ D:\Student-Grade-Management\src\models\HonorsStudent.java
 D:\Student-Grade-Management\src\models\RegularStudent.java
 D:\Student-Grade-Management\src\models\Student.java
 D:\Student-Grade-Management\src\models\Subject.java
+D:\Student-Grade-Management\src\services\AutomatedTasks.java
+D:\Student-Grade-Management\src\services\BatchReportService.java
 D:\Student-Grade-Management\src\services\BulkImportService.java
 D:\Student-Grade-Management\src\services\DataSeeder.java
 D:\Student-Grade-Management\src\services\DirectoryWatcherService.java
@@ -25,6 +27,7 @@ D:\Student-Grade-Management\src\services\GPACalculator.java
 D:\Student-Grade-Management\src\services\GradeManager.java
 D:\Student-Grade-Management\src\services\ReportGenerator.java
 D:\Student-Grade-Management\src\services\SimpleCSVParser.java
+D:\Student-Grade-Management\src\services\StatisticsDashboardService.java
 D:\Student-Grade-Management\src\services\StudentManager.java
 D:\Student-Grade-Management\src\services\StudentSearchService.java
 D:\Student-Grade-Management\src\services\SubjectFactory.java

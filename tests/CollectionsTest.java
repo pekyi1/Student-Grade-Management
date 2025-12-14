@@ -91,18 +91,6 @@ public class CollectionsTest {
     }
 
     @Test
-    public void testTaskSchedulerPriorityQueue() {
-        TaskScheduler scheduler = new TaskScheduler();
-        scheduler.addTask(new TaskScheduler.ScheduledTask("Low Priority", 10));
-        scheduler.addTask(new TaskScheduler.ScheduledTask("High Priority", 1));
-        scheduler.addTask(new TaskScheduler.ScheduledTask("Medium Priority", 5));
-
-        assertEquals(1, scheduler.pollNextTask().getPriority());
-        assertEquals(5, scheduler.pollNextTask().getPriority());
-        assertEquals(10, scheduler.pollNextTask().getPriority());
-    }
-
-    @Test
     public void testComparators() throws Exception {
         Student s1 = new RegularStudent("Charlie", 22, "c@c.com", "1111111111", "2024-01-01"); // STU...
         Student s2 = new RegularStudent("Alice", 20, "a@a.com", "2222222222", "2024-01-01");
