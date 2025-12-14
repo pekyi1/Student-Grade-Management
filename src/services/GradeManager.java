@@ -61,7 +61,19 @@ public class GradeManager {
         grades.add(grade);
         // Invalidate cache
         averageCache.remove(grade.getStudentID());
+
+        if (auditService != null) {
+            auditService.log("RECORD_GRADE", "Grade: " + grade.getGrade() + " for " + grade.getStudentID(), "SYSTEM",
+                    true);
+        }
+
         System.out.println("\n✓ Grade recorded successfully!");
+    }
+
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
     }
 
     // This method prints a detailed grade history for a specific student
@@ -113,8 +125,7 @@ public class GradeManager {
                             + (int) student.getPassingGrade() + "%)");
         }
 
-        System.out.println("\nPress Enter to continue...");
-        new java.util.Scanner(System.in).nextLine();
+
     }
 
     private boolean checkAllCoreSubjectsPassing(String studentId, double passingGrade) {

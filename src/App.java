@@ -26,6 +26,7 @@ public class App {
     private static StatisticsDashboardService statisticsDashboardService = new StatisticsDashboardService();
     private static TaskScheduler taskScheduler = new TaskScheduler();
     private static PatternSearchService patternSearchService = new PatternSearchService();
+    private static AuditLogService auditLogService = new AuditLogService();
     private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
@@ -55,6 +56,10 @@ public class App {
 
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
+
+        // Inject Audit Service
+        studentManager.setAuditService(auditLogService);
+        gradeManager.setAuditService(auditLogService);
 
         boolean running = true;
         while (running) {
@@ -114,6 +119,7 @@ public class App {
                         directoryWatcherService.stop();
                         statisticsDashboardService.shutdown();
                         taskScheduler.shutdown();
+                        auditLogService.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
                     case 13:
@@ -124,6 +130,9 @@ public class App {
                         break;
                     case 15:
                         handleCacheManagement();
+                        break;
+                    case 16:
+                        handleAuditTrail();
                         break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
@@ -157,6 +166,7 @@ public class App {
         System.out.println("13. Scheduled Tasks Management");
         System.out.println("14. Advanced Pattern-Based Search");
         System.out.println("15. Cache Management");
+        System.out.println("16. View Audit Trail");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -457,6 +467,8 @@ public class App {
             utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
@@ -789,12 +801,6 @@ public class App {
                 case 1:
                     System.out.print("Enter email domain pattern: ");
                     String domain = scanner.nextLine().trim();
-                    // Escaping user input for basic usage if they type just "@gmail.com" -> we want
-                    // to match end
-                    // But US says "regex patterns", so we assume they might know regex or we help
-                    // them.
-                    // Acceptance Example: "@university.edu" -> regex ".*@university\.edu$"
-                    // Let's interpret their input as the literal domain suffix
                     regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
                     extractor = models.Student::getEmail;
                     break;
@@ -807,7 +813,6 @@ public class App {
                 case 3:
                     System.out.print("Enter ID pattern (use * for wildcard): ");
                     String idPat = scanner.nextLine().trim();
-                    // Simple wildcard conversion
                     regex = "^" + idPat.replace("*", ".*") + "$";
                     extractor = models.Student::getStudentId;
                     break;
@@ -855,12 +860,6 @@ public class App {
             System.out.println("__________________________________________________");
 
             for (PatternSearchService.SearchResult r : response.results) {
-                // We display the highlighted text in the 3rd column or replacing the field?
-                // The screenshot shows columns ID | NAME | EMAIL (highlighted)
-                // Since we have a generic extractor, we might not know 'which' column
-                // corresponds to highlighted text if we print standard columns.
-                // But for cases 1-4 we know clearly.
-                // Let's blindly print ID | Name | HighlightedValue
                 System.out.printf("%-10s | %-20s | %s%n",
                         r.getStudent().getStudentId(),
                         r.getStudent().getName(),
@@ -899,6 +898,7 @@ public class App {
                 break;
             case 2:
                 cache.clear();
+                auditLogService.log("CLEAR_CACHE", "Cache cleared manually", "ADMIN", true);
                 System.out.println("✓ Cache cleared successfully.");
                 break;
             case 3:
@@ -907,6 +907,43 @@ public class App {
                 System.out.println("Invalid option.");
         }
 
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleAuditTrail() {
+        System.out.println("\nAUDIT TRAIL");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Recent Logs (Last 20)");
+        System.out.println("2. Search Logs by Keyword");
+        System.out.println("3. Back to Main Menu");
+        int choice = getIntInput("Select option (1-3): ");
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                java.util.List<String> logs = auditLogService.getRecentLogs(20);
+                if (logs.isEmpty()) {
+                    System.out.println("No logs found.");
+                } else {
+                    for (String log : logs) {
+                        System.out.println(log);
+                    }
+                }
+                break;
+            case 2:
+                String keyword = getStringInput("Enter keyword: ");
+                java.util.List<String> results = auditLogService.searchLogs(keyword);
+                System.out.println("\nFound " + results.size() + " matches:");
+                for (String res : results) {
+                    System.out.println(res);
+                }
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
