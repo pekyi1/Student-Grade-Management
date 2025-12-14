@@ -30,6 +30,5 @@ services\BulkImportService.class
 utils\ValidationUtils.class
 models\ClassStatistics.class
 services\TaskScheduler.class
-utils\Logger.class
 interfaces\Gradable.class
 utils\StudentComparators.class
