@@ -1,9 +1,9 @@
-import exceptions.GradeManagementException;
+
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
 import utils.Logger;
-import utils.Logger;
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import models.*;
 import services.*;
-import interfaces.*;
 
 // This class is the main entry point for the Student Grade Management System
 public class App {
@@ -20,9 +19,10 @@ public class App {
     private static ReportGenerator reportGenerator = new ReportGenerator();
     private static FileExporter fileExporter = new FileExporter();
     private static GPACalculator gpaCalculator = new GPACalculator();
-    private static BulkImportService bulkImportService = new BulkImportService(new SimpleCSVParser());
+    private static BulkImportService bulkImportService = new BulkImportService();
     private static ClassStatistics classStatistics = new ClassStatistics();
     private static StudentSearchService studentSearchService = new StudentSearchService();
+    private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
     /**
@@ -32,6 +32,13 @@ public class App {
      * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
+        // Start Directory Watcher
+        directoryWatcherService = new DirectoryWatcherService("imports", bulkImportService, studentManager,
+                gradeManager);
+        Thread watcherThread = new Thread(directoryWatcherService);
+        watcherThread.setDaemon(true); // Ensure it dies with the app
+        watcherThread.start();
+
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
 
@@ -71,6 +78,7 @@ public class App {
                         break;
                     case 10:
                         running = false;
+                        directoryWatcherService.stop();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
                     default:
@@ -108,58 +116,83 @@ public class App {
      * Prompts for user input and validates data before creating a student.
      */
     private static void addNewStudent() {
-        System.out.println("\nADD STUDENT");
+        System.out.println("\nADD STUDENT (with validation)");
         System.out.println("__________________________________________________________________________________");
         try {
-            String name = getStringInput("Enter student name: ");
+            String name;
+            while (true) {
+                name = getStringInput("Enter Student Name: ");
+                try {
+                    utils.ValidationUtils.validateName(name);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: Only letters, spaces, hyphens, and apostrophes");
+                }
+            }
 
             int age;
             while (true) {
-                age = getIntInput("Enter student age: ");
+                age = getIntInput("Enter Student Age: ");
                 try {
                     utils.ValidationUtils.validateAge(age);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid age: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
                 }
             }
 
             String email;
             while (true) {
-                email = getStringInput("Enter student email: ");
+                email = getStringInput("Enter Email Address: ");
                 try {
                     utils.ValidationUtils.validateEmail(email);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid email: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: username@domain.extension");
                 }
             }
 
             String phone;
             while (true) {
-                phone = getStringInput("Enter student phone (10 digits): ");
+                phone = getStringInput("Enter Phone Number: ");
                 try {
                     utils.ValidationUtils.validatePhone(phone);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid phone: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out
+                            .println("  Accepted patterns: (123) 456-7890, 123-456-7890, +1-123-456-7890, 1234567890");
+                }
+            }
+
+            String enrollmentDate;
+            while (true) {
+                enrollmentDate = getStringInput("Enter Enrollment Date (YYYY-MM-DD): ");
+                try {
+                    utils.ValidationUtils.validateDate(enrollmentDate);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: YYYY-MM-DD (e.g. 2024-11-03)");
                 }
             }
 
             Student student = null;
             boolean selectingType = true;
             while (selectingType) {
-                System.out.println("\nStudent type:");
-                System.out.println("1. Regular Student (Passing grade: 50%)");
-                System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
+                System.out.println("\nStudent Type:");
+                System.out.println("1. Regular Student");
+                System.out.println("2. Honors Student");
                 int typeChoice = getIntInput("\nSelect type (1-2): ");
 
                 try {
                     if (typeChoice == 1) {
-                        student = new RegularStudent(name, age, email, phone);
+                        student = new RegularStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else if (typeChoice == 2) {
-                        student = new HonorsStudent(name, age, email, phone);
+                        student = new HonorsStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else {
                         System.out.println("Invalid student type.");
@@ -171,14 +204,21 @@ public class App {
                     }
                 } catch (InvalidDataException e) {
                     System.out.println("Error creating student: " + e.getMessage());
-                    return; // Should not happen if inputs are validated, but good for safety
+                    return;
                 }
             }
 
             studentManager.addStudent(student);
+            System.out.println("\n✓ Student added successfully!");
+            System.out.println("  All inputs validated with regex patterns");
+            System.out.println("  Student ID: " + student.getStudentId());
+            System.out.println("  Name: " + student.getName());
+            System.out.println("  Email: " + student.getEmail());
+            System.out.println("  Enrolled: " + student.getEnrollmentDate());
+
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
-        } catch (InvalidDataException e) {
+        } catch (Exception e) { // Catch generic to be safe
             Logger.logError("Failed to add student", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
@@ -195,6 +235,7 @@ public class App {
         while (recording) {
             try {
                 String studentId = getStringInput("Enter Student ID: ");
+                utils.ValidationUtils.validateStudentId(studentId);
                 Student student = studentManager.getStudent(studentId);
 
                 System.out.println("\nStudent Details:");
@@ -364,10 +405,14 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("\nEnter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -377,55 +422,65 @@ public class App {
      * Prompts for report type (Summary/Detailed) and filename.
      */
     private static void exportGradeReport() {
-        System.out.println("\nEXPORT GRADE REPORT");
+        System.out.println("\nEXPORT GRADE REPORT (Multi-Format)");
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
-            System.out.println("\nStudent: " + studentId + " " + student.getName());
-            System.out.println("Type: " + student.getStudentType() + " Student");
-            System.out.println("Total Grades: " + gradeManager.getEnrolledSubjectCount(studentId));
+            System.out.println("\nStudent: " + studentId + " - " + student.getName());
 
-            boolean selectingOption = true;
-            String content = "";
-            while (selectingOption) {
-                System.out.println("\nExport options:");
-                System.out.println("1. Summary Report (overview only)");
-                System.out.println("2. Detailed Report (all grades)");
-                System.out.println("3. Both");
-                int option = getIntInput("\nSelect option (1-3): ");
+            // Format Selection
+            System.out.println("\nExport Format:");
+            System.out.println("1. CSV (Comma-Separated Values)");
+            System.out.println("2. JSON (JavaScript Object Notation)");
+            System.out.println("3. Binary (Serialized Java Object)");
+            System.out.println("4. All formats");
+            int formatChoice = getIntInput("Select format (1-4): ");
 
-                if (option == 1) {
-                    content = reportGenerator.generateSummaryReport(student, gradeManager);
-                    selectingOption = false;
-                } else if (option == 2) {
-                    content = reportGenerator.generateDetailedReport(student, gradeManager);
-                    selectingOption = false;
-                } else if (option == 3) {
-                    content = reportGenerator.generateBothReport(student, gradeManager);
-                    selectingOption = false;
-                } else {
-                    System.out.println("Invalid option.");
-                    String retry = getStringInput("Try again? (Y/N): ");
-                    if (!retry.equalsIgnoreCase("y")) {
-                        System.out.println("Export cancelled.");
-                        return;
-                    }
-                }
+            // Content Generation (Summary/Detailed logic)
+            // Reusing existing logic for content generation string if relevant for
+            // CSV/Text,
+            // but for JSON/Binary we export raw objects generally.
+            // The instructions imply exporting the "report".
+            // Existing exportToFile took a String content.
+            // New FileExporter methods take objects or strings.
+
+            // If CSV/Text report:
+            String textContent = "";
+            if (formatChoice == 1 || formatChoice == 4) {
+                // Ask for report type only if CSV/Text is involved to keep valid logic
+                textContent = generateReportContent(student);
             }
 
-            String filename = getStringInput("\nEnter filename (without extension): ");
             try {
-                String filePath = fileExporter.exportToFile(filename, content);
-                java.io.File file = new java.io.File(filePath);
-                System.out.println("\n✓ Report exported successfully!");
-                System.out.println("File: " + file.getName());
-                System.out.println("Location: " + filePath);
-                System.out.println("Size: " + file.length() + " bytes");
+                if (formatChoice == 1 || formatChoice == 4) {
+                    String filename = "report_" + studentId;
+                    String path = fileExporter.exportToFile(filename + ".txt", textContent); // Legacy txt/csv-like
+                                                                                             // report
+                    System.out.println("✓ Text/CSV Report exported: " + path);
+                }
+
+                if (formatChoice == 2 || formatChoice == 4) {
+                    // Export Grades List as JSON
+                    String filename = "grades_" + studentId;
+                    String path = fileExporter.exportToJSON(gradeManager.getGradesForStudent(studentId), filename);
+                    System.out.println("✓ JSON Data exported: " + path);
+                }
+
+                if (formatChoice == 3 || formatChoice == 4) {
+                    // Export Student object + grades as Binary? Or just Student?
+                    // Let's export the List<Grade> for now as it contains Student ID
+                    String filename = "data_" + studentId;
+                    java.util.List<Grade> grades = gradeManager.getGradesForStudent(studentId);
+                    String path = fileExporter.exportToBinary(grades, filename); // Serializing List
+                    System.out.println("✓ Binary Data exported: " + path);
+                }
+
             } catch (java.io.IOException e) {
                 Logger.logError("Export failed", e);
-                System.out.println("X ERROR: Failed to export report. " + e.getMessage());
+                System.out.println("X ERROR: Failed to export. " + e.getMessage());
             }
 
             System.out.println("\nPress Enter to continue...");
@@ -434,7 +489,36 @@ public class App {
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
+            System.out.println("X ERROR: " + e.getMessage());
         }
+    }
+
+    private static String generateReportContent(Student student) {
+        boolean selectingOption = true;
+        String content = "";
+        while (selectingOption) {
+            System.out.println("\nReport Type:");
+            System.out.println("1. Summary Report");
+            System.out.println("2. Detailed Report");
+            System.out.println("3. Both");
+            int option = getIntInput("\nSelect option (1-3): ");
+
+            if (option == 1) {
+                content = reportGenerator.generateSummaryReport(student, gradeManager);
+                selectingOption = false;
+            } else if (option == 2) {
+                content = reportGenerator.generateDetailedReport(student, gradeManager);
+                selectingOption = false;
+            } else if (option == 3) {
+                content = reportGenerator.generateBothReport(student, gradeManager);
+                selectingOption = false;
+            } else {
+                System.out.println("Invalid option.");
+            }
+        }
+        return content;
     }
 
     private static String getStringInput(String prompt) {
@@ -473,6 +557,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " " + student.getName());
@@ -492,6 +577,9 @@ public class App {
 
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }

@@ -22,8 +22,8 @@ public class StudentSearchServiceTest {
 
     @Test
     public void testSearchByName() throws InvalidDataException {
-        Student s1 = new RegularStudent("Alice Smith", 20, "alice@test.com", "1234567890");
-        Student s2 = new RegularStudent("Bob Jones", 20, "bob@test.com", "1234567890");
+        Student s1 = new RegularStudent("Alice Smith", 20, "alice@test.com", "1234567890", "2024-01-01");
+        Student s2 = new RegularStudent("Bob Jones", 20, "bob@test.com", "1234567890", "2024-01-01");
 
         // Method expects array, so convert list to array or just create array
         Student[] allStudents = new Student[] { s1, s2 };
@@ -39,8 +39,8 @@ public class StudentSearchServiceTest {
 
     @Test
     public void testSearchByType() throws InvalidDataException {
-        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1234567890");
-        Student s2 = new HonorsStudent("Bob", 20, "bob@test.com", "1234567890");
+        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1234567890", "2024-01-01");
+        Student s2 = new HonorsStudent("Bob", 20, "bob@test.com", "1234567890", "2024-01-01");
 
         Student[] allStudents = new Student[] { s1, s2 };
 

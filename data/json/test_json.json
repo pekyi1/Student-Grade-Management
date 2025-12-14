@@ -1,0 +1,8 @@
+{
+  "id": "STU013",
+  "name": "Json User",
+  "age": 21,
+  "email": "json@test.com",
+  "phone": "0987654321",
+  "type": "Regular"
+}

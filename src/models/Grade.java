@@ -5,7 +5,8 @@ import interfaces.Exportable;
 import interfaces.Gradable;
 import java.time.LocalDate;
 
-public class Grade implements Gradable, Exportable, Calculable {
+public class Grade implements Gradable, Exportable, Calculable, java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public static int gradeCounter;
     private String gradeID;
     private String studentID;
@@ -13,12 +14,10 @@ public class Grade implements Gradable, Exportable, Calculable {
     private double grade;
     private String date;
 
-    public Grade(String studentID, Subject subject, double grade) {
-        // validate grade on creation; throw so callers (like App) can handle invalid
-        // input
-        if (!validateGrade(grade)) {
-            throw new IllegalArgumentException("Grade must be between 0 and 100.");
-        }
+    public Grade(String studentID, Subject subject, double grade) throws exceptions.InvalidDataException {
+        // validate inputs
+        utils.ValidationUtils.validateStudentId(studentID);
+        utils.ValidationUtils.validateGrade(grade);
 
         this.gradeID = "GRD" + gradeCounter++;
         this.studentID = studentID;

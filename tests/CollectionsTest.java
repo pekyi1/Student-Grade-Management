@@ -21,8 +21,8 @@ public class CollectionsTest {
     @Test
     public void testStudentManagerUsingHashMap() throws Exception {
         StudentManager sm = new StudentManager();
-        Student s1 = new RegularStudent("John Doe", 20, "john@example.com", "1234567890");
-        Student s2 = new RegularStudent("Jane Doe", 21, "jane@example.com", "1234567891");
+        Student s1 = new RegularStudent("John Doe", 20, "john@example.com", "1234567890", "2024-01-01");
+        Student s2 = new RegularStudent("Jane Doe", 21, "jane@example.com", "1234567891", "2024-01-01");
 
         sm.addStudent(s1);
         sm.addStudent(s2);
@@ -65,9 +65,9 @@ public class CollectionsTest {
         StudentManager sm = new StudentManager();
         GradeManager gm = new GradeManager();
 
-        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1231231234");
-        Student s2 = new RegularStudent("Bob", 20, "bob@test.com", "1231231235");
-        Student s3 = new RegularStudent("Charlie", 20, "charlie@test.com", "1231231236");
+        Student s1 = new RegularStudent("Alice", 20, "alice@test.com", "1231231234", "2024-01-01");
+        Student s2 = new RegularStudent("Bob", 20, "bob@test.com", "1231231235", "2024-01-01");
+        Student s3 = new RegularStudent("Charlie", 20, "charlie@test.com", "1231231236", "2024-01-01");
 
         sm.addStudent(s1);
         sm.addStudent(s2);
@@ -104,9 +104,9 @@ public class CollectionsTest {
 
     @Test
     public void testComparators() throws Exception {
-        Student s1 = new RegularStudent("Charlie", 22, "c@c.com", "1111111111"); // STU...
-        Student s2 = new RegularStudent("Alice", 20, "a@a.com", "2222222222");
-        Student s3 = new RegularStudent("Bob", 21, "b@b.com", "3333333333");
+        Student s1 = new RegularStudent("Charlie", 22, "c@c.com", "1111111111", "2024-01-01"); // STU...
+        Student s2 = new RegularStudent("Alice", 20, "a@a.com", "2222222222", "2024-01-01");
+        Student s3 = new RegularStudent("Bob", 21, "b@b.com", "3333333333", "2024-01-01");
 
         List<Student> list = new ArrayList<>(Arrays.asList(s1, s2, s3));
 
