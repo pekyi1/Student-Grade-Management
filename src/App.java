@@ -27,6 +27,7 @@ public class App {
     private static TaskScheduler taskScheduler = new TaskScheduler();
     private static PatternSearchService patternSearchService = new PatternSearchService();
     private static AuditLogService auditLogService = new AuditLogService();
+    private static StreamDataService streamDataService = new StreamDataService();
     private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
@@ -134,6 +135,9 @@ public class App {
                     case 16:
                         handleAuditTrail();
                         break;
+                    case 17:
+                        handleStreamAnalysis();
+                        break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
                 }
@@ -167,6 +171,7 @@ public class App {
         System.out.println("14. Advanced Pattern-Based Search");
         System.out.println("15. Cache Management");
         System.out.println("16. View Audit Trail");
+        System.out.println("17. Stream Analysis");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -943,6 +948,62 @@ public class App {
                 return;
             default:
                 System.out.println("Invalid option.");
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleStreamAnalysis() {
+        System.out.println("\nSTREAM DATA ANALYSIS");
+        System.out.println("__________________________________________________________________________________");
+        System.out.println("1. Filter Students (Age > 20)");
+        System.out.println("2. Extract Student Emails");
+        System.out.println("3. Average Grade Per Subject");
+        System.out.println("4. Group Students by Grade Range");
+        System.out.println("5. Find Top 3 Students");
+        System.out.println("6. Performance Comparison (Seq vs Parallel)");
+        System.out.println("7. Back");
+        System.out.println("__________________________________________________________________________________");
+
+        int choice = getIntInput("Enter choice: ");
+        
+        List<Student> students = studentManager.getAllStudents(); // Need to verify this method exists
+        List<Grade> grades = gradeManager.getAllGrades(); // Need to verify this method exists
+
+        switch (choice) {
+            case 1:
+                List<Student> older = streamDataService.filterStudents(students, s -> s.getAge() > 20);
+                System.out.println("Found " + older.size() + " students > 20:");
+                older.forEach(s -> System.out.println(s.getName() + " (" + s.getAge() + ")"));
+                break;
+            case 2:
+                List<String> emails = streamDataService.extractEmails(students);
+                System.out.println("Emails:");
+                emails.forEach(System.out::println);
+                break;
+            case 3:
+                java.util.Map<String, Double> avgs = streamDataService.calculateAverageGradePerSubject(grades);
+                System.out.println("Average per Subject:");
+                avgs.forEach((k, v) -> System.out.printf("%s: %.2f%%%n", k, v));
+                break;
+            case 4:
+                java.util.Map<String, List<Student>> groups = streamDataService.groupStudentsByGradeRange(students, gradeManager);
+                groups.forEach((range, list) -> {
+                    System.out.println(range + ": " + list.size() + " students");
+                });
+                break;
+            case 5:
+                List<Student> top = streamDataService.findTopStudents(students, gradeManager, 3);
+                System.out.println("Top 3 Students:");
+                top.forEach(s -> System.out.printf("%s: %.2f%%%n", s.getName(), s.calculateAverageGrade(gradeManager)));
+                break;
+            case 6:
+                System.out.println(streamDataService.comparePerformance(students));
+                break;
+            case 7:
+                return;
+            default:
+                System.out.println("Invalid choice.");
         }
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();

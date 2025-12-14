@@ -174,9 +174,9 @@ public class StudentManager implements Searchable {
         return gpaMap;
     }
 
-    // Maintained for compatibility, but internally converts from Map
-    public Student[] getAllStudents() {
-        return students.values().toArray(new Student[0]);
+    // Returns a list of all students
+    public List<Student> getAllStudents() {
+        return new ArrayList<>(students.values());
     }
 
     public int getStudentCount() {
