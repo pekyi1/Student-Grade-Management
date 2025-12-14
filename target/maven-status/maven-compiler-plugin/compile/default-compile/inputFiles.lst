@@ -17,6 +17,7 @@ D:\Student-Grade-Management\src\models\HonorsStudent.java
 D:\Student-Grade-Management\src\models\RegularStudent.java
 D:\Student-Grade-Management\src\models\Student.java
 D:\Student-Grade-Management\src\models\Subject.java
+D:\Student-Grade-Management\src\services\BatchReportService.java
 D:\Student-Grade-Management\src\services\BulkImportService.java
 D:\Student-Grade-Management\src\services\DataSeeder.java
 D:\Student-Grade-Management\src\services\DirectoryWatcherService.java
