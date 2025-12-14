@@ -1,4 +1,5 @@
 services\ReportGenerator.class
+services\PatternSearchService$searchStats.class
 exceptions\GradeManagementException.class
 services\TaskScheduler$TaskConfig.class
 App.class
@@ -10,6 +11,7 @@ models\CoreSubject.class
 services\BatchReportService.class
 services\StudentManager.class
 exceptions\InvalidDataException.class
+services\PatternSearchService$SearchResult.class
 services\GPACalculator.class
 services\GradeManager.class
 exceptions\StudentNotFoundException.class
@@ -19,6 +21,7 @@ models\Grade.class
 interfaces\Searchable.class
 models\Subject.class
 interfaces\Calculable.class
+services\PatternSearchService.class
 services\StudentSearchService.class
 models\ElectiveSubject.class
 services\TaskScheduler$ScheduledTaskInfo.class
@@ -35,6 +38,7 @@ services\BulkImportService.class
 utils\ValidationUtils.class
 models\ClassStatistics.class
 services\TaskScheduler.class
+services\PatternSearchService$SearchResponse.class
 services\StatisticsDashboardService.class
 utils\Logger.class
 interfaces\Gradable.class

@@ -25,6 +25,7 @@ public class App {
     private static BatchReportService batchReportService = new BatchReportService();
     private static StatisticsDashboardService statisticsDashboardService = new StatisticsDashboardService();
     private static TaskScheduler taskScheduler = new TaskScheduler();
+    private static PatternSearchService patternSearchService = new PatternSearchService();
     private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
@@ -113,6 +114,9 @@ public class App {
                     case 13:
                         manageScheduledTasks();
                         break;
+                    case 14:
+                        handlePatternSearch();
+                        break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
                 }
@@ -143,6 +147,7 @@ public class App {
         System.out.println("11. Real-Time Statistics Dashboard");
         System.out.println("12. Exit");
         System.out.println("13. Scheduled Tasks Management");
+        System.out.println("14. Advanced Pattern-Based Search");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -751,6 +756,121 @@ public class App {
             taskScheduler.scheduleTask("System Check", () -> System.out.println("System Check OK"), 0, 10,
                     java.util.concurrent.TimeUnit.SECONDS);
             System.out.println("System Check Scheduled (Every 10s).");
+        }
+    }
+
+    private static void handlePatternSearch() {
+        System.out.println("\nPATTERN-BASED SEARCH");
+        System.out.println("__________________________________________________");
+        System.out.println("1. Email Domain Pattern (e.g., @university.edu)");
+        System.out.println("2. Phone Area Code Pattern (e.g., 555)");
+        System.out.println("3. Student ID Pattern (e.g., STU0**)");
+        System.out.println("4. Name Pattern (regex)");
+        System.out.println("5. Custom Regex Pattern");
+
+        int type = getIntInput("Select type (1-5): ");
+        String regex = "";
+        java.util.function.Function<models.Student, String> extractor = null;
+
+        scanner.nextLine(); // consume newline
+
+        // Build regex based on type or ask user
+        try {
+            switch (type) {
+                case 1:
+                    System.out.print("Enter email domain pattern: ");
+                    String domain = scanner.nextLine().trim();
+                    // Escaping user input for basic usage if they type just "@gmail.com" -> we want
+                    // to match end
+                    // But US says "regex patterns", so we assume they might know regex or we help
+                    // them.
+                    // Acceptance Example: "@university.edu" -> regex ".*@university\.edu$"
+                    // Let's interpret their input as the literal domain suffix
+                    regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
+                    extractor = models.Student::getEmail;
+                    break;
+                case 2:
+                    System.out.print("Enter area code: ");
+                    String area = scanner.nextLine().trim();
+                    regex = "^" + java.util.regex.Pattern.quote(area) + ".*"; // Starts with area code
+                    extractor = models.Student::getPhone;
+                    break;
+                case 3:
+                    System.out.print("Enter ID pattern (use * for wildcard): ");
+                    String idPat = scanner.nextLine().trim();
+                    // Simple wildcard conversion
+                    regex = "^" + idPat.replace("*", ".*") + "$";
+                    extractor = models.Student::getStudentId;
+                    break;
+                case 4:
+                    System.out.print("Enter name pattern (regex): ");
+                    regex = scanner.nextLine().trim();
+                    extractor = models.Student::getName;
+                    break;
+                case 5:
+                    System.out.print("Enter custom regex: ");
+                    regex = scanner.nextLine().trim();
+                    System.out.println("Select field (1=ID, 2=Name, 3=Email, 4=Phone): ");
+                    int f = getIntInput("Field: ");
+                    scanner.nextLine();
+                    switch (f) {
+                        case 1:
+                            extractor = models.Student::getStudentId;
+                            break;
+                        case 2:
+                            extractor = models.Student::getName;
+                            break;
+                        case 3:
+                            extractor = models.Student::getEmail;
+                            break;
+                        case 4:
+                            extractor = models.Student::getPhone;
+                            break;
+                        default:
+                            extractor = models.Student::getName;
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid type.");
+                    return;
+            }
+
+            System.out.println("Searching with regex: " + regex);
+            java.util.List<models.Student> all = java.util.Arrays.asList(studentManager.getAllStudents());
+            PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex, extractor);
+
+            System.out.println("Processing " + response.stats.totalScanned + " students...");
+            System.out.println("\nSEARCH RESULTS (" + response.stats.matchesFound + " found)");
+            System.out.println("__________________________________________________");
+            System.out.printf("%-10s | %-20s | %-30s%n", "ID", "NAME", "MATCHED FIELD");
+            System.out.println("__________________________________________________");
+
+            for (PatternSearchService.SearchResult r : response.results) {
+                // We display the highlighted text in the 3rd column or replacing the field?
+                // The screenshot shows columns ID | NAME | EMAIL (highlighted)
+                // Since we have a generic extractor, we might not know 'which' column
+                // corresponds to highlighted text if we print standard columns.
+                // But for cases 1-4 we know clearly.
+                // Let's blindly print ID | Name | HighlightedValue
+                System.out.printf("%-10s | %-20s | %s%n",
+                        r.getStudent().getStudentId(),
+                        r.getStudent().getName(),
+                        r.getHighlightedText());
+            }
+
+            System.out.println("\nPattern Match Statistics:");
+            System.out.println("  Total Students Scanned: " + response.stats.totalScanned);
+            System.out.println(String.format("  Matches Found: %d (%.0f%%)",
+                    response.stats.matchesFound,
+                    (double) response.stats.matchesFound / response.stats.totalScanned * 100));
+            System.out.println("  Search Time: " + response.stats.searchTimeMs + "ms");
+            System.out.println("  Regex Complexity: " + response.stats.regexComplexityHint);
+
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+
+        } catch (Exception e) {
+            System.out.println("Error in search: " + e.getMessage());
         }
     }
 }
