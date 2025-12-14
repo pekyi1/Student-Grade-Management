@@ -23,6 +23,8 @@ public class App {
     private static ClassStatistics classStatistics = new ClassStatistics();
     private static StudentSearchService studentSearchService = new StudentSearchService();
     private static BatchReportService batchReportService = new BatchReportService();
+    private static StatisticsDashboardService statisticsDashboardService = new StatisticsDashboardService();
+    private static TaskScheduler taskScheduler = new TaskScheduler();
     private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
@@ -39,6 +41,11 @@ public class App {
         Thread watcherThread = new Thread(directoryWatcherService);
         watcherThread.setDaemon(true); // Ensure it dies with the app
         watcherThread.start();
+
+        watcherThread.start();
+
+        // Load persistents schedules
+        taskScheduler.loadSchedules(studentManager, gradeManager);
 
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
@@ -94,9 +101,17 @@ public class App {
                         generateBatchReports();
                         break;
                     case 11:
+                        statisticsDashboardService.startDashboard(studentManager, gradeManager, scanner);
+                        break;
+                    case 12:
                         running = false;
                         directoryWatcherService.stop();
+                        statisticsDashboardService.shutdown();
+                        taskScheduler.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
+                        break;
+                    case 13:
+                        manageScheduledTasks();
                         break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
@@ -125,7 +140,9 @@ public class App {
         System.out.println("8. View Class Statistics");
         System.out.println("9. Search Students");
         System.out.println("10. Generate Batch Reports");
-        System.out.println("11. Exit");
+        System.out.println("11. Real-Time Statistics Dashboard");
+        System.out.println("12. Exit");
+        System.out.println("13. Scheduled Tasks Management");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -702,5 +719,38 @@ public class App {
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
+    }
+
+    private static void manageScheduledTasks() {
+        System.out.println("\nSCHEDULED TASKS MANAGEMENT");
+        System.out.println("__________________________________________________________________________________");
+
+        System.out.println("Active Tasks:");
+        java.util.List<TaskScheduler.ScheduledTaskInfo> tasks = taskScheduler.getActiveTasks();
+        if (tasks.isEmpty()) {
+            System.out.println("No active tasks.");
+        } else {
+            for (TaskScheduler.ScheduledTaskInfo info : tasks) {
+                long delay = info.getDelay(java.util.concurrent.TimeUnit.SECONDS);
+                System.out.printf("- %s (Every %d %s) - Next run in: %d seconds%n",
+                        info.getName(), info.getPeriod(), info.getUnit(), delay);
+            }
+        }
+
+        System.out.println("\nOptions:");
+        System.out.println("1. Schedule Daily Backup");
+        System.out.println("2. Schedule Custom Check (Demo)");
+        System.out.println("3. Back to Main Menu");
+
+        int choice = getIntInput("Select option: ");
+        if (choice == 1) {
+            taskScheduler.scheduleTask("Daily Backup", AutomatedTasks.createDailyBackupTask(), 0, 24,
+                    java.util.concurrent.TimeUnit.HOURS);
+            System.out.println("Backup Scheduled.");
+        } else if (choice == 2) {
+            taskScheduler.scheduleTask("System Check", () -> System.out.println("System Check OK"), 0, 10,
+                    java.util.concurrent.TimeUnit.SECONDS);
+            System.out.println("System Check Scheduled (Every 10s).");
+        }
     }
 }
