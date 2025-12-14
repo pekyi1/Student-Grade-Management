@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // This class handles the bulk import of grades from CSV files
-public class BulkImportService {
+public class BulkImportService{
 
     private static final String IMPORT_DIR = "imports/";
     private static final String LOG_DIR = "logs/";
