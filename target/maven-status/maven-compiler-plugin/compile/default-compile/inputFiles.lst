@@ -20,6 +20,7 @@ D:\Student-Grade-Management\src\models\Subject.java
 D:\Student-Grade-Management\src\services\AutomatedTasks.java
 D:\Student-Grade-Management\src\services\BatchReportService.java
 D:\Student-Grade-Management\src\services\BulkImportService.java
+D:\Student-Grade-Management\src\services\CacheService.java
 D:\Student-Grade-Management\src\services\DataSeeder.java
 D:\Student-Grade-Management\src\services\DirectoryWatcherService.java
 D:\Student-Grade-Management\src\services\FileExporter.java

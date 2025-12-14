@@ -48,6 +48,11 @@ public class App {
         // Load persistents schedules
         taskScheduler.loadSchedules(studentManager, gradeManager);
 
+        // US-8: Schedule background cache refresh (if not already scheduled)
+        // We use a simple check or just overwrite for this demo requirement
+        taskScheduler.scheduleTask("Cache Refresh", () -> gradeManager.refreshAllCache(studentManager), 0, 5,
+                java.util.concurrent.TimeUnit.MINUTES);
+
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
 
@@ -117,6 +122,9 @@ public class App {
                     case 14:
                         handlePatternSearch();
                         break;
+                    case 15:
+                        handleCacheManagement();
+                        break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
                 }
@@ -148,6 +156,7 @@ public class App {
         System.out.println("12. Exit");
         System.out.println("13. Scheduled Tasks Management");
         System.out.println("14. Advanced Pattern-Based Search");
+        System.out.println("15. Cache Management");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -872,5 +881,33 @@ public class App {
         } catch (Exception e) {
             System.out.println("Error in search: " + e.getMessage());
         }
+    }
+
+    private static void handleCacheManagement() {
+        System.out.println("\nCACHE MANAGEMENT");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Cache Statistics");
+        System.out.println("2. Clear Cache");
+        System.out.println("3. Back to Main Menu");
+        int subChoice = getIntInput("Select option (1-3): ");
+
+        CacheService<String, Double> cache = gradeManager.getCacheService();
+
+        switch (subChoice) {
+            case 1:
+                System.out.println(cache.getStats());
+                break;
+            case 2:
+                cache.clear();
+                System.out.println("✓ Cache cleared successfully.");
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }
