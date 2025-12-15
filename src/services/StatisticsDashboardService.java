@@ -9,7 +9,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import models.ClassStatistics;
 import models.Grade;
@@ -93,7 +92,7 @@ public class StatisticsDashboardService {
 
     private void refreshDashboard(StudentManager sm, GradeManager gm) {
         List<Grade> grades = gm.getAllGrades();
-        List<Student> students = java.util.Arrays.asList(sm.getAllStudents());
+        List<Student> students = sm.getAllStudents();
 
         StringBuilder sb = new StringBuilder();
 
