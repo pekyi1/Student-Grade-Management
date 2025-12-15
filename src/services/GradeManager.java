@@ -48,26 +48,27 @@ public class GradeManager {
             throw new InvalidGradeException(grade.getGrade());
         }
 
-        // Check for existing grade for this student and subject - O(n)
-        for (Grade g : grades) {
-            if (g.getStudentID().equals(grade.getStudentID()) &&
-                    g.getSubject().equals(grade.getSubject())) {
+        synchronized (grades) {
+            // Check for existing grade for this student and subject - O(n)
+            for (Grade g : grades) {
+                if (g.getStudentID().equals(grade.getStudentID()) &&
+                        g.getSubject().equals(grade.getSubject())) {
 
-                // Update existing grade
-                g.recordGrade(grade.getGrade());
-                // Invalidate cache
-                averageCache.remove(grade.getStudentID());
-                System.out.println("\n✓ Grade updated successfully!");
-                return;
+                    // Update existing grade
+                    g.recordGrade(grade.getGrade());
+                    // Invalidate cache
+                    averageCache.remove(grade.getStudentID());
+                    System.out.println("\n✓ Grade updated successfully!");
+                    saveGrades(); // Save inside lock
+                    return;
+                }
             }
-        }
 
-        // LinkedList has no fixed capacity, but for safety in this project scope:
-        // (Removed capacity check as Lists grow dynamically)
-
-        grades.add(grade);
-        // Invalidate cache
-        averageCache.remove(grade.getStudentID());
+            grades.add(grade);
+            // Invalidate cache
+            averageCache.remove(grade.getStudentID());
+            saveGrades(); // Save inside lock
+        } // End lock
 
         if (auditService != null) {
             auditService.log("RECORD_GRADE", "Grade: " + grade.getGrade() + " for " + grade.getStudentID(), "SYSTEM",
@@ -75,14 +76,15 @@ public class GradeManager {
         }
 
         System.out.println("\n✓ Grade recorded successfully!");
-        saveGrades(); // Persist changes
     }
 
     private void saveGrades() {
         try {
             List<String> lines = new ArrayList<>();
-            for (Grade g : grades) {
-                lines.add(g.toExportFormat());
+            synchronized (grades) {
+                for (Grade g : grades) {
+                    lines.add(g.toExportFormat());
+                }
             }
             Path path = Paths.get(DATA_FILE);
             if (path.getParent() != null)
@@ -178,17 +180,19 @@ public class GradeManager {
 
         // Display in reverse chronological order
         // LinkedList descendingIterator is efficient
-        java.util.Iterator<Grade> it = grades.descendingIterator();
-        while (it.hasNext()) {
-            Grade g = it.next();
-            if (g.getStudentID().equals(studentId)) {
-                System.out.printf("%-8s | %-12s | %-15s | %-10s | %-8.1f%%%n",
-                        g.getGradeID(),
-                        g.getDate(),
-                        g.getSubject().getSubjectName(),
-                        g.getSubject().getSubjectType(),
-                        g.getGrade());
-                found = true;
+        synchronized (grades) {
+            java.util.Iterator<Grade> it = grades.descendingIterator();
+            while (it.hasNext()) {
+                Grade g = it.next();
+                if (g.getStudentID().equals(studentId)) {
+                    System.out.printf("%-8s | %-12s | %-15s | %-10s | %-8.1f%%%n",
+                            g.getGradeID(),
+                            g.getDate(),
+                            g.getSubject().getSubjectName(),
+                            g.getSubject().getSubjectType(),
+                            g.getGrade());
+                    found = true;
+                }
             }
         }
         System.out.println("__________________________________________________________________________________");
@@ -269,10 +273,12 @@ public class GradeManager {
 
         double sum = 0;
         int count = 0;
-        for (Grade g : grades) {
-            if (g.getStudentID().equals(studentId)) {
-                sum += g.getGrade();
-                count++;
+        synchronized (grades) {
+            for (Grade g : grades) {
+                if (g.getStudentID().equals(studentId)) {
+                    sum += g.getGrade();
+                    count++;
+                }
             }
         }
         double avg = count == 0 ? 0.0 : sum / count;
@@ -297,9 +303,11 @@ public class GradeManager {
     // This method retrieves a list of all grades belonging to a specific student
     public List<Grade> getGradesForStudent(String studentId) {
         List<Grade> studentGrades = new ArrayList<>();
-        for (Grade g : grades) {
-            if (g.getStudentID().equals(studentId)) {
-                studentGrades.add(g);
+        synchronized (grades) {
+            for (Grade g : grades) {
+                if (g.getStudentID().equals(studentId)) {
+                    studentGrades.add(g);
+                }
             }
         }
         return studentGrades;
@@ -379,8 +387,10 @@ public class GradeManager {
         // US-1: Use HashSet<String> for tracking unique courses enrolled.
         // Even though we return a List, we use Set for uniqueness.
         Set<models.Subject> subjects = new HashSet<>();
-        for (Grade g : grades) {
-            subjects.add(g.getSubject());
+        synchronized (grades) {
+            for (Grade g : grades) {
+                subjects.add(g.getSubject());
+            }
         }
         return new ArrayList<>(subjects);
     }

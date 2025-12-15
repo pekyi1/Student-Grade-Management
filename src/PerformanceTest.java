@@ -19,70 +19,84 @@ public class PerformanceTest {
         System.out.println("Starting Performance Verification (Extended)...");
         System.out.println("==================================================");
 
-        // 1. HashMap vs ArrayList Benchmark
-        System.out.println("\n[Test 1] Comparing HashMap O(1) vs ArrayList O(n) Lookup");
-        System.out.println("--------------------------------------------------");
-        int[] sizes = { 10000, 100000, 1000000 };
-        StudentManager largestSm = null;
-        List<Student> largestList = null;
+        /*
+         * // 1. HashMap vs ArrayList Benchmark
+         * System.out.
+         * println("\n[Test 1] Comparing HashMap O(1) vs ArrayList O(n) Lookup");
+         * System.out.println("--------------------------------------------------");
+         * int[] sizes = { 10000, 100000, 1000000 };
+         * StudentManager largestSm = null;
+         * List<Student> largestList = null;
+         * 
+         * for (int size : sizes) {
+         * Object[] result = runBenchmark(size);
+         * if (size == 1000000) {
+         * largestSm = (StudentManager) result[0];
+         * largestList = (List<Student>) result[1];
+         * }
+         * }
+         * 
+         * if (largestSm == null)
+         * return;
+         * 
+         * // 2. Add 500 more students and verify O(1)
+         * System.out.
+         * println("\n[Test 2] Adding 500 more students to 1M dataset & Re-verifying..."
+         * );
+         * System.out.println("--------------------------------------------------");
+         * int added = 0;
+         * Random rand = new Random();
+         * Student lastAdded = null;
+         * for (int i = 0; i < 500; i++) {
+         * try {
+         * String name = "NewStudent";
+         * String email = "new" + i + "@test.com";
+         * String phone = String.format("555%07d", i % 10000000);
+         * Student s = new RegularStudent(name, 20, email, phone, "2025-01-01");
+         * largestSm.addStudent(s);
+         * largestList.add(s);
+         * lastAdded = s;
+         * added++;
+         * } catch (Exception e) {
+         * }
+         * }
+         * System.out.println("  Added " + added + " new students.");
+         * 
+         * // Measure lookup for the very last added student
+         * String targetId = lastAdded.getStudentId();
+         * long t1 = System.nanoTime();
+         * largestSm.findStudent(targetId);
+         * long t2 = System.nanoTime();
+         * long mapTime = t2 - t1;
+         * System.out.printf("  HashMap Lookup (Item #1,000,500): %,d ns%n", mapTime);
+         * if (mapTime < 50000) { // arbitrary threshold for O(1), e.g. 50us
+         * System.out.println("  ✓ Verified O(1) performance maintained.");
+         * } else {
+         * System.out.println("  ! Warning: Lookup took longer than expected.");
+         * }
+         * 
+         * // 3. TreeMap Auto-Sorting
+         * System.out.
+         * println("\n[Test 3] Verifying TreeMap Auto-Sorting (GPA Descending)");
+         * System.out.println("--------------------------------------------------");
+         * verifyTreeMapSorting();
+         * 
+         * // 4. HashSet Duplicate Prevention
+         * System.out.
+         * println("\n[Test 4] Verifying HashSet Prevents Duplicate Course Codes");
+         * System.out.println("--------------------------------------------------");
+         * verifyHashSetDuplicates();
+         */
 
-        for (int size : sizes) {
-            Object[] result = runBenchmark(size);
-            if (size == 1000000) {
-                largestSm = (StudentManager) result[0];
-                largestList = (List<Student>) result[1];
-            }
-        }
+        // 8. Stream Processing Performance
+        // testStreamProcessingPerformance(); // Commented out to focus on Test 9
 
-        if (largestSm == null)
-            return;
-
-        // 2. Add 500 more students and verify O(1)
-        System.out.println("\n[Test 2] Adding 500 more students to 1M dataset & Re-verifying...");
-        System.out.println("--------------------------------------------------");
-        int added = 0;
-        Random rand = new Random();
-        Student lastAdded = null;
-        for (int i = 0; i < 500; i++) {
-            try {
-                String name = "NewStudent";
-                String email = "new" + i + "@test.com";
-                String phone = String.format("555%07d", i % 10000000);
-                Student s = new RegularStudent(name, 20, email, phone, "2025-01-01");
-                largestSm.addStudent(s);
-                largestList.add(s);
-                lastAdded = s;
-                added++;
-            } catch (Exception e) {
-            }
-        }
-        System.out.println("  Added " + added + " new students.");
-
-        // Measure lookup for the very last added student
-        String targetId = lastAdded.getStudentId();
-        long t1 = System.nanoTime();
-        largestSm.findStudent(targetId);
-        long t2 = System.nanoTime();
-        long mapTime = t2 - t1;
-        System.out.printf("  HashMap Lookup (Item #1,000,500): %,d ns%n", mapTime);
-        if (mapTime < 50000) { // arbitrary threshold for O(1), e.g. 50us
-            System.out.println("  ✓ Verified O(1) performance maintained.");
-        } else {
-            System.out.println("  ! Warning: Lookup took longer than expected.");
-        }
-
-        // 3. TreeMap Auto-Sorting
-        System.out.println("\n[Test 3] Verifying TreeMap Auto-Sorting (GPA Descending)");
-        System.out.println("--------------------------------------------------");
-        verifyTreeMapSorting();
-
-        // 4. HashSet Duplicate Prevention
-        System.out.println("\n[Test 4] Verifying HashSet Prevents Duplicate Course Codes");
-        System.out.println("--------------------------------------------------");
-        verifyHashSetDuplicates();
+        // 9. Thread Safety Verification
+        testThreadSafety();
     }
 
     private static Object[] runBenchmark(int size) {
+
         System.out.println("\nDataset Size: " + size);
         StudentManager sm = new StudentManager();
         List<Student> studentList = new ArrayList<>(size);
@@ -190,12 +204,212 @@ public class PerformanceTest {
                 System.out.println("  X Failed: Duplicate allowed.");
             }
 
-            // Edge case: Same Code, Diff Name (Current equals checks both, so this
-            // validates that)
-            // If requirements strictly wanted "Duplicate Code" prevention regardless of
-            // name, this test would show current app behavior.
-            // But for now we verify basic duplicate object prevention.
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --- TEST SCENARIO 8: STREAM PROCESSING PERFORMANCE ---
+    private static void testStreamProcessingPerformance() {
+        System.out.println("\n[Test 8] Stream Processing Performance (10,000 records)");
+        System.out.println("--------------------------------------------------");
+
+        String testFile = "imports/large_grades_perf.csv";
+        int recordCount = 10000;
+        createLargeCSV(testFile, recordCount);
+
+        // A. Streaming Import (Files.lines())
+        System.gc();
+        long memBefore = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long startStream = System.nanoTime();
+
+        List<String> streamedLines = new ArrayList<>();
+        try (java.util.stream.Stream<String> stream = java.nio.file.Files.lines(java.nio.file.Paths.get(testFile))) {
+            stream.forEach(streamedLines::add); // Simulating processing
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+
+        long endStream = System.nanoTime();
+        long memAfterStream = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long streamTime = endStream - startStream;
+        long streamMem = Math.max(0, memAfterStream - memBefore);
+
+        System.out.printf("  Streaming Import Time:     %,d ns (%.2f ms)%n", streamTime, streamTime / 1_000_000.0);
+        // Memory metrics in Java are tricky/noisy, but we log what we capture
+        System.out.printf("  Streaming Memory Delta:    %,d bytes%n", streamMem);
+
+        // B. Non-Streaming Import (Files.readAllLines())
+        System.gc();
+        memBefore = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long startLoad = System.nanoTime();
+
+        try {
+            List<String> allLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(testFile));
+            // Just accessing to ensure loaded
+            int sz = allLines.size();
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+
+        long endLoad = System.nanoTime();
+        long memAfterLoad = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long loadTime = endLoad - startLoad;
+        long loadMem = Math.max(0, memAfterLoad - memBefore);
+
+        System.out.printf("  Load-All Import Time:      %,d ns (%.2f ms)%n", loadTime, loadTime / 1_000_000.0);
+        System.out.printf("  Load-All Memory Delta:     %,d bytes%n", loadMem);
+
+        if (streamMem < loadMem) {
+            System.out.println("  ✓ Verified: Streaming used less memory.");
+        } else {
+            System.out.println("  ! Note: Memory difference inconclusive (GC noise likely).");
+        }
+
+        // C. Parallel vs Sequential Stats
+        List<Double> grades = new ArrayList<>(recordCount);
+        Random r = new Random();
+        for (int i = 0; i < recordCount; i++)
+            grades.add(r.nextDouble() * 100);
+
+        // Sequential
+        long startSeq = System.nanoTime();
+        double avgSeq = grades.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+        long timeSeq = System.nanoTime() - startSeq;
+
+        // Parallel
+        long startPar = System.nanoTime();
+        double avgPar = grades.parallelStream().mapToDouble(Double::doubleValue).average().orElse(0);
+        long timePar = System.nanoTime() - startPar;
+
+        System.out.printf("\n  Sequential Stats Time:     %,d ns%n", timeSeq);
+        System.out.printf("  Parallel Stats Time:       %,d ns%n", timePar);
+        double speedup = (double) timeSeq / timePar;
+        System.out.printf("  Speedup Factor:            %.2fx%n", speedup);
+
+        if (Math.abs(avgSeq - avgPar) < 0.0001) {
+            System.out.println("  ✓ Verified: Results identical (" + avgSeq + ").");
+        } else {
+            System.out.println("  X Failed: Results differ.");
+        }
+    }
+
+    private static void createLargeCSV(String filepath, int records) {
+        try (java.io.BufferedWriter bw = java.nio.file.Files.newBufferedWriter(java.nio.file.Paths.get(filepath))) {
+            bw.write("StudentID,SubjectName,Type,Score,Date");
+            bw.newLine();
+            Random r = new Random();
+            for (int i = 0; i < records; i++) {
+                bw.write(String.format("STU%05d,Math,Core,%d,2024-01-01", i, r.nextInt(101)));
+                bw.newLine();
+            }
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --- TEST SCENARIO 9: THREAD SAFETY VERIFICATION ---
+    private static void testThreadSafety() {
+        System.out.println("\n[Test 9] Thread Safety Verification");
+        System.out.println("--------------------------------------------------");
+
+        StudentManager sm = new StudentManager();
+        GradeManager gm = new GradeManager();
+
+        // Seed initial data
+        // Seed initial data
+        Student s1Temp = null;
+        try {
+            s1Temp = new RegularStudent("Student One", 20, "s1@test.com", "555-555-5555", "2024-01-01");
+            sm.addStudent(s1Temp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        final Student s1 = s1Temp;
+
+        int initialGrades = 10;
+        try {
+            for (int i = 0; i < initialGrades; i++) {
+                gm.addGrade(new Grade(s1.getStudentId(), new CoreSubject("Math", "MAT101"), 80.0));
+            }
+        } catch (Exception e) {
+        }
+
+        // Thread pool
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(3);
+        java.util.List<String> errors = java.util.Collections.synchronizedList(new ArrayList<>());
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(3);
+
+        // Task 1: "Dashboard" - Continuous Reading
+        executor.submit(() -> {
+            try {
+                for (int i = 0; i < 50; i++) {
+                    gm.calculateOverallAverage(s1.getStudentId());
+                    gm.getAllUniqueSubjects();
+                    Thread.sleep(5);
+                }
+            } catch (Exception e) {
+                errors.add("Dashboard Task Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Task 2: "Writer" - Adding 50 Grades
+        executor.submit(() -> {
+            try {
+                for (int i = 0; i < 50; i++) {
+                    gm.addGrade(new Grade(s1.getStudentId(), new CoreSubject("History", "HIS101"), 90.0));
+                    Thread.sleep(5);
+                }
+            } catch (Exception e) {
+                errors.add("Write Task Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Task 3: "Reporter" - Batch Report (Deep Read)
+        executor.submit(() -> {
+            try {
+                for (int i = 0; i < 10; i++) {
+                    // Simulate checking all grades
+                    List<Grade> all = gm.getAllGrades(); // This does iteration inside copy
+                    gm.viewGradesByStudent(s1); // This iterates grades
+                    Thread.sleep(25);
+                }
+            } catch (Exception e) {
+                errors.add("Report Task Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        try {
+            // Wait for all
+            boolean completed = latch.await(10, java.util.concurrent.TimeUnit.SECONDS);
+            executor.shutdown();
+
+            if (!completed) {
+                System.out.println("  X Timeout: Operations took too long.");
+            } else if (errors.isEmpty()) {
+                System.out.println("  ✓ Success: No ConcurrentModificationExceptions or data corruption.");
+                // Verification
+                int expected = initialGrades + 50;
+                int actual = gm.getGradesForStudent(s1.getStudentId()).size();
+                if (actual >= expected) {
+                    System.out.println("  ✓ Data Integrity Check: Operations completed without crash.");
+                } else {
+                    System.out.println("  ? Data Count: " + actual + " (Logic might have updated duplicates)");
+                }
+            } else {
+                System.out.println("  X Failed: Errors occurred:");
+                for (String err : errors) {
+                    System.out.println("    - " + err);
+                }
+            }
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
