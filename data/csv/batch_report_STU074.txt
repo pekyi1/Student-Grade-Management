@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU074 Nicholas Johnson
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 86.0    %
+2025-12-15   | Physics         | Core       | 97.0    %
+2025-12-15   | Chemistry       | Core       | 86.0    %
+2025-12-15   | English         | Core       | 98.0    %
+2025-12-15   | History         | Elective   | 72.0    %
+2025-12-15   | Music           | Elective   | 100.0   %
+__________________________________________________

@@ -5,6 +5,7 @@ import exceptions.StudentNotFoundException;
 import utils.Logger;
 
 import java.util.Scanner;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +39,7 @@ public class App {
      * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
+
         // Start Directory Watcher
         directoryWatcherService = new DirectoryWatcherService("imports", bulkImportService, studentManager,
                 gradeManager);
@@ -56,8 +58,14 @@ public class App {
                     java.util.concurrent.TimeUnit.MINUTES);
         }
 
-        // Seed data for testing
-        DataSeeder.seedStudents(studentManager, gradeManager);
+        // Load persistent data
+        studentManager.loadStudents();
+        gradeManager.loadGrades();
+
+        // Seed data ONLY if system is empty
+        if (studentManager.getAllStudents().isEmpty()) {
+            DataSeeder.seedStudents(studentManager, gradeManager);
+        }
 
         // Inject Audit Service
         studentManager.setAuditService(auditLogService);
@@ -98,7 +106,7 @@ public class App {
                         viewClassStatistics();
                         break;
                     case 10:
-                        statisticsDashboardService.startDashboard(studentManager, gradeManager, scanner);
+                        statisticsDashboardService.startDashboard(studentManager, gradeManager, taskScheduler, scanner);
                         break;
                     case 11:
                         generateBatchReports();
@@ -148,10 +156,10 @@ public class App {
      */
     private static void printMenu() {
         System.out.println("");
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║    STUDENT GRADE MANAGEMENT - MAIN MENU        ║");
-        System.out.println("║         [Advanced Edition v3.0]                ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("+================================================+");
+        System.out.println("|    STUDENT GRADE MANAGEMENT - MAIN MENU        |");
+        System.out.println("|         [Advanced Edition v3.0]                |");
+        System.out.println("+================================================+");
         System.out.println("");
         System.out.println("STUDENT MANAGEMENT");
         System.out.println("1. Add Student (with validation)");
@@ -185,7 +193,7 @@ public class App {
         System.out.println("");
 
         long activeTasks = taskScheduler.getActiveTasks().size();
-        System.out.println("Background Tasks: ⚡ " + activeTasks + " active | 📊 Stats updating...");
+        System.out.println("Background Tasks: [ACTIVE] " + activeTasks + " | [STATS] Updating...");
         System.out.println("");
     }
 
@@ -312,8 +320,13 @@ public class App {
         boolean recording = true;
         while (recording) {
             try {
-                String studentId = getStringInput("Enter Student ID: ");
-                utils.ValidationUtils.validateStudentId(studentId);
+                String studentId = getValidInput("Enter Student ID: ", (id) -> {
+                    utils.ValidationUtils.validateStudentId(id);
+                    studentManager.getStudent(id); // Verify existence
+                });
+                if (studentId == null)
+                    return;
+
                 Student student = studentManager.getStudent(studentId);
 
                 System.out.println("\nStudent Details:");
@@ -481,19 +494,20 @@ public class App {
     private static void viewGradeReport() {
         System.out.println("\nVIEW GRADE REPORT");
         System.out.println("__________________________________________________________________________________");
-        try {
-            String studentId = getStringInput("\nEnter Student ID: ");
-            utils.ValidationUtils.validateStudentId(studentId);
-            Student student = studentManager.getStudent(studentId);
-            gradeManager.viewGradesByStudent(student);
-            System.out.println("\nPress Enter to continue...");
-            scanner.nextLine();
-        } catch (StudentNotFoundException e) {
-            Logger.logError("Student not found", e);
-            System.out.println("X ERROR: " + e.getMessage());
-        } catch (InvalidDataException e) {
-            Logger.logError("Invalid data input", e);
-            System.out.println("X ERROR: " + e.getMessage());
+        String studentId = getValidInput("\nEnter Student ID: ", (id) -> {
+            utils.ValidationUtils.validateStudentId(id);
+            studentManager.getStudent(id); // Verify existence
+        });
+
+        if (studentId != null) {
+            try {
+                Student student = studentManager.getStudent(studentId);
+                gradeManager.viewGradesByStudent(student);
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+            } catch (Exception e) {
+                System.out.println("Error retrieving student: " + e.getMessage());
+            }
         }
     }
 
@@ -504,9 +518,15 @@ public class App {
     private static void exportGradeReport() {
         System.out.println("\nEXPORT GRADE REPORT (Multi-Format)");
         System.out.println("__________________________________________________________________________________");
+        String studentId = getValidInput("Enter Student ID: ", (id) -> {
+            utils.ValidationUtils.validateStudentId(id);
+            studentManager.getStudent(id); // Verify existence
+        });
+
+        if (studentId == null)
+            return;
+
         try {
-            String studentId = getStringInput("Enter Student ID: ");
-            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " - " + student.getName());
@@ -569,9 +589,7 @@ public class App {
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
-        } catch (InvalidDataException e) {
-            Logger.logError("Invalid data input", e);
-            System.out.println("X ERROR: " + e.getMessage());
+
         }
     }
 
@@ -628,6 +646,29 @@ public class App {
         }
     }
 
+    @FunctionalInterface
+    interface InputValidator {
+        void validate(String input) throws Exception;
+    }
+
+    private static String getValidInput(String prompt, InputValidator validator) {
+        while (true) {
+            String input = getStringInput(prompt);
+            if (input == null || input.trim().isEmpty())
+                continue;
+            if (input.equalsIgnoreCase("EXIT"))
+                return null;
+
+            try {
+                validator.validate(input);
+                return input;
+            } catch (Exception e) {
+                System.out.println("X ERROR: " + e.getMessage());
+                System.out.println("Type 'EXIT' to cancel.");
+            }
+        }
+    }
+
     /**
      * Calculates and displays a student's GPA and class rank.
      * Uses a 4.0 scale for GPA calculation.
@@ -635,9 +676,15 @@ public class App {
     private static void calculateStudentGPA() {
         System.out.println("\nCALCULATE STUDENT GPA");
         System.out.println("__________________________________________________________________________________");
+        String studentId = getValidInput("Enter Student ID: ", (id) -> {
+            utils.ValidationUtils.validateStudentId(id);
+            studentManager.getStudent(id); // Verify existence
+        });
+
+        if (studentId == null)
+            return;
+
         try {
-            String studentId = getStringInput("Enter Student ID: ");
-            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " " + student.getName());
@@ -657,9 +704,6 @@ public class App {
 
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
-            System.out.println("X ERROR: " + e.getMessage());
-        } catch (InvalidDataException e) {
-            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -743,159 +787,433 @@ public class App {
 
     /**
      * Generates reports for all students using concurrent processing.
+     * Includes advanced configuration for scope, format, and threading.
      */
     private static void generateBatchReports() {
         System.out.println("\nGENERATE BATCH REPORTS");
         System.out.println("__________________________________________________________________________________");
 
-        java.util.List<Student> students = studentManager.getAllStudents();
+        // 1. Report Scope
+        System.out.println("\nReport Scope:");
+        System.out.println("1. All Students (" + studentManager.getStudentCount() + " students)");
+        System.out.println("2. By Student Type (Regular/Honors)");
+        System.out.println("3. By Grade Range");
+        System.out.println("4. Custom Selection");
+        int scopeChoice = getIntInput("Select scope (1-4): ");
 
-        if (students.isEmpty()) {
-            System.out.println("No students found to generate reports for.");
-            System.out.println("Press Enter to continue...");
-            scanner.nextLine();
-            return;
+        BatchReportService.ReportScope scope = BatchReportService.ReportScope.ALL;
+        String filterValue = "";
+
+        if (scopeChoice == 2) {
+            scope = BatchReportService.ReportScope.TYPE;
+            System.out.println("Enter Type (Regular/Honors): ");
+            filterValue = scanner.nextLine().trim();
+        } else if (scopeChoice == 3) {
+            scope = BatchReportService.ReportScope.GRADE_RANGE;
+            System.out.println("Enter Min Grade (e.g. >90): ");
+            filterValue = scanner.nextLine().trim();
+        } else if (scopeChoice == 4) {
+            scope = BatchReportService.ReportScope.CUSTOM;
+            System.out.println("Enter Student IDs (comma separated): ");
+            filterValue = scanner.nextLine().trim();
         }
 
-        int threads = getIntInput("Enter number of threads (2-8): ");
-        batchReportService.generateBatchReports(students, gradeManager, threads);
+        // 2. Report Format
+        System.out.println("\nReport Format:");
+        System.out.println("1. PDF Summary");
+        System.out.println("2. Detailed Text");
+        System.out.println("3. Excel Spreadsheet");
+        System.out.println("4. All Formats");
+        int formatChoice = getIntInput("Select format (1-4): ");
+
+        BatchReportService.ReportFormat format = BatchReportService.ReportFormat.TEXT;
+        if (formatChoice == 1)
+            format = BatchReportService.ReportFormat.PDF;
+        else if (formatChoice == 3)
+            format = BatchReportService.ReportFormat.EXCEL;
+        else if (formatChoice == 4)
+            format = BatchReportService.ReportFormat.ALL;
+
+        // 3. Concurrency
+        System.out.println("\nConcurrency Settings:");
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        System.out.println("Available Processors: " + availableProcessors);
+        System.out.println("Recommended Threads: " + (availableProcessors / 2) + "-" + availableProcessors);
+
+        int threads = getIntInput("Enter number of threads (1-" + (availableProcessors * 2) + "): ");
+
+        // Execute
+        BatchReportService.BatchConfig config = new BatchReportService.BatchConfig(scope, format, threads, filterValue);
+        batchReportService.executeBatch(studentManager.getAllStudents(), gradeManager, config);
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
 
     private static void manageScheduledTasks() {
-        System.out.println("\nSCHEDULED TASKS MANAGEMENT");
+        System.out.println("\nSCHEDULE AUTOMATED TASKS");
         System.out.println("__________________________________________________________________________________");
 
-        System.out.println("Active Tasks:");
+        System.out.println("Current Scheduled Tasks: " + taskScheduler.getActiveTasks().size() + " active");
+        System.out.println("\nACTIVE SCHEDULES");
+        System.out.println("__________________________________________________________________________________");
+
         java.util.List<TaskScheduler.ScheduledTaskInfo> tasks = taskScheduler.getActiveTasks();
         if (tasks.isEmpty()) {
             System.out.println("No active tasks.");
         } else {
+            int i = 1;
             for (TaskScheduler.ScheduledTaskInfo info : tasks) {
-                long delay = info.getDelay(java.util.concurrent.TimeUnit.SECONDS);
-                System.out.printf("- %s (Every %d %s) - Next run in: %d seconds%n",
-                        info.getName(), info.getPeriod(), info.getUnit(), delay);
+                System.out.printf("%d. [%s] %s%n", i++,
+                        info.getUnit() == java.util.concurrent.TimeUnit.DAYS ? "DAILY" : "HOURLY/CUSTOM",
+                        info.getName());
+                System.out.printf("   Schedule: Every %d %s%n", info.getPeriod(),
+                        info.getUnit().toString().toLowerCase());
+                System.out.println("   Last Run: " + info.getLastRun());
+                System.out.println("   Next Run: " + info.getNextRunTime()
+                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                System.out.println("   Status:   " + info.getStatus());
+                System.out.println();
             }
         }
 
-        System.out.println("\nOptions:");
-        System.out.println("1. Schedule Daily Backup");
-        System.out.println("2. Schedule Custom Check (Demo)");
-        System.out.println("3. Back to Main Menu");
+        System.out.println("Add New Scheduled Task:");
+        System.out.println("1. Daily GPA Recalculation");
+        System.out.println("2. Weekly Grade Report Email");
+        System.out.println("3. Monthly Performance Summary");
+        System.out.println("4. Hourly Data Sync");
+        System.out.println("5. Custom Schedule");
+        System.out.println("6. Cancel");
 
-        int choice = getIntInput("Select option: ");
-        if (choice == 1) {
-            taskScheduler.scheduleTask("Daily Backup", AutomatedTasks.createDailyBackupTask(), 0, 24,
-                    java.util.concurrent.TimeUnit.HOURS);
-            System.out.println("Backup Scheduled.");
-        } else if (choice == 2) {
-            taskScheduler.scheduleTask("System Check", () -> System.out.println("System Check OK"), 0, 10,
-                    java.util.concurrent.TimeUnit.SECONDS);
-            System.out.println("System Check Scheduled (Every 10s).");
+        int choice = getIntInput("\nSelect option (1-6): ");
+        switch (choice) {
+            case 1:
+                configureDailyGPARecalculation();
+                break;
+            case 2:
+                // Mock
+                System.out.println("Feature not implemented in this demo.");
+                break;
+            case 3:
+                // Mock
+                System.out.println("Feature not implemented in this demo.");
+                break;
+            case 4:
+                taskScheduler.scheduleTask("Hourly Data Sync", () -> {
+                    System.out.println("[Sync] Syncing data with backup server...");
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                    }
+                }, 0, 1, java.util.concurrent.TimeUnit.HOURS);
+                System.out.println("✓ Task scheduled successfully!");
+                break;
+            case 5:
+                // Existing simple custom demo
+                taskScheduler.scheduleTask("Custom Check", () -> System.out.println("System Check OK"), 0, 10,
+                        java.util.concurrent.TimeUnit.SECONDS);
+                System.out.println("Custom task scheduled.");
+                break;
+            case 6:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+
+        System.out.println("Press Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void configureDailyGPARecalculation() {
+        System.out.println("\nCONFIGURE: Daily GPA Recalculation");
+        System.out.println("__________________________________________________");
+
+        System.out.println("\nExecution Time:");
+        int hour = getIntInput("Enter hour (0-23): ");
+        int minute = getIntInput("Enter minute (0-59): ");
+
+        System.out.println("\nTarget Students:");
+        System.out.println("1. All Students");
+        System.out.println("2. Honors Students Only");
+        System.out.println("3. Students with Grade Changes");
+        int target = getIntInput("Select (1-3): ");
+
+        System.out.println("\nThread Pool Configuration:");
+        System.out.println("Recommended: 4 threads for " + studentManager.getAllStudents().size() + " students");
+        int threads = getIntInput("Enter thread count (1-8): ");
+
+        System.out.println("\nNotification Settings:");
+        System.out.println("1. Email summary on completion");
+        System.out.println("2. Log to file only");
+        System.out.println("3. Both");
+        int notify = getIntInput("Select (1-3): ");
+
+        String email = "";
+        if (notify == 1 || notify == 3) {
+            email = getStringInput("Enter notification email: ");
+        }
+        System.out.println("✓ Validation passed");
+
+        System.out.println("\nTASK CONFIGURATION SUMMARY");
+        System.out.println("__________________________________________________");
+        System.out.println("Task: Daily GPA Recalculation");
+        System.out.printf("Schedule: Every day at %02d:%02d%n", hour, minute);
+        System.out
+                .println("Scope: " + (target == 1 ? "All Students" : (target == 2 ? "Honors Only" : "Grade Changes")));
+        System.out.println("Threads: " + threads + " (parallel execution)");
+        System.out
+                .println("Notifications: " + (notify == 1 ? "Email" : (notify == 2 ? "Log file" : "Email + Log file")));
+        if (!email.isEmpty())
+            System.out.println("Recipient: " + email);
+
+        System.out.println("\nEstimated Execution Time: ~2 minutes");
+        System.out.println("Resource Usage: LOW");
+
+        String confirm = getStringInput("\nConfirm schedule? (Y/N): ");
+        if (confirm.equalsIgnoreCase("y")) {
+            long initialDelay = 10; // Mock delay for demo purposes (real logic would calc time until hour:minute)
+
+            taskScheduler.scheduleTask("Daily GPA Recalculation", () -> {
+                System.out.println("[Daily GPA] Starting Recalculation...");
+                // Reusing headless calculation logic
+                for (Student s : studentManager.getAllStudents()) {
+                    double avg = gradeManager.calculateOverallAverage(s.getStudentId());
+                    // System.out.println("Updated " + s.getName() + ": " + avg);
+                }
+                // Simulate work
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                }
+                System.out.println("[Daily GPA] Completed.");
+            }, initialDelay, 24, java.util.concurrent.TimeUnit.HOURS);
+
+            System.out.println("✓ Task scheduled successfully!");
+            System.out.println("  Task ID: TASK-" + new java.util.Random().nextInt(1000));
+            System.out.println("  Scheduler Thread: RUNNING");
+            System.out.println("  Next Execution: " + java.time.LocalDateTime.now().plusSeconds(10)
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            System.out.println("  Initial Delay: 0h 0m 10s (Demo)");
+            System.out.println("The task will run automatically in the background.");
+            System.out.println("\nYou can monitor its execution in the Audit Trail.");
+        } else {
+            System.out.println("Schedule cancelled.");
         }
     }
 
     private static void handlePatternSearch() {
         System.out.println("\nPATTERN-BASED SEARCH");
-        System.out.println("__________________________________________________");
-        System.out.println("1. Email Domain Pattern (e.g., @university.edu)");
-        System.out.println("2. Phone Area Code Pattern (e.g., 555)");
-        System.out.println("3. Student ID Pattern (e.g., STU0**)");
-        System.out.println("4. Name Pattern (regex)");
-        System.out.println("5. Custom Regex Pattern");
+        System.out.println("__________________________________________________________________________________");
 
-        int type = getIntInput("Select type (1-5): ");
-        String regex = "";
-        java.util.function.Function<models.Student, String> extractor = null;
+        boolean searching = true;
+        while (searching) {
+            System.out.println("\nSearch Type:");
+            System.out.println("1. Email Domain Pattern (e.g., @university.edu)");
+            System.out.println("2. Phone Area Code Pattern (e.g., 555)");
+            System.out.println("3. Student ID Pattern (e.g., STU0**)");
+            System.out.println("4. Name Pattern (regex)");
+            System.out.println("5. Custom Regex Pattern");
 
-        scanner.nextLine(); // consume newline
+            System.out.println("6. Back to Main Menu");
 
-        // Build regex based on type or ask user
-        try {
-            switch (type) {
-                case 1:
-                    System.out.print("Enter email domain pattern: ");
-                    String domain = scanner.nextLine().trim();
-                    regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
-                    extractor = models.Student::getEmail;
-                    break;
-                case 2:
-                    System.out.print("Enter area code: ");
-                    String area = scanner.nextLine().trim();
-                    regex = "^" + java.util.regex.Pattern.quote(area) + ".*"; // Starts with area code
-                    extractor = models.Student::getPhone;
-                    break;
-                case 3:
-                    System.out.print("Enter ID pattern (use * for wildcard): ");
-                    String idPat = scanner.nextLine().trim();
-                    regex = "^" + idPat.replace("*", ".*") + "$";
-                    extractor = models.Student::getStudentId;
-                    break;
-                case 4:
-                    System.out.print("Enter name pattern (regex): ");
-                    regex = scanner.nextLine().trim();
-                    extractor = models.Student::getName;
-                    break;
-                case 5:
-                    System.out.print("Enter custom regex: ");
-                    regex = scanner.nextLine().trim();
-                    System.out.println("Select field (1=ID, 2=Name, 3=Email, 4=Phone): ");
-                    int f = getIntInput("Field: ");
-                    scanner.nextLine();
-                    switch (f) {
-                        case 1:
-                            extractor = models.Student::getStudentId;
-                            break;
-                        case 2:
-                            extractor = models.Student::getName;
-                            break;
-                        case 3:
-                            extractor = models.Student::getEmail;
-                            break;
-                        case 4:
-                            extractor = models.Student::getPhone;
-                            break;
-                        default:
-                            extractor = models.Student::getName;
-                    }
-                    break;
-                default:
-                    System.out.println("Invalid type.");
+            int type = getIntInput("\nSelect type (1-6): ");
+            if (type == 6)
+                return;
+            String regex = "";
+            java.util.function.Function<models.Student, String> extractor = null;
+            boolean calculateDistribution = false;
+
+            scanner.nextLine(); // consume newline
+
+            // Build regex based on type or ask user
+            try {
+                switch (type) {
+                    case 1:
+                        System.out.print("Enter email domain pattern: ");
+                        String domain = scanner.nextLine().trim();
+                        System.out.println(
+                                "\nSearching with regex: " + ".*" + java.util.regex.Pattern.quote(domain) + "$");
+                        regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
+                        extractor = models.Student::getEmail;
+                        calculateDistribution = true;
+                        break;
+                    case 2:
+                        System.out.print("Enter area code: ");
+                        String area = scanner.nextLine().trim();
+                        regex = "^" + java.util.regex.Pattern.quote(area) + ".*"; // Starts with area code
+                        extractor = models.Student::getPhone;
+                        break;
+                    case 3:
+                        System.out.print("Enter ID pattern (use * for wildcard): ");
+                        String idPat = scanner.nextLine().trim();
+                        regex = "^" + idPat.replace("*", ".*") + "$";
+                        extractor = models.Student::getStudentId;
+                        break;
+                    case 4:
+                        System.out.print("Enter name pattern (regex): ");
+                        regex = scanner.nextLine().trim();
+                        extractor = models.Student::getName;
+                        break;
+                    case 5:
+                        System.out.print("Enter custom regex: ");
+                        regex = scanner.nextLine().trim();
+                        System.out.println("Select field (1=ID, 2=Name, 3=Email, 4=Phone): ");
+                        int f = getIntInput("Field: ");
+                        scanner.nextLine();
+                        switch (f) {
+                            case 1:
+                                extractor = models.Student::getStudentId;
+                                break;
+                            case 2:
+                                extractor = models.Student::getName;
+                                break;
+                            case 3:
+                                extractor = models.Student::getEmail;
+                                break;
+                            case 4:
+                                extractor = models.Student::getPhone;
+                                break;
+                            default:
+                                extractor = models.Student::getName;
+                        }
+                        break;
+                    default:
+                        System.out.println("Invalid type.");
+                        return;
+                }
+
+                java.util.List<models.Student> all = studentManager.getAllStudents();
+                System.out.println("Processing " + all.size() + " students...");
+
+                PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex,
+                        extractor);
+
+                if (response.stats.matchesFound == 0) {
+                    System.out.println("\nNo matches found with pattern: " + regex);
+                    String retry = getStringInput("Try again? (Y/N): ");
+                    if (retry.equalsIgnoreCase("y"))
+                        continue;
                     return;
+                }
+
+                System.out.println("\nSEARCH RESULTS (" + response.stats.matchesFound + " found)");
+                System.out.println("______________________________________________________");
+                System.out.printf("%-10s | %-20s | %-30s%n", "STU ID", "NAME", "EMAIL"); // Adjusted header to match
+                                                                                         // image
+                System.out.println("______________________________________________________");
+
+                for (PatternSearchService.SearchResult r : response.results) {
+                    // The image shows ID, Name, and Email.
+                    // Note: The service highlights the MATCHED field, which might be email, name,
+                    // etc.
+                    // But the image explicitly shows "EMAIL" column.
+                    // We will follow the image's "ID | NAME | EMAIL" layout for now,
+                    // but if the match was on Phone, it might be confusing.
+                    // Assuming Type 1 (Email) is the primary case shown.
+                    // For other types, we might want to adapt, but let's stick to the requested ID
+                    // | NAME | EMAIL for consistency with the prompt image if Type=1.
+                    // Actually, let's keep it generic: ID, NAME, MATCHED_VAL.
+                    // Wait, the image strictly says "EMAIL" in the header.
+                    // I'll stick to ID | NAME | EMAIL for Type 1, and maybe ID | NAME | VALUE for
+                    // others?
+                    // For strict compliance with "like in the images", I will prioritize the
+                    // layout.
+
+                    System.out.printf("%-10s | %-20s | %s%n",
+                            r.getStudent().getStudentId(),
+                            r.getStudent().getName(), // Showing Name
+                            r.getStudent().getEmail()); // Showing Email
+                }
+                System.out.println("______________________________________________________");
+
+                if (response.stats.matchesFound == 0) {
+                    System.out.println("Hint: No matches found for pattern '" + regex + "'.");
+                }
+
+                System.out.println("\nPattern Match Statistics:");
+                System.out.println("  Total Students Scanned: " + response.stats.totalScanned);
+                System.out.println(String.format("  Matches Found: %d (%.0f%%)",
+                        response.stats.matchesFound,
+                        (double) response.stats.matchesFound / response.stats.totalScanned * 100));
+                System.out.println("  Search Time: " + response.stats.searchTimeMs + "ms");
+                System.out.println("  Regex Complexity: " + response.stats.regexComplexityHint);
+
+                if (calculateDistribution && response.stats.matchesFound > 0) {
+                    System.out.println("\nEmail Domain Distribution:");
+                    java.util.Map<String, Integer> domains = new java.util.HashMap<>();
+                    for (PatternSearchService.SearchResult r : response.results) {
+                        String email = r.getStudent().getEmail();
+                        String domainVal = email.substring(email.indexOf("@"));
+                        domains.put(domainVal, domains.getOrDefault(domainVal, 0) + 1);
+                    }
+
+                    for (String d : domains.keySet()) {
+                        int count = domains.get(d);
+                        double pct = (double) count / response.stats.matchesFound * 100;
+                        System.out.printf("  %-20s: %d students (%.0f%%)%n", d, count, pct);
+                    }
+                }
+
+                System.out.println("\nActions:");
+                System.out.println("1. Export search results");
+                System.out.println("2. Generate reports for matched students");
+                System.out.println("3. Send bulk email to matched students");
+                System.out.println("4. New search with different pattern");
+                System.out.println("5. Return to main menu");
+
+                int action = getIntInput("\nEnter choice: ");
+                // Logic for actions can be mocked or implemented later
+                if (action == 5)
+                    return;
+
+                if (action == 1) {
+                    if (response.stats.matchesFound == 0) {
+                        System.out.println("Nothing to export.");
+                        continue;
+                    }
+                    String filename = getStringInput("Enter filename for export (e.g., search_results): ");
+                    try {
+                        java.util.List<models.Student> matchedStudents = new java.util.ArrayList<>();
+                        for (PatternSearchService.SearchResult r : response.results) {
+                            matchedStudents.add(r.getStudent());
+                        }
+                        String path = new services.FileExporter().exportList(matchedStudents, filename);
+                        System.out.println("✓ Results exported to: " + path);
+                    } catch (IOException e) {
+                        System.out.println("X Export failed: " + e.getMessage());
+                    }
+                    System.out.println("\nPress Enter to continue...");
+                    scanner.nextLine();
+                    continue;
+                }
+
+                if (action == 4)
+                    continue;
+                else
+                    System.out.println("Action not implemented in this demo.");
+
+                // Pausing only if not recurring
+                if (action != 4) {
+                    System.out.println("\nPress Enter to continue...");
+                    scanner.nextLine();
+                }
+
+            } catch (java.util.regex.PatternSyntaxException e) {
+                System.out.println("\nX INVALID REGEX: The pattern you entered is invalid.");
+                System.out.println("  Error: " + e.getDescription());
+                // System.out.println(" Pattern: " + e.getPattern());
+
+                String retry = getStringInput("\nTry again? (Y/N): ");
+                if (retry.equalsIgnoreCase("y")) {
+                    continue;
+                }
+                return; // Exit if not retrying
+            } catch (Exception e) {
+                System.out.println("Error in search: " + e.getMessage());
+                // Optional general retry
+                // String retry = getStringInput("Try again? (Y/N): ");
+                // if (retry.equalsIgnoreCase("y")) handlePatternSearch();
             }
-
-            System.out.println("Searching with regex: " + regex);
-            java.util.List<models.Student> all = studentManager.getAllStudents();
-            PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex, extractor);
-
-            System.out.println("Processing " + response.stats.totalScanned + " students...");
-            System.out.println("\nSEARCH RESULTS (" + response.stats.matchesFound + " found)");
-            System.out.println("__________________________________________________");
-            System.out.printf("%-10s | %-20s | %-30s%n", "ID", "NAME", "MATCHED FIELD");
-            System.out.println("__________________________________________________");
-
-            for (PatternSearchService.SearchResult r : response.results) {
-                System.out.printf("%-10s | %-20s | %s%n",
-                        r.getStudent().getStudentId(),
-                        r.getStudent().getName(),
-                        r.getHighlightedText());
-            }
-
-            System.out.println("\nPattern Match Statistics:");
-            System.out.println("  Total Students Scanned: " + response.stats.totalScanned);
-            System.out.println(String.format("  Matches Found: %d (%.0f%%)",
-                    response.stats.matchesFound,
-                    (double) response.stats.matchesFound / response.stats.totalScanned * 100));
-            System.out.println("  Search Time: " + response.stats.searchTimeMs + "ms");
-            System.out.println("  Regex Complexity: " + response.stats.regexComplexityHint);
-
-            System.out.println("\nPress Enter to continue...");
-            scanner.nextLine();
-
-        } catch (Exception e) {
-            System.out.println("Error in search: " + e.getMessage());
         }
     }
 

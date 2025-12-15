@@ -83,8 +83,8 @@ public class Grade implements Gradable, Exportable, Calculable, java.io.Serializ
 
     @Override
     public String toExportFormat() {
-        return String.format("%s,%s,%s,%.2f",
-                studentID, subject.getSubjectName(), subject.getSubjectType(), grade);
+        return String.format("%s,%s,%s,%s,%.2f",
+                studentID, subject.getSubjectName(), subject.getSubjectCode(), subject.getSubjectType(), grade);
     }
 
     @Override

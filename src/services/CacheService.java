@@ -99,6 +99,11 @@ public class CacheService<K, V> {
         }
     }
 
+    public double getHitRate() {
+        int totalRequests = hits.get() + misses.get();
+        return totalRequests == 0 ? 0.0 : (double) hits.get() / totalRequests * 100.0;
+    }
+
     public String getStats() {
         int totalRequests = hits.get() + misses.get();
         double hitRate = totalRequests == 0 ? 0 : (double) hits.get() / totalRequests * 100;

@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU069 Justin Baker
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 97.0    %
+2025-12-15   | Physics         | Core       | 77.0    %
+2025-12-15   | Chemistry       | Core       | 80.0    %
+2025-12-15   | English         | Core       | 95.0    %
+2025-12-15   | Art             | Elective   | 87.0    %
+2025-12-15   | Music           | Elective   | 99.0    %
+__________________________________________________

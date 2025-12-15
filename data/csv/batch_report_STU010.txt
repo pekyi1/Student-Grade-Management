@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU010 Student J
+Student: STU010 Samuel Wilson
 __________________________________________________
 
 DETAILED GRADE HISTORY

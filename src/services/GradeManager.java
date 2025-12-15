@@ -4,6 +4,12 @@ import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import models.Grade;
 import models.Student;
+import services.SubjectFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +19,7 @@ import java.util.Set;
 
 // This class handles the storage and calculation of grades for all students
 public class GradeManager {
+    private static final String DATA_FILE = "data/grades.csv";
     // US-1: Use LinkedList<Grade> for frequent insertions/deletions in grade
     // history
     private java.util.LinkedList<Grade> grades;
@@ -68,6 +75,83 @@ public class GradeManager {
         }
 
         System.out.println("\n✓ Grade recorded successfully!");
+        saveGrades(); // Persist changes
+    }
+
+    private void saveGrades() {
+        try {
+            List<String> lines = new ArrayList<>();
+            for (Grade g : grades) {
+                lines.add(g.toExportFormat());
+            }
+            Path path = Paths.get(DATA_FILE);
+            if (path.getParent() != null)
+                Files.createDirectories(path.getParent());
+            Files.write(path, lines, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to save grades: " + e.getMessage());
+        }
+    }
+
+    public void loadGrades() {
+        Path path = Paths.get(DATA_FILE);
+        if (!Files.exists(path))
+            return;
+
+        try {
+            List<String> lines = Files.readAllLines(path);
+            grades.clear(); // Clear existing in-memory grades
+            averageCache.clear(); // Clear cache as we are reloading
+
+            Map<String, String> legacyCodeMap = new HashMap<>(); // Name+Type -> Code
+
+            for (String line : lines) {
+                try {
+                    String[] parts = line.split(",");
+                    if (parts.length < 4)
+                        continue;
+
+                    String studentId = parts[0];
+                    String subjectName = parts[1];
+                    models.Subject subject;
+                    double gradeVal;
+
+                    if (parts.length >= 5) {
+                        // New Format: ID, Name, Code, Type, Grade
+                        String subjectCode = parts[2];
+                        String subjectType = parts[3];
+                        gradeVal = Double.parseDouble(parts[4]);
+                        subject = SubjectFactory.createSubject(subjectName, subjectCode, subjectType);
+                    } else {
+                        // Old Format: ID, Name, Type, Grade
+                        String subjectType = parts[2];
+                        gradeVal = Double.parseDouble(parts[3]);
+
+                        // Deduplicate legacy subjects
+                        String key = subjectName + "|" + subjectType;
+                        String code;
+                        if (legacyCodeMap.containsKey(key)) {
+                            code = legacyCodeMap.get(key);
+                        } else {
+                            // Generate new code and cache it
+                            models.Subject temp = SubjectFactory.createSubject(subjectName, subjectType);
+                            code = temp.getSubjectCode();
+                            legacyCodeMap.put(key, code);
+                        }
+                        subject = SubjectFactory.createSubject(subjectName, code, subjectType);
+                    }
+
+                    Grade g = new Grade(studentId, subject, gradeVal);
+                    grades.add(g);
+
+                } catch (Exception e) {
+                    // System.err.println("Skipping invalid grade row: " + line + " Error: " +
+                    // e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to load grades: " + e.getMessage());
+        }
     }
 
     private AuditLogService auditService;
@@ -124,7 +208,6 @@ public class GradeManager {
                     (student.isPassing(currentAverage) ? "Yes: " : "No: ") + " Meeting passing grade requirement ("
                             + (int) student.getPassingGrade() + "%)");
         }
-
 
     }
 
