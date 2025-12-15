@@ -15,6 +15,8 @@ public class DirectoryWatcherService implements Runnable {
     private final StudentManager studentManager;
     private final GradeManager gradeManager;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final java.util.Set<String> processedFiles = java.util.Collections
+            .synchronizedSet(new java.util.HashSet<>());
 
     public DirectoryWatcherService(String importDir, BulkImportService importService,
             StudentManager studentManager, GradeManager gradeManager) {
@@ -62,6 +64,12 @@ public class DirectoryWatcherService implements Runnable {
                             @SuppressWarnings("unchecked")
                             WatchEvent<Path> ev = (WatchEvent<Path>) event;
                             Path fileName = ev.context();
+
+                            // DEDUPLICATION: Check if already processed recently
+                            if (processedFiles.contains(fileName.toString())) {
+                                continue;
+                            }
+                            processedFiles.add(fileName.toString());
 
                             System.out.println("New file detected: " + fileName);
                             // Process file
