@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU001 Student A
+Student: STU001 Billy Nelson
 __________________________________________________
 
 DETAILED GRADE HISTORY

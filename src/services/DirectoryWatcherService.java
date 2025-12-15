@@ -15,6 +15,8 @@ public class DirectoryWatcherService implements Runnable {
     private final StudentManager studentManager;
     private final GradeManager gradeManager;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final java.util.Set<String> processedFiles = java.util.Collections
+            .synchronizedSet(new java.util.HashSet<>());
 
     public DirectoryWatcherService(String importDir, BulkImportService importService,
             StudentManager studentManager, GradeManager gradeManager) {
@@ -63,6 +65,12 @@ public class DirectoryWatcherService implements Runnable {
                             WatchEvent<Path> ev = (WatchEvent<Path>) event;
                             Path fileName = ev.context();
 
+                            // DEDUPLICATION: Check if already processed recently
+                            if (processedFiles.contains(fileName.toString())) {
+                                continue;
+                            }
+                            processedFiles.add(fileName.toString());
+
                             System.out.println("New file detected: " + fileName);
                             // Process file
                             // Add slight delay to ensure file write is complete by OS
@@ -72,6 +80,20 @@ public class DirectoryWatcherService implements Runnable {
                             }
 
                             importService.importGrades(fileName.toString(), studentManager, gradeManager);
+
+                            // Move to processed directory to prevent loops
+                            try {
+                                Path source = path.resolve(fileName);
+                                Path processedDir = path.resolve("processed");
+                                if (!Files.exists(processedDir)) {
+                                    Files.createDirectories(processedDir);
+                                }
+                                Path target = processedDir.resolve(fileName);
+                                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+                                System.out.println("File moved to: " + target);
+                            } catch (IOException e) {
+                                System.err.println("Failed to move processed file: " + e.getMessage());
+                            }
                         }
                     }
 

@@ -100,4 +100,16 @@ public class FileExporter {
     private String ensureExtension(String filename, String extension) {
         return filename.toLowerCase().endsWith(extension) ? filename : filename + extension;
     }
+
+    /**
+     * Exports content to a specific custom path, creating directories if needed.
+     */
+    public String exportToPath(String customPath, String content) throws IOException {
+        Path path = Paths.get(customPath);
+        if (path.getParent() != null) {
+            Files.createDirectories(path.getParent());
+        }
+        Files.write(path, content.getBytes(StandardCharsets.UTF_8));
+        return path.toAbsolutePath().toString();
+    }
 }

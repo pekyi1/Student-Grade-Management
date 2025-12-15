@@ -9,8 +9,17 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import models.RegularStudent;
+import models.HonorsStudent;
+
 // This class manages the collection of students and deals with adding or finding them
 public class StudentManager implements Searchable {
+    private static final String DATA_FILE = "data/students.csv";
     // US-1: Use HashMap<String, Student> for O(1) student lookup by ID
     private java.util.Map<String, Student> students;
     // We don't need studentCount as the Map tracks size
@@ -49,14 +58,69 @@ public class StudentManager implements Searchable {
             auditService.log("ADD_STUDENT", "Added student: " + student.getStudentId(), "SYSTEM", true);
         }
 
-        System.out.println("\n-> Student added successfully!");
-        System.out.println("  Student ID: " + student.getStudentId());
-        System.out.println("  Name: " + student.getName());
-        System.out.println("  Type: " + student.getStudentType());
-        System.out.println("  Age: " + student.getAge());
-        System.out.println("  Email: " + student.getEmail());
-        System.out.printf("  Passing Grade: %.0f%%%n", student.getPassingGrade());
-        System.out.println("  Status: " + student.getStatus());
+        saveStudents(); // Persist changes
+    }
+
+    private void saveStudents() {
+        try {
+            List<String> lines = new ArrayList<>();
+            for (Student s : students.values()) {
+                lines.add(s.toExportFormat());
+            }
+            Path path = Paths.get(DATA_FILE);
+            if (path.getParent() != null)
+                Files.createDirectories(path.getParent());
+            Files.write(path, lines, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to save students: " + e.getMessage());
+        }
+    }
+
+    public void loadStudents() {
+        Path path = Paths.get(DATA_FILE);
+        if (!Files.exists(path))
+            return;
+
+        try {
+            List<String> lines = Files.readAllLines(path);
+            students.clear();
+            for (String line : lines) {
+                try {
+                    String[] parts = line.split(",");
+                    if (parts.length < 8)
+                        continue;
+                    // Format: studentId, name, type, age, email, phone, enrollmentDate, status
+                    String id = parts[0];
+                    String name = parts[1];
+                    String type = parts[2];
+                    int age = Integer.parseInt(parts[3]);
+                    String email = parts[4];
+                    String phone = parts[5];
+                    String date = parts[6];
+                    String status = parts[7];
+
+                    Student s;
+                    if (type.equalsIgnoreCase("Honors")) {
+                        s = new HonorsStudent(name, age, email, phone, date);
+                    } else {
+                        s = new RegularStudent(name, age, email, phone, date);
+                    }
+
+                    // Reflection hack to restore ID
+                    java.lang.reflect.Field idField = models.Student.class.getDeclaredField("studentId");
+                    idField.setAccessible(true);
+                    idField.set(s, id);
+
+                    s.setStatus(status);
+                    students.put(id, s);
+
+                } catch (Exception e) {
+                    System.err.println("Skipping invalid student row: " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to load students: " + e.getMessage());
+        }
     }
 
     private AuditLogService auditService;
@@ -72,7 +136,7 @@ public class StudentManager implements Searchable {
      * @param studentId The unique identifier of the student.
      * @return The Student object if found, or null if not found.
      */
-    public Student findStudent(String studentId) {
+    public Student findStudent(String studentId) { // Use HashMap<String, Student> for O(1) student lookup by ID
         return students.get(studentId);
     }
 

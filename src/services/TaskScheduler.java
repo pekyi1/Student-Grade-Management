@@ -23,17 +23,41 @@ public class TaskScheduler {
         new File("data").mkdirs();
     }
 
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
+    }
+
     public void scheduleTask(String name, Runnable task, long initialDelay, long period, TimeUnit unit) {
-        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
+        ScheduledTaskInfo info = new ScheduledTaskInfo(name, period, unit, null);
+
+        Runnable wrappedTask = () -> {
+            info.markRunning();
+            long start = System.currentTimeMillis();
             try {
                 task.run();
+                long duration = System.currentTimeMillis() - start;
+                info.markSuccess();
                 System.out.println("[Scheduler] Task '" + name + "' executed successfully.");
+                if (auditService != null) {
+                    auditService.log("TASK_EXEC", "Task: " + name, "SCHEDULER", true, duration);
+                }
             } catch (Exception e) {
+                info.markFailure();
+                long duration = System.currentTimeMillis() - start;
                 System.err.println("[Scheduler] Task '" + name + "' failed: " + e.getMessage());
+                if (auditService != null) {
+                    auditService.log("TASK_EXEC", "Task: " + name + " Failed: " + e.getMessage(), "SCHEDULER", false,
+                            duration);
+                }
             }
-        }, initialDelay, period, unit);
-        
-        activeTasks.add(new ScheduledTaskInfo(name, period, unit, future));
+        };
+
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(wrappedTask, initialDelay, period, unit);
+        info.setFuture(future);
+
+        activeTasks.add(info);
         saveSchedules();
     }
 
@@ -41,6 +65,7 @@ public class TaskScheduler {
         return new ArrayList<>(activeTasks); // Return copy
     }
 
+    // ... existing shutdown/save/load methods ...
     public void shutdown() {
         System.out.println("Shutting down Task Scheduler...");
         scheduler.shutdown();
@@ -48,13 +73,8 @@ public class TaskScheduler {
 
     private void saveSchedules() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SCHEDULES_FILE))) {
-            // We can't serialize Runnable or Future easily. 
-            // We serialize the configuration (name, period, unit) to recreate generic tasks on restart if needed.
-            // But specific task logic (lambdas) needs to be re-mapped. 
-            // For this US, we likely just want ID/Name persistence or basic config.
-            // We will save a clean list of DTOs.
             List<TaskConfig> configs = new ArrayList<>();
-            for(ScheduledTaskInfo info : activeTasks) {
+            for (ScheduledTaskInfo info : activeTasks) {
                 configs.add(new TaskConfig(info.getName(), info.getPeriod(), info.getUnit()));
             }
             oos.writeObject(configs);
@@ -66,32 +86,24 @@ public class TaskScheduler {
     @SuppressWarnings("unchecked")
     public void loadSchedules(StudentManager sm, GradeManager gm) {
         File file = new File(SCHEDULES_FILE);
-        if(!file.exists()) return;
+        if (!file.exists())
+            return;
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-             List<TaskConfig> configs = (List<TaskConfig>) ois.readObject();
-             System.out.println("Restoring " + configs.size() + " schedules...");
-             for(TaskConfig config : configs) {
-                 // Re-attach logic based on name convention or just generic logging if unknown
-                 Runnable logic = () -> System.out.println("Restored generic task: " + config.getName());
-                 
-                 if(config.getName().contains("Backup")) {
-                     logic = AutomatedTasks.createDailyBackupTask();
-                 }
-                 
-                 // Reschedule without saving again (avoid dupe or recursive save loop if scheduleTask calls save)
-                 // We need a internal schedule method or just use scheduleTask provided we handle dupes?
-                 // Simple approach: clear list before load or check existence. 
-                 // Here we just schedule.
-                 
-                 // NOTE: We deviate slightly from scheduleTask calling saveSchedules to avoid overwrite race? 
-                 // Actually scheduleTask appends. 
-                 // We should probably NOT call scheduleTask here but the internal logic.
-                 // Refactor for cleaner separation if time allows. 
-                 // For now, let's just schedule and it will re-save the list which is fine.
-                 
-                 scheduleTask(config.getName(), logic, 5, config.getPeriod(), config.getUnit());
-             }
+            List<TaskConfig> configs = (List<TaskConfig>) ois.readObject();
+            System.out.println("Restoring " + configs.size() + " schedules...");
+            for (TaskConfig config : configs) {
+                Runnable logic = () -> System.out.println("Restored generic task: " + config.getName());
+
+                // Simple restoration logic for demo purposes
+                if (config.getName().contains("Backup")) {
+                    logic = AutomatedTasks.createDailyBackupTask();
+                } else if (config.getName().contains("Statistics")) {
+                    // logic = ... (needs access to services, tricky in simple restore)
+                }
+
+                scheduleTask(config.getName(), logic, 5, config.getPeriod(), config.getUnit());
+            }
         } catch (Exception e) {
             System.err.println("Failed to load schedules: " + e.getMessage());
         }
@@ -104,35 +116,93 @@ public class TaskScheduler {
         private TimeUnit unit;
         private ScheduledFuture<?> future;
 
+        // Metadata
+        private String status = "PENDING";
+        private java.time.LocalDateTime lastRun;
+        private int executionCount = 0;
+
         public ScheduledTaskInfo(String name, long period, TimeUnit unit, ScheduledFuture<?> future) {
             this.name = name;
             this.period = period;
             this.unit = unit;
             this.future = future;
         }
-        
+
+        public void setFuture(ScheduledFuture<?> future) {
+            this.future = future;
+        }
+
+        public void markRunning() {
+            this.status = "RUNNING";
+        }
+
+        public void markSuccess() {
+            this.status = "✓ Success";
+            this.lastRun = java.time.LocalDateTime.now();
+            this.executionCount++;
+        }
+
+        public void markFailure() {
+            this.status = "X Failed";
+            this.lastRun = java.time.LocalDateTime.now();
+            this.executionCount++; // Count attempts?
+        }
+
         // Getters
-        public String getName() { return name; }
-        public long getPeriod() { return period; }
-        public TimeUnit getUnit() { return unit; }
-        public long getDelay(TimeUnit u) { return future.getDelay(u); }
+        public String getName() {
+            return name;
+        }
+
+        public long getPeriod() {
+            return period;
+        }
+
+        public TimeUnit getUnit() {
+            return unit;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public String getLastRun() {
+            return lastRun == null ? "Never"
+                    : lastRun.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+
+        public java.time.LocalDateTime getNextRunTime() {
+            long delay = getDelay(TimeUnit.SECONDS);
+            return java.time.LocalDateTime.now().plusSeconds(delay);
+        }
+
+        public long getDelay(TimeUnit u) {
+            return future.getDelay(u);
+        }
     }
-    
+
     // Serializable DTO
     public static class TaskConfig implements Serializable {
         private static final long serialVersionUID = 1L;
         private String name;
         private long period;
         private TimeUnit unit;
-        
+
         public TaskConfig(String name, long period, TimeUnit unit) {
             this.name = name;
             this.period = period;
             this.unit = unit;
         }
-        
-        public String getName() { return name; }
-        public long getPeriod() { return period; }
-        public TimeUnit getUnit() { return unit; }
+
+        public String getName() {
+            return name;
+        }
+
+        public long getPeriod() {
+            return period;
+        }
+
+        public TimeUnit getUnit() {
+            return unit;
+        }
     }
 }

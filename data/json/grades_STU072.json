@@ -1,0 +1,38 @@
+[
+  {
+    "studentId": "STU072",
+    "subject": "Mathematics",
+    "type": "Core",
+    "score": 99.0
+  },
+  {
+    "studentId": "STU072",
+    "subject": "Physics",
+    "type": "Core",
+    "score": 91.0
+  },
+  {
+    "studentId": "STU072",
+    "subject": "Chemistry",
+    "type": "Core",
+    "score": 76.0
+  },
+  {
+    "studentId": "STU072",
+    "subject": "English",
+    "type": "Core",
+    "score": 90.0
+  },
+  {
+    "studentId": "STU072",
+    "subject": "Art",
+    "type": "Elective",
+    "score": 100.0
+  },
+  {
+    "studentId": "STU072",
+    "subject": "Computer Science",
+    "type": "Elective",
+    "score": 84.0
+  }
+]

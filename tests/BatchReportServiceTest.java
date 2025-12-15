@@ -31,23 +31,24 @@ public class BatchReportServiceTest {
         }
 
         BatchReportService service = new BatchReportService();
+        BatchReportService.BatchConfig config = new BatchReportService.BatchConfig(
+                BatchReportService.ReportScope.ALL,
+                BatchReportService.ReportFormat.TEXT,
+                4,
+                "");
 
         // Execute with 4 threads
-        assertDoesNotThrow(() -> service.generateBatchReports(students, gm, 4));
-
-        // Basic verification that check files were created for the first few students
-        // Filename format: data/csv/batch_report_STU###.txt
-        // Wait, IDs are auto-generated. STU001, STU002...
-        // But the static counter in Student might be high from previous tests if
-        // running in same JVM (not likely for specific run)
-        // or effectively random if parallel tests run.
-        // Just checking execution completes without error is the main concurrent test
-        // here.
+        assertDoesNotThrow(() -> service.executeBatch(students, gm, config));
     }
 
     @Test
     public void testGenerateReportsEmptyList() {
         BatchReportService service = new BatchReportService();
-        assertDoesNotThrow(() -> service.generateBatchReports(new ArrayList<>(), new GradeManager(), 2));
+        BatchReportService.BatchConfig config = new BatchReportService.BatchConfig(
+                BatchReportService.ReportScope.ALL,
+                BatchReportService.ReportFormat.TEXT,
+                2,
+                "");
+        assertDoesNotThrow(() -> service.executeBatch(new ArrayList<>(), new GradeManager(), config));
     }
 }

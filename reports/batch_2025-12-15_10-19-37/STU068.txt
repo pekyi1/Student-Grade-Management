@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU068 Ava Collins
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 91.0    %
+2025-12-15   | Physics         | Core       | 91.0    %
+2025-12-15   | Chemistry       | Core       | 96.0    %
+2025-12-15   | English         | Core       | 76.0    %
+2025-12-15   | Music           | Elective   | 98.0    %
+2025-12-15   | Computer Science | Elective   | 62.0    %
+__________________________________________________

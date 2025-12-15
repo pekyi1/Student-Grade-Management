@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU009 Student I
+Student: STU009 Eric Green
 __________________________________________________
 
 DETAILED GRADE HISTORY

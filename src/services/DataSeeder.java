@@ -1,5 +1,3 @@
-//I have created this class to create some seed data so that 
-//I dont have to always add a new student when i update the code
 package services;
 
 import models.Student;
@@ -11,91 +9,111 @@ import models.CoreSubject;
 import models.ElectiveSubject;
 
 public class DataSeeder {
-    public static void seedStudents(StudentManager studentManager, GradeManager gradeManager) {
-        try {
-            studentManager.addStudent(
-                    new RegularStudent("Alice Johnson", 18, "alice@example.com", "5555550101", "2024-01-01")); // STU001
-            studentManager
-                    .addStudent(new HonorsStudent("Bob Smith", 19, "bob@example.com", "5555550102", "2024-01-01")); // STU002
-            studentManager.addStudent(
-                    new RegularStudent("Charlie Brown", 18, "charlie@example.com", "5555550103", "2024-01-01")); // STU003
-            studentManager
-                    .addStudent(new HonorsStudent("Diana Prince", 19, "diana@example.com", "5555550104", "2024-01-01")); // STU004
-            studentManager
-                    .addStudent(new RegularStudent("Evan Wright", 18, "evan@example.com", "5555550105", "2024-01-01")); // STU005
-            studentManager
-                    .addStudent(new RegularStudent("Fiona Green", 19, "fiona@example.com", "5555550106", "2024-01-01")); // STU006
-            studentManager
-                    .addStudent(new HonorsStudent("George Hill", 18, "george@example.com", "5555550107", "2024-01-01")); // STU007
-            studentManager.addStudent(
-                    new RegularStudent("Hannah White", 19, "hannah@example.com", "5555550108", "2024-01-01")); // STU008
-            studentManager
-                    .addStudent(new HonorsStudent("Ian Black", 18, "ian@example.com", "5555550109", "2024-01-01")); // STU009
-            studentManager.addStudent(
-                    new RegularStudent("Julia Roberts", 19, "julia@example.com", "5555550110", "2024-01-01")); // STU010
-            studentManager
-                    .addStudent(new RegularStudent("Kevin Hart", 18, "kevin@example.com", "5555550111", "2024-01-01")); // STU011
-            studentManager
-                    .addStudent(new HonorsStudent("Laura Croft", 19, "laura@example.com", "5555550112", "2024-01-01")); // STU012
-            studentManager
-                    .addStudent(new RegularStudent("Mike Ross", 18, "mike@example.com", "5555550113", "2024-01-01")); // STU013
-            studentManager
-                    .addStudent(new HonorsStudent("Nina Simone", 19, "nina@example.com", "5555550114", "2024-01-01")); // STU014
-            studentManager
-                    .addStudent(new RegularStudent("Oscar Wilde", 18, "oscar@example.com", "5555550115", "2024-01-01")); // STU015
-            studentManager
-                    .addStudent(new RegularStudent("Paul Rudd", 19, "paul@example.com", "5555550116", "2024-01-01")); // STU016
-            studentManager
-                    .addStudent(new HonorsStudent("Quinn Fabray", 18, "quinn@example.com", "5555550117", "2024-01-01")); // STU017
-            studentManager.addStudent(
-                    new RegularStudent("Rachel Green", 19, "rachel@example.com", "5555550118", "2024-01-01")); // STU018
-            studentManager
-                    .addStudent(new HonorsStudent("Steve Rogers", 18, "steve@example.com", "5555550119", "2024-01-01")); // STU019
-            studentManager
-                    .addStudent(new RegularStudent("Tony Stark", 19, "tony@example.com", "5555550120", "2024-01-01")); // STU020
+        public static void seedStudents(StudentManager studentManager, GradeManager gradeManager) {
+                try {
+                        // Seed 100 random students
+                        String[] firstNames = { "James", "John", "Robert", "Michael", "William", "David", "Richard",
+                                        "Joseph",
+                                        "Thomas", "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Donald",
+                                        "Mark", "Paul",
+                                        "Steven", "Andrew", "Kenneth", "George", "Joshua", "Kevin", "Brian", "Edward",
+                                        "Ronald", "Timothy",
+                                        "Jason", "Jeffrey", "Ryan", "Jacob", "Gary", "Nicholas", "Eric", "Stephen",
+                                        "Jonathan", "Larry",
+                                        "Justin", "Scott", "Brandon", "Frank", "Benjamin", "Gregory", "Samuel",
+                                        "Raymond", "Patrick",
+                                        "Alexander", "Jack", "Dennis", "Jerry", "Tyler", "Aaron", "Henry", "Jose",
+                                        "Douglas", "Peter",
+                                        "Adam", "Nathan", "Zachary", "Walter", "Kyle", "Harold", "Carl", "Jeremy",
+                                        "Keith", "Roger",
+                                        "Gerald", "Ethan", "Arthur", "Terry", "Christian", "Sean", "Lawrence", "Austin",
+                                        "Joe", "Noah",
+                                        "Jesse", "Albert", "Billy", "Bruce", "Willie", "Jordan", "Dylan", "Bryan",
+                                        "Eugene", "Madison",
+                                        "Abigail", "Olivia", "Emma", "Ava", "Isabella", "Sophia", "Charlotte", "Mia",
+                                        "Amelia", "Harper",
+                                        "Evelyn" };
+                        String[] lastNames = { "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller",
+                                        "Wilson",
+                                        "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin",
+                                        "Thompson",
+                                        "Garcia", "Martinez", "Robinson", "Clark", "Rodriguez", "Lewis", "Lee",
+                                        "Walker", "Hall", "Allen",
+                                        "Young", "Hernandez", "King", "Wright", "Lopez", "Hill", "Scott", "Green",
+                                        "Adams", "Baker",
+                                        "Gonzalez", "Nelson", "Carter", "Mitchell", "Perez", "Roberts", "Turner",
+                                        "Phillips", "Campbell",
+                                        "Parker", "Evans", "Edwards", "Collins" };
 
-            System.out.println("✓ Seeded 20 students (STU001 - STU020)");
+                        java.util.Random rand = new java.util.Random();
+                        for (int i = 0; i < 100; i++) {
+                                String first = firstNames[rand.nextInt(firstNames.length)];
+                                String last = lastNames[rand.nextInt(lastNames.length)];
+                                String name = first + " " + last;
+                                int age = 18 + rand.nextInt(8); // 18-25
+                                String email = first.toLowerCase() + "." + last.toLowerCase() + rand.nextInt(1000)
+                                                + "@example.com";
+                                // Generate 10 digit phone
+                                String phone = String.format("555%07d", rand.nextInt(10000000));
 
-            // Now add some sample grades for Bob Smith (STU002) if gradeManager is provided
-            if (gradeManager != null) {
-                // find Bob Smith by name from the student manager
-                Student bob = null;
-                for (Student s : studentManager.getAllStudents()) {
-                    if (s.getName().equalsIgnoreCase("Bob Smith")) {
-                        bob = s;
-                        break;
-                    }
+                                // Enrollment date random within 2024
+                                int month = 1 + rand.nextInt(12);
+                                int day = 1 + rand.nextInt(28);
+                                String date = String.format("2024-%02d-%02d", month, day);
+
+                                if (rand.nextBoolean()) {
+                                        studentManager.addStudent(new RegularStudent(name, age, email, phone, date));
+                                } else {
+                                        studentManager.addStudent(new HonorsStudent(name, age, email, phone, date));
+                                }
+                        }
+                        System.out.println("✓ Seeded 100 random students");
+
+                        // Add grades for first 25 students
+                        java.util.List<Student> allStudents = studentManager.getAllStudents();
+                        int limit = Math.min(25, allStudents.size());
+
+                        Subject[] coreSubjects = {
+                                        new CoreSubject("Mathematics", "MAT101"),
+                                        new CoreSubject("Physics", "PHY101"),
+                                        new CoreSubject("Chemistry", "CHE101"),
+                                        new CoreSubject("English", "ENG101")
+                        };
+
+                        Subject[] electiveSubjects = {
+                                        new ElectiveSubject("Art", "ART101"),
+                                        new ElectiveSubject("History", "HIS101"),
+                                        new ElectiveSubject("Music", "MUS101"),
+                                        new ElectiveSubject("Computer Science", "CSC101")
+                        };
+
+                        System.out.println("Seeding grades for first " + limit + " students...");
+
+                        for (int i = 0; i < limit; i++) {
+                                Student s = allStudents.get(i);
+
+                                // Add grades for all core subjects
+                                for (Subject sub : coreSubjects) {
+                                        double score = 60 + rand.nextInt(41); // 60-100
+                                        gradeManager.addGrade(new Grade(s.getStudentId(), sub, score));
+                                }
+
+                                // Add grades for 2 unique electives
+                                int idx1 = rand.nextInt(electiveSubjects.length);
+                                int idx2 = rand.nextInt(electiveSubjects.length);
+                                while (idx1 == idx2) {
+                                        idx2 = rand.nextInt(electiveSubjects.length);
+                                }
+
+                                gradeManager.addGrade(new Grade(s.getStudentId(), electiveSubjects[idx1],
+                                                60 + rand.nextInt(41)));
+                                gradeManager.addGrade(new Grade(s.getStudentId(), electiveSubjects[idx2],
+                                                60 + rand.nextInt(41)));
+                        }
+                        System.out.println("✓ Seeded grades for " + limit + " students");
+
+                } catch (Exception e) {
+                        System.out.println("Error seeding data: " + e.getMessage());
                 }
-
-                if (bob != null) {
-                    String bobId = bob.getStudentId();
-                    try {
-                        // Core subjects
-                        Subject math = new CoreSubject("Mathematics", "MAT101");
-                        Subject english = new CoreSubject("English", "ENG101");
-                        Subject science = new CoreSubject("Science", "SCI101");
-
-                        // Electives
-                        Subject music = new ElectiveSubject("Music", "MUS101");
-                        Subject art = new ElectiveSubject("Art", "ART101");
-
-                        gradeManager.addGrade(new Grade(bobId, math, 88.5));
-                        gradeManager.addGrade(new Grade(bobId, english, 76.0));
-                        gradeManager.addGrade(new Grade(bobId, science, 69.5));
-                        gradeManager.addGrade(new Grade(bobId, music, 92.0));
-                        gradeManager.addGrade(new Grade(bobId, art, 81.0));
-
-                        System.out.println("✓ Seeded sample grades for Bob Smith (STU002)");
-                    } catch (Exception ex) {
-                        System.out.println("Error seeding grades for Bob Smith: " + ex.getMessage());
-                    }
-                } else {
-                    System.out.println("Could not find Bob Smith to seed grades.");
-                }
-            }
-
-        } catch (Exception e) {
-            System.out.println("Error seeding data: " + e.getMessage());
         }
-    }
 }

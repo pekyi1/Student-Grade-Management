@@ -96,9 +96,7 @@ public class PatternSearchService {
     }
 
     private String estimateComplexity(String regex) {
-        if (regex.contains(".*") || regex.contains(".+")) {
-            return "O(N) - Linear scan, but '.*' wildcards can be slow on long strings.";
-        }
-        return "O(N) - Linear scan.";
+        // Simplified for UI consistency as per screenshot
+        return "O(n)";
     }
 }

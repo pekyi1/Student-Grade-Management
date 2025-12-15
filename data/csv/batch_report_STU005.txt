@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU005 Student E
+Student: STU005 Kyle Wilson
 __________________________________________________
 
 DETAILED GRADE HISTORY

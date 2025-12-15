@@ -1,0 +1,362 @@
+[
+    {
+        "studentId": "STU001",
+        "subject": "Mathematics",
+        "type": "Core",
+        "score": 85
+    },
+    {
+        "studentId": "STU002",
+        "subject": "English",
+        "type": "Core",
+        "score": 92
+    },
+    {
+        "studentId": "STU003",
+        "subject": "Science",
+        "type": "Core",
+        "score": 78
+    },
+    {
+        "studentId": "STU004",
+        "subject": "History",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU005",
+        "subject": "Music",
+        "type": "Elective",
+        "score": 95
+    },
+    {
+        "studentId": "STU006",
+        "subject": "Art",
+        "type": "Elective",
+        "score": 82
+    },
+    {
+        "studentId": "STU007",
+        "subject": "Physical Education",
+        "type": "Elective",
+        "score": 90
+    },
+    {
+        "studentId": "STU008",
+        "subject": "Mathematics",
+        "type": "Core",
+        "score": 75
+    },
+    {
+        "studentId": "STU009",
+        "subject": "English",
+        "type": "Core",
+        "score": 89
+    },
+    {
+        "studentId": "STU010",
+        "subject": "Science",
+        "type": "Core",
+        "score": 94
+    },
+    {
+        "studentId": "STU011",
+        "subject": "Computer Science",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU012",
+        "subject": "Physics",
+        "type": "Core",
+        "score": 76
+    },
+    {
+        "studentId": "STU013",
+        "subject": "Chemistry",
+        "type": "Core",
+        "score": 85
+    },
+    {
+        "studentId": "STU014",
+        "subject": "Biology",
+        "type": "Core",
+        "score": 91
+    },
+    {
+        "studentId": "STU015",
+        "subject": "Drama",
+        "type": "Elective",
+        "score": 83
+    },
+    {
+        "studentId": "STU016",
+        "subject": "Economics",
+        "type": "Elective",
+        "score": 79
+    },
+    {
+        "studentId": "STU017",
+        "subject": "Geography",
+        "type": "Core",
+        "score": 87
+    },
+    {
+        "studentId": "STU018",
+        "subject": "Literature",
+        "type": "Core",
+        "score": 93
+    },
+    {
+        "studentId": "STU019",
+        "subject": "French",
+        "type": "Elective",
+        "score": 80
+    },
+    {
+        "studentId": "STU020",
+        "subject": "Spanish",
+        "type": "Elective",
+        "score": 86
+    },
+    {
+        "studentId": "STU001",
+        "subject": "English",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU002",
+        "subject": "Mathematics",
+        "type": "Core",
+        "score": 90
+    },
+    {
+        "studentId": "STU003",
+        "subject": "History",
+        "type": "Core",
+        "score": 82
+    },
+    {
+        "studentId": "STU004",
+        "subject": "Science",
+        "type": "Core",
+        "score": 85
+    },
+    {
+        "studentId": "STU005",
+        "subject": "Art",
+        "type": "Elective",
+        "score": 92
+    },
+    {
+        "studentId": "STU006",
+        "subject": "Music",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU007",
+        "subject": "Computer Science",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU008",
+        "subject": "English",
+        "type": "Core",
+        "score": 80
+    },
+    {
+        "studentId": "STU009",
+        "subject": "Mathematics",
+        "type": "Core",
+        "score": 91
+    },
+    {
+        "studentId": "STU010",
+        "subject": "History",
+        "type": "Core",
+        "score": 89
+    },
+    {
+        "studentId": "STU011",
+        "subject": "Physical Education",
+        "type": "Elective",
+        "score": 95
+    },
+    {
+        "studentId": "STU012",
+        "subject": "Chemistry",
+        "type": "Core",
+        "score": 78
+    },
+    {
+        "studentId": "STU013",
+        "subject": "Physics",
+        "type": "Core",
+        "score": 82
+    },
+    {
+        "studentId": "STU014",
+        "subject": "Geography",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU015",
+        "subject": "Economics",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU016",
+        "subject": "Drama",
+        "type": "Elective",
+        "score": 80
+    },
+    {
+        "studentId": "STU017",
+        "subject": "Literature",
+        "type": "Core",
+        "score": 90
+    },
+    {
+        "studentId": "STU018",
+        "subject": "Geography",
+        "type": "Core",
+        "score": 92
+    },
+    {
+        "studentId": "STU019",
+        "subject": "Spanish",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU020",
+        "subject": "French",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU001",
+        "subject": "Science",
+        "type": "Core",
+        "score": 90
+    },
+    {
+        "studentId": "STU002",
+        "subject": "History",
+        "type": "Core",
+        "score": 85
+    },
+    {
+        "studentId": "STU003",
+        "subject": "English",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU004",
+        "subject": "Mathematics",
+        "type": "Core",
+        "score": 92
+    },
+    {
+        "studentId": "STU005",
+        "subject": "Physical Education",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU006",
+        "subject": "Computer Science",
+        "type": "Elective",
+        "score": 90
+    },
+    {
+        "studentId": "STU007",
+        "subject": "Art",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU008",
+        "subject": "Science",
+        "type": "Core",
+        "score": 82
+    },
+    {
+        "studentId": "STU009",
+        "subject": "History",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU010",
+        "subject": "English",
+        "type": "Core",
+        "score": 91
+    },
+    {
+        "studentId": "STU011",
+        "subject": "Music",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU012",
+        "subject": "Biology",
+        "type": "Core",
+        "score": 80
+    },
+    {
+        "studentId": "STU013",
+        "subject": "Geography",
+        "type": "Core",
+        "score": 88
+    },
+    {
+        "studentId": "STU014",
+        "subject": "Physics",
+        "type": "Core",
+        "score": 85
+    },
+    {
+        "studentId": "STU015",
+        "subject": "French",
+        "type": "Elective",
+        "score": 82
+    },
+    {
+        "studentId": "STU016",
+        "subject": "Spanish",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU017",
+        "subject": "Economics",
+        "type": "Elective",
+        "score": 90
+    },
+    {
+        "studentId": "STU018",
+        "subject": "Drama",
+        "type": "Elective",
+        "score": 85
+    },
+    {
+        "studentId": "STU019",
+        "subject": "Art",
+        "type": "Elective",
+        "score": 88
+    },
+    {
+        "studentId": "STU020",
+        "subject": "Music",
+        "type": "Elective",
+        "score": 92
+    }
+]

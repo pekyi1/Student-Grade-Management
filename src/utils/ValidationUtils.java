@@ -46,6 +46,13 @@ public class ValidationUtils {
         if (date == null || !DATE_PATTERN.matcher(date).matches()) {
             throw new InvalidDataException("Invalid date format. Pattern required: YYYY-MM-DD");
         }
+        try {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("uuuu-MM-dd")
+                    .withResolverStyle(java.time.format.ResolverStyle.STRICT);
+            java.time.LocalDate.parse(date, formatter);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new InvalidDataException("Invalid date value. Please enter a real date (YYYY-MM-DD).");
+        }
     }
 
     public static void validateCourseCode(String code) throws InvalidDataException {
@@ -76,7 +83,7 @@ public class ValidationUtils {
     // Kept for backward compatibility if used, but redirected to range check
     public static void validateAge(int age) throws InvalidDataException {
         if (age < 0 || age > 120) { // relaxed upper bound
-            throw new InvalidDataException("Invalid age.");
+            throw new InvalidDataException("Invalid age. Must be between 0 and 120.");
         }
     }
 }

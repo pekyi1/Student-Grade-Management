@@ -31,27 +31,24 @@ public class StatisticsDashboardService {
         this.classStatistics = new ClassStatistics();
     }
 
-    public void startDashboard(StudentManager studentManager, GradeManager gradeManager, Scanner scanner) {
+    public void startDashboard(StudentManager studentManager, GradeManager gradeManager, TaskScheduler taskScheduler,
+            Scanner scanner) {
         isRunning.set(true);
         System.out.println("Starting Real-Time Dashboard...");
 
         // Start background update task (every 5 seconds)
         autoRefreshTask = scheduler.scheduleAtFixedRate(() -> {
             if (!isPaused.get() && isRunning.get()) {
-                refreshDashboard(studentManager, gradeManager);
-                // We don't print here directly to avoid messing up input line?
-                // Actually, the requirements say "Auto-refreshing dashboard".
-                // In a console app, this usually means clearing screen or re-printing.
-                // We will print. The user input will just happen at the bottom.
+                refreshDashboard(studentManager, gradeManager, taskScheduler);
                 printDashboard();
             }
         }, 0, 5, TimeUnit.SECONDS);
 
         // Input loop on main thread
-        handleInput(scanner, studentManager, gradeManager);
+        handleInput(scanner, studentManager, gradeManager, taskScheduler);
     }
 
-    private void handleInput(Scanner scanner, StudentManager sm, GradeManager gm) {
+    private void handleInput(Scanner scanner, StudentManager sm, GradeManager gm, TaskScheduler ts) {
         while (isRunning.get()) {
             if (scanner.hasNextLine()) {
                 String input = scanner.nextLine().trim().toUpperCase();
@@ -66,11 +63,10 @@ public class StatisticsDashboardService {
                         break;
                     case "R":
                         System.out.println("Refreshing...");
-                        refreshDashboard(sm, gm);
+                        refreshDashboard(sm, gm, ts);
                         printDashboard();
                         break;
                     default:
-                        // Ignore other input or print help
                         break;
                 }
             }
@@ -82,27 +78,25 @@ public class StatisticsDashboardService {
         if (autoRefreshTask != null) {
             autoRefreshTask.cancel(true);
         }
-        // Don't shutdown executor if we want to reuse service?
-        // Instructions imply cleanly shutting down thread pool.
-        // We might want to shutdown if exiting the feature.
-        // But if we re-enter, we need it.
-        // Let's rely on App shutdown for full pool shutdown or managing it closer.
-        // For now, cancel task is enough to stop updates.
     }
 
-    private void refreshDashboard(StudentManager sm, GradeManager gm) {
+    private synchronized void refreshDashboard(StudentManager sm, GradeManager gm, TaskScheduler ts) {
+        // Reload data from disk to pick up changes from other processes
+        sm.loadStudents();
+        gm.loadGrades();
+
         List<Grade> grades = gm.getAllGrades();
         List<Student> students = sm.getAllStudents();
 
         StringBuilder sb = new StringBuilder();
 
         // Header
-        sb.append("\n\n\n\n\n\n"); // "Clear" screen by pushing content up
+        sb.append("\n\n\n\n\n\n"); // "Clear" screen
         sb.append("REAL-TIME STATISTICS DASHBOARD\n");
         sb.append("__________________________________________________\n");
-        sb.append(String.format("Auto-refresh: %s (5 sec) | Thread: %s\n",
+        sb.append(String.format("Auto-refresh: %-8s (5 sec) | Thread: %s\n",
                 isPaused.get() ? "PAUSED" : "Enabled",
-                Thread.currentThread().getName()));
+                "RUNNING"));
         sb.append("Press 'Q' to quit | 'R' to refresh now | 'P' to pause\n");
         sb.append("__________________________________________________\n");
 
@@ -112,21 +106,19 @@ public class StatisticsDashboardService {
         // System Status
         sb.append("SYSTEM STATUS\n");
         sb.append("__________________________________________________\n");
-        sb.append("Total Students: ").append(students.size()).append("\n");
-        // Mocking some system metrics as we don't have deep hooks yet
-        sb.append("Active Threads: ").append(Thread.activeCount()).append("\n");
-        sb.append("Cache Hit Rate: ").append("N/A").append("\n"); // Placeholder for future US
-        sb.append("Memory Usage: ")
-                .append((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024)
-                .append(" MB / ").append(Runtime.getRuntime().totalMemory() / 1024 / 1024).append(" MB\n\n");
+        sb.append(String.format("Total Students:  %-5d\n", students.size()));
+        sb.append(String.format("Active Threads:  %-5d\n", Thread.activeCount()));
+        sb.append(String.format("Cache Hit Rate:  %.1f%%\n", gm.getCacheService().getHitRate()));
+        long totalMem = Runtime.getRuntime().totalMemory() / (1024 * 1024);
+        long freeMem = Runtime.getRuntime().freeMemory() / (1024 * 1024);
+        sb.append(String.format("Memory Usage:    %d MB / %d MB\n\n", (totalMem - freeMem), totalMem));
 
         // Live Statistics
         sb.append("LIVE STATISTICS\n");
         sb.append("__________________________________________________\n");
-        sb.append("Total Grades: ").append(grades.size()).append("\n");
+        sb.append(String.format("Total Grades:    %-5d\n", grades.size()));
 
-        // Adding distribution chart logic here (reusing logic from ClassStatistics
-        // usually better, allowing duplication for custom UI format)
+        // Grade Distribution
         int[] counts = new int[5]; // A, B, C, D, F
         for (Grade g : grades) {
             if (g.getGrade() >= 90)
@@ -141,18 +133,57 @@ public class StatisticsDashboardService {
                 counts[4]++;
         }
 
-        sb.append("Grade Distribution (Live):\n");
+        sb.append("\nGrade Distribution (Live):\n");
         String[] labels = { "90-100% (A):", "80-89%  (B):", "70-79%  (C):", "60-69%  (D):", "0-59%   (F):" };
-        int maxCount = 0;
-        for (int c : counts)
-            if (c > maxCount)
-                maxCount = c;
 
         for (int i = 0; i < 5; i++) {
             double percent = grades.isEmpty() ? 0 : (double) counts[i] / grades.size() * 100;
-            int barLength = (int) (percent / 2);
+            int barLength = (int) (percent / 2); // 50 chars = 100%
             String bar = repeat("█", barLength) + repeat("░", 50 - barLength);
-            sb.append(String.format("%-12s %s %.1f%% (%d grades)%n", labels[i], bar, percent, counts[i]));
+            sb.append(String.format("%-12s [%s] %.1f%% (%d grades)%n", labels[i], bar, percent, counts[i]));
+        }
+
+        // Current Statistics
+        if (!grades.isEmpty()) {
+            double sum = 0;
+            for (Grade g : grades)
+                sum += g.getGrade();
+            double mean = sum / grades.size();
+
+            // Median
+            grades.sort((g1, g2) -> Double.compare(g1.getGrade(), g2.getGrade()));
+            double median = grades.get(grades.size() / 2).getGrade();
+
+            sb.append(String.format("\nCurrent Statistics:\n"));
+            sb.append(String.format("Mean:   %.1f%%\n", mean));
+            sb.append(String.format("Median: %.1f%%\n", median));
+        }
+
+        // Top Performers
+        sb.append("\nTop Performers (Live Rankings):\n");
+        students.stream()
+                .sorted((s1, s2) -> Double.compare(gm.calculateOverallAverage(s2.getStudentId()),
+                        gm.calculateOverallAverage(s1.getStudentId())))
+                .limit(3)
+                .forEach(s -> {
+                    double avg = gm.calculateOverallAverage(s.getStudentId());
+                    double gpa = new GPACalculator().calculateCumulativeGPA(gm.getGradesForStudent(s.getStudentId()));
+                    sb.append(String.format("- %-6s %-20s : GPA %.2f (%.1f%%)\n",
+                            s.getStudentId(), s.getName(), gpa, avg));
+                });
+
+        // Concurrent Operations
+        sb.append("\nCONCURRENT OPERATIONS\n");
+        sb.append("__________________________________________________\n");
+        List<services.TaskScheduler.ScheduledTaskInfo> tasks = ts.getActiveTasks();
+        if (tasks.isEmpty()) {
+            sb.append("[No background tasks scheduled]\n");
+        } else {
+            for (services.TaskScheduler.ScheduledTaskInfo task : tasks) {
+                long delay = task.getDelay(TimeUnit.SECONDS);
+                String status = delay <= 0 ? "RUNNING" : "WAITING (" + delay + "s)";
+                sb.append(String.format("[%-15s] : %s\n", task.getName(), status));
+            }
         }
 
         sb.append("\nCommand: ");
