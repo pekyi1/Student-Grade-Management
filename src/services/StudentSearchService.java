@@ -41,7 +41,7 @@ public class StudentSearchService {
         }
     }
 
-    public List<Student> findStudentsByName(Student[] allStudents, String nameFragment) {
+    public List<Student> findStudentsByName(List<Student> allStudents, String nameFragment) {
         List<Student> results = new ArrayList<>();
         String search = nameFragment.toLowerCase();
         for (Student s : allStudents) {
@@ -71,7 +71,7 @@ public class StudentSearchService {
                     continue;
                 }
 
-                Student[] allStudents = sm.getAllStudents();
+                List<Student> allStudents = sm.getAllStudents();
                 List<Student> results = new ArrayList<>();
                 for (Student s : allStudents) {
                     double avg = gm.calculateOverallAverage(s.getStudentId());
@@ -113,7 +113,7 @@ public class StudentSearchService {
         }
     }
 
-    public List<Student> findStudentsByType(Student[] allStudents, String type) {
+    public List<Student> findStudentsByType(List<Student> allStudents, String type) {
         List<Student> results = new ArrayList<>();
         for (Student s : allStudents) {
             if (s.getStudentType().equalsIgnoreCase(type)) {

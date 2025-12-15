@@ -45,15 +45,16 @@ public class App {
         watcherThread.setDaemon(true); // Ensure it dies with the app
         watcherThread.start();
 
-        watcherThread.start();
-
         // Load persistents schedules
         taskScheduler.loadSchedules(studentManager, gradeManager);
 
         // US-8: Schedule background cache refresh (if not already scheduled)
-        // We use a simple check or just overwrite for this demo requirement
-        taskScheduler.scheduleTask("Cache Refresh", () -> gradeManager.refreshAllCache(studentManager), 0, 5,
-                java.util.concurrent.TimeUnit.MINUTES);
+        boolean cacheTaskExists = taskScheduler.getActiveTasks().stream()
+                .anyMatch(t -> t.getName().equals("Cache Refresh"));
+        if (!cacheTaskExists) {
+            taskScheduler.scheduleTask("Cache Refresh", () -> gradeManager.refreshAllCache(studentManager), 0, 5,
+                    java.util.concurrent.TimeUnit.MINUTES);
+        }
 
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
@@ -85,58 +86,51 @@ public class App {
                         exportGradeReport();
                         break;
                     case 6:
-                        calculateStudentGPA();
+                        handleMultiFormatImport();
                         break;
                     case 7:
                         bulkImportGrades();
                         break;
                     case 8:
-                        viewClassStatistics();
+                        calculateStudentGPA();
                         break;
                     case 9:
-                        searchStudents();
+                        viewClassStatistics();
                         break;
                     case 10:
-                        // Exit was 10, moving to 11
-                        // Wait, user story says "New Facets". Lets keep 10 as exit?
-                        // Instructions say "10 user stories".
-                        // US-4 is just "Concurrent Batch Report Generation".
-                        // I'll add it as option 11 and make Exit 12?
-                        // Or I can add it as option 11 if I renumber?
-                        // Let's add it as option 10 and push Exit to 11.
-                        // Wait, previous menu had 10 items.
-                        // 1. Add Student
-                        // ...
-                        // 9. Search Students
-                        // 10. Exit
-                        // So I will make 10 -> Batch Reports, 11 -> Exit.
-                        generateBatchReports();
-                        break;
-                    case 11:
                         statisticsDashboardService.startDashboard(studentManager, gradeManager, scanner);
                         break;
+                    case 11:
+                        generateBatchReports();
+                        break;
                     case 12:
+                        searchStudents(); // Advanced is handled within
+                        break;
+                    case 13:
+                        handlePatternSearch();
+                        break;
+                    case 14:
+                        queryGradeHistory();
+                        break;
+                    case 15:
+                        manageScheduledTasks();
+                        break;
+                    case 16:
+                        viewSystemPerformance();
+                        break;
+                    case 17:
+                        handleCacheManagement();
+                        break;
+                    case 18:
+                        handleAuditTrail();
+                        break;
+                    case 19:
                         running = false;
                         directoryWatcherService.stop();
                         statisticsDashboardService.shutdown();
                         taskScheduler.shutdown();
                         auditLogService.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
-                        break;
-                    case 13:
-                        manageScheduledTasks();
-                        break;
-                    case 14:
-                        handlePatternSearch();
-                        break;
-                    case 15:
-                        handleCacheManagement();
-                        break;
-                    case 16:
-                        handleAuditTrail();
-                        break;
-                    case 17:
-                        handleStreamAnalysis();
                         break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
@@ -153,26 +147,46 @@ public class App {
      * Displays the main menu options to the user.
      */
     private static void printMenu() {
-        System.out.println("\nSTUDENT GRADE MANAGEMENT SYSTEM");
-        System.out.println("__________________________________________________________________________________");
-        System.out.println("1. Add Student");
+        System.out.println("");
+        System.out.println("╔════════════════════════════════════════════════╗");
+        System.out.println("║    STUDENT GRADE MANAGEMENT - MAIN MENU        ║");
+        System.out.println("║         [Advanced Edition v3.0]                ║");
+        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("");
+        System.out.println("STUDENT MANAGEMENT");
+        System.out.println("1. Add Student (with validation)");
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
-        System.out.println("5. Export Grade Report");
-        System.out.println("6. Calculate Student GPA");
+        System.out.println("");
+        System.out.println("FILE OPERATIONS");
+        System.out.println("5. Export Grade Report (CSV/JSON/Binary)");
+        System.out.println("6. Import Data (Multi-format support)        [ENHANCED]");
         System.out.println("7. Bulk Import Grades");
-        System.out.println("8. View Class Statistics");
-        System.out.println("9. Search Students");
-        System.out.println("10. Generate Batch Reports");
-        System.out.println("11. Real-Time Statistics Dashboard");
-        System.out.println("12. Exit");
-        System.out.println("13. Scheduled Tasks Management");
-        System.out.println("14. Advanced Pattern-Based Search");
-        System.out.println("15. Cache Management");
-        System.out.println("16. View Audit Trail");
-        System.out.println("17. Stream Analysis");
-        System.out.println("__________________________________________________________________________________");
+        System.out.println("");
+        System.out.println("ANALYTICS & REPORTING");
+        System.out.println("8. Calculate Student GPA");
+        System.out.println("9. View Class Statistics");
+        System.out.println("10. Real-Time Statistics Dashboard           [NEW]");
+        System.out.println("11. Generate Batch Reports                   [NEW]");
+        System.out.println("");
+        System.out.println("SEARCH & QUERY");
+        System.out.println("12. Search Students (Advanced)               [ENHANCED]");
+        System.out.println("13. Pattern-Based Search                     [NEW]");
+        System.out.println("14. Query Grade History                      [NEW]");
+        System.out.println("");
+        System.out.println("ADVANCED FEATURES");
+        System.out.println("15. Schedule Automated Tasks                 [NEW]");
+        System.out.println("16. View System Performance                  [NEW]");
+        System.out.println("17. Cache Management                         [NEW]");
+        System.out.println("18. Audit Trail Viewer                       [NEW]");
+        System.out.println("");
+        System.out.println("19. Exit");
+        System.out.println("");
+
+        long activeTasks = taskScheduler.getActiveTasks().size();
+        System.out.println("Background Tasks: ⚡ " + activeTasks + " active | 📊 Stats updating...");
+        System.out.println("");
     }
 
     /**
@@ -678,8 +692,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
 
         java.util.List<Grade> allGrades = gradeManager.getAllGrades();
-        Student[] studentsArray = studentManager.getAllStudents();
-        java.util.List<Student> allStudents = java.util.Arrays.asList(studentsArray);
+        java.util.List<Student> allStudents = studentManager.getAllStudents();
 
         String report = classStatistics.generateClassStatisticsReport(allGrades, allStudents);
         System.out.println(report);
@@ -735,8 +748,7 @@ public class App {
         System.out.println("\nGENERATE BATCH REPORTS");
         System.out.println("__________________________________________________________________________________");
 
-        Student[] studentsArray = studentManager.getAllStudents();
-        java.util.List<Student> students = java.util.Arrays.asList(studentsArray);
+        java.util.List<Student> students = studentManager.getAllStudents();
 
         if (students.isEmpty()) {
             System.out.println("No students found to generate reports for.");
@@ -855,7 +867,7 @@ public class App {
             }
 
             System.out.println("Searching with regex: " + regex);
-            java.util.List<models.Student> all = java.util.Arrays.asList(studentManager.getAllStudents());
+            java.util.List<models.Student> all = studentManager.getAllStudents();
             PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex, extractor);
 
             System.out.println("Processing " + response.stats.totalScanned + " students...");
@@ -953,58 +965,42 @@ public class App {
         scanner.nextLine();
     }
 
-    private static void handleStreamAnalysis() {
-        System.out.println("\nSTREAM DATA ANALYSIS");
-        System.out.println("__________________________________________________________________________________");
-        System.out.println("1. Filter Students (Age > 20)");
-        System.out.println("2. Extract Student Emails");
-        System.out.println("3. Average Grade Per Subject");
-        System.out.println("4. Group Students by Grade Range");
-        System.out.println("5. Find Top 3 Students");
-        System.out.println("6. Performance Comparison (Seq vs Parallel)");
-        System.out.println("7. Back");
-        System.out.println("__________________________________________________________________________________");
+    private static void handleMultiFormatImport() {
+        System.out.println("\nIMPORT DATA (Multi-Format)");
+        System.out.println("__________________________________________________");
+        System.out.println("Supported: CSV (.csv), JSON (.json), Binary (.dat/.bin)");
+        System.out.println("Place files in: imports/");
+        String filename = getStringInput("Enter filename (with extension): ");
+        bulkImportService.importGrades(filename, studentManager, gradeManager);
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
 
-        int choice = getIntInput("Enter choice: ");
-        
-        List<Student> students = studentManager.getAllStudents(); // Need to verify this method exists
-        List<Grade> grades = gradeManager.getAllGrades(); // Need to verify this method exists
-
-        switch (choice) {
-            case 1:
-                List<Student> older = streamDataService.filterStudents(students, s -> s.getAge() > 20);
-                System.out.println("Found " + older.size() + " students > 20:");
-                older.forEach(s -> System.out.println(s.getName() + " (" + s.getAge() + ")"));
-                break;
-            case 2:
-                List<String> emails = streamDataService.extractEmails(students);
-                System.out.println("Emails:");
-                emails.forEach(System.out::println);
-                break;
-            case 3:
-                java.util.Map<String, Double> avgs = streamDataService.calculateAverageGradePerSubject(grades);
-                System.out.println("Average per Subject:");
-                avgs.forEach((k, v) -> System.out.printf("%s: %.2f%%%n", k, v));
-                break;
-            case 4:
-                java.util.Map<String, List<Student>> groups = streamDataService.groupStudentsByGradeRange(students, gradeManager);
-                groups.forEach((range, list) -> {
-                    System.out.println(range + ": " + list.size() + " students");
-                });
-                break;
-            case 5:
-                List<Student> top = streamDataService.findTopStudents(students, gradeManager, 3);
-                System.out.println("Top 3 Students:");
-                top.forEach(s -> System.out.printf("%s: %.2f%%%n", s.getName(), s.calculateAverageGrade(gradeManager)));
-                break;
-            case 6:
-                System.out.println(streamDataService.comparePerformance(students));
-                break;
-            case 7:
-                return;
-            default:
-                System.out.println("Invalid choice.");
+    private static void queryGradeHistory() {
+        System.out.println("\nQUERY GRADE HISTORY");
+        System.out.println("__________________________________________________");
+        try {
+            String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
+            Student s = studentManager.getStudent(studentId);
+            gradeManager.viewGradesByStudent(s);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void viewSystemPerformance() {
+        System.out.println("\nSYSTEM PERFORMANCE");
+        System.out.println("__________________________________________________");
+        long totalMem = Runtime.getRuntime().totalMemory() / (1024 * 1024);
+        long freeMem = Runtime.getRuntime().freeMemory() / (1024 * 1024);
+        System.out.println("Memory Usage: " + (totalMem - freeMem) + "MB / " + totalMem + "MB");
+        System.out.println("Active Threads: " + Thread.activeCount());
+        System.out.println("__________________________________________________");
+        System.out.println("Running Stream Performance Benchmark...");
+        System.out.println(streamDataService.comparePerformance(studentManager.getAllStudents()));
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
