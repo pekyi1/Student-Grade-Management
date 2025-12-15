@@ -23,18 +23,34 @@ public class TaskScheduler {
         new File("data").mkdirs();
     }
 
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
+    }
+
     public void scheduleTask(String name, Runnable task, long initialDelay, long period, TimeUnit unit) {
         ScheduledTaskInfo info = new ScheduledTaskInfo(name, period, unit, null);
 
         Runnable wrappedTask = () -> {
             info.markRunning();
+            long start = System.currentTimeMillis();
             try {
                 task.run();
+                long duration = System.currentTimeMillis() - start;
                 info.markSuccess();
                 System.out.println("[Scheduler] Task '" + name + "' executed successfully.");
+                if (auditService != null) {
+                    auditService.log("TASK_EXEC", "Task: " + name, "SCHEDULER", true, duration);
+                }
             } catch (Exception e) {
                 info.markFailure();
+                long duration = System.currentTimeMillis() - start;
                 System.err.println("[Scheduler] Task '" + name + "' failed: " + e.getMessage());
+                if (auditService != null) {
+                    auditService.log("TASK_EXEC", "Task: " + name + " Failed: " + e.getMessage(), "SCHEDULER", false,
+                            duration);
+                }
             }
         };
 

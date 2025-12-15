@@ -70,6 +70,10 @@ public class App {
         // Inject Audit Service
         studentManager.setAuditService(auditLogService);
         gradeManager.setAuditService(auditLogService);
+        batchReportService.setAuditService(auditLogService);
+        taskScheduler.setAuditService(auditLogService);
+
+        auditLogService.log("APP_START", "Application started", "SYSTEM", true);
 
         boolean running = true;
         while (running) {
@@ -137,6 +141,7 @@ public class App {
                         directoryWatcherService.stop();
                         statisticsDashboardService.shutdown();
                         taskScheduler.shutdown();
+                        auditLogService.log("APP_SHUTDOWN", "Application exit", "SYSTEM", true);
                         auditLogService.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;

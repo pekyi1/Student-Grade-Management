@@ -21,6 +21,12 @@ public class BatchReportService {
     private final ReportGenerator reportGenerator;
     private final FileExporter fileExporter;
 
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
+    }
+
     public BatchReportService() {
         this.reportGenerator = new ReportGenerator();
         this.fileExporter = new FileExporter();
@@ -54,6 +60,11 @@ public class BatchReportService {
     public void executeBatch(List<Student> allStudents, GradeManager gradeManager, BatchConfig config) {
         // 1. Filter Students based on Scope
         List<Student> targetStudents = filterStudents(allStudents, gradeManager, config);
+
+        if (auditService != null) {
+            auditService.log("BATCH_START", "Scope: " + config.scope + ", Target: " + targetStudents.size(), "SYSTEM",
+                    true);
+        }
 
         if (targetStudents.isEmpty()) {
             System.out.println("No students match the selected scope.");
@@ -138,6 +149,13 @@ public class BatchReportService {
         // 6. Final Summary
         printSummary(totalTasks, successCount.get(), failCount.get(), totalWallTime, totalProcessingTime.get(),
                 threadCount, batchId);
+
+        if (auditService != null) {
+            auditService.log("BATCH_END",
+                    String.format("ID: %s, Success: %d, Failed: %d, Time: %.2fs",
+                            batchId, successCount.get(), failCount.get(), totalWallTime / 1000.0),
+                    "SYSTEM", true, totalWallTime);
+        }
     }
 
     private void updateThreadStatus(long threadId, String studentId, String status) {
