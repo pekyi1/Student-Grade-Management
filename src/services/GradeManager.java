@@ -103,28 +103,43 @@ public class GradeManager {
             grades.clear(); // Clear existing in-memory grades
             averageCache.clear(); // Clear cache as we are reloading
 
+            Map<String, String> legacyCodeMap = new HashMap<>(); // Name+Type -> Code
+
             for (String line : lines) {
                 try {
                     String[] parts = line.split(",");
                     if (parts.length < 4)
                         continue;
-                    // Format: studentID, subjectName, subjectType, grade (float)
+
                     String studentId = parts[0];
                     String subjectName = parts[1];
-                    String subjectType = parts[2];
-                    double gradeVal = Double.parseDouble(parts[3]);
+                    models.Subject subject;
+                    double gradeVal;
 
-                    // Use SubjectFactory to recreate subject
-                    models.Subject subject = SubjectFactory.createSubject(subjectName, subjectType);
+                    if (parts.length >= 5) {
+                        // New Format: ID, Name, Code, Type, Grade
+                        String subjectCode = parts[2];
+                        String subjectType = parts[3];
+                        gradeVal = Double.parseDouble(parts[4]);
+                        subject = SubjectFactory.createSubject(subjectName, subjectCode, subjectType);
+                    } else {
+                        // Old Format: ID, Name, Type, Grade
+                        String subjectType = parts[2];
+                        gradeVal = Double.parseDouble(parts[3]);
 
-                    // Grade constructor validates ID/Grade. We assume file is valid but catch
-                    // exceptions.
-                    // ValidationUtils.validateStudentId(studentId) called inside Grade constructor.
-                    // This might be problematic if we don't have student manager to verify
-                    // existence?
-                    // Grade constructor calls ValidationUtils checks but does NOT check
-                    // StudentManager existence.
-                    // So it is safe to load isolated grades, assuming IDs are valid strings.
+                        // Deduplicate legacy subjects
+                        String key = subjectName + "|" + subjectType;
+                        String code;
+                        if (legacyCodeMap.containsKey(key)) {
+                            code = legacyCodeMap.get(key);
+                        } else {
+                            // Generate new code and cache it
+                            models.Subject temp = SubjectFactory.createSubject(subjectName, subjectType);
+                            code = temp.getSubjectCode();
+                            legacyCodeMap.put(key, code);
+                        }
+                        subject = SubjectFactory.createSubject(subjectName, code, subjectType);
+                    }
 
                     Grade g = new Grade(studentId, subject, gradeVal);
                     grades.add(g);
