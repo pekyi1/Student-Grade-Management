@@ -13,50 +13,67 @@ import java.util.Set;
 
 // This class handles the storage and calculation of grades for all students
 public class GradeManager {
-    private Grade[] grades;
-    private int gradeCount;
+    // US-1: Use LinkedList<Grade> for frequent insertions/deletions in grade
+    // history
+    private java.util.LinkedList<Grade> grades;
+    // US-8: Thread-Safe Caching System
+    private final CacheService<String, Double> averageCache = new CacheService<>(150);
+
+    public CacheService<String, Double> getCacheService() {
+        return averageCache;
+    }
 
     public GradeManager() {
-        this.grades = new Grade[200];
-        this.gradeCount = 0;
+        this.grades = new java.util.LinkedList<>();
     }
 
     /**
      * Adds a grade to the system after validating it.
+     * Time Complexity: O(1) - Adding to end of LinkedList.
+     * (Duplicate check is O(n))
      *
      * @param grade The Grade object to be added.
      * @throws InvalidGradeException If the grade value is not between 0 and 100.
-     * @throws InvalidDataException  If the storage capacity has been reached.
+     * @throws InvalidDataException  If the data is invalid.
      */
     public void addGrade(Grade grade) throws InvalidGradeException, InvalidDataException {
         if (grade.getGrade() < 0 || grade.getGrade() > 100) {
             throw new InvalidGradeException(grade.getGrade());
         }
 
-        // Check for existing grade for this student and subject
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(grade.getStudentID()) &&
-                    grades[i].getSubject().equals(grade.getSubject())) {
+        // Check for existing grade for this student and subject - O(n)
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(grade.getStudentID()) &&
+                    g.getSubject().equals(grade.getSubject())) {
 
                 // Update existing grade
-                grades[i].recordGrade(grade.getGrade());
-                // grades[i].setDate(grade.getDate()); // Date setter not available, but logic
-                // implies update.
-                // Since Grade date is set on creation/modification, we might want to update it
-                // if possible,
-                // but Grade.java only has recordGrade which updates the value.
-                // For now, updating value is the critical request.
+                g.recordGrade(grade.getGrade());
+                // Invalidate cache
+                averageCache.remove(grade.getStudentID());
                 System.out.println("\n✓ Grade updated successfully!");
                 return;
             }
         }
 
-        if (gradeCount >= grades.length) {
-            throw new InvalidDataException("Cannot add grade. Maximum capacity reached.");
+        // LinkedList has no fixed capacity, but for safety in this project scope:
+        // (Removed capacity check as Lists grow dynamically)
+
+        grades.add(grade);
+        // Invalidate cache
+        averageCache.remove(grade.getStudentID());
+
+        if (auditService != null) {
+            auditService.log("RECORD_GRADE", "Grade: " + grade.getGrade() + " for " + grade.getStudentID(), "SYSTEM",
+                    true);
         }
 
-        grades[gradeCount++] = grade;
         System.out.println("\n✓ Grade recorded successfully!");
+    }
+
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
     }
 
     // This method prints a detailed grade history for a specific student
@@ -76,14 +93,17 @@ public class GradeManager {
         System.out.println("__________________________________________________________________________________");
 
         // Display in reverse chronological order
-        for (int i = gradeCount - 1; i >= 0; i--) {
-            if (grades[i].getStudentID().equals(studentId)) {
+        // LinkedList descendingIterator is efficient
+        java.util.Iterator<Grade> it = grades.descendingIterator();
+        while (it.hasNext()) {
+            Grade g = it.next();
+            if (g.getStudentID().equals(studentId)) {
                 System.out.printf("%-8s | %-12s | %-15s | %-10s | %-8.1f%%%n",
-                        grades[i].getGradeID(),
-                        grades[i].getDate(),
-                        grades[i].getSubject().getSubjectName(),
-                        grades[i].getSubject().getSubjectType(),
-                        grades[i].getGrade());
+                        g.getGradeID(),
+                        g.getDate(),
+                        g.getSubject().getSubjectName(),
+                        g.getSubject().getSubjectType(),
+                        g.getGrade());
                 found = true;
             }
         }
@@ -105,15 +125,14 @@ public class GradeManager {
                             + (int) student.getPassingGrade() + "%)");
         }
 
-        System.out.println("\nPress Enter to continue...");
-        new java.util.Scanner(System.in).nextLine();
+
     }
 
     private boolean checkAllCoreSubjectsPassing(String studentId, double passingGrade) {
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId) &&
-                    grades[i].getSubject().getSubjectType().equals("Core")) {
-                if (grades[i].getGrade() < passingGrade) {
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId) &&
+                    g.getSubject().getSubjectType().equals("Core")) {
+                if (g.getGrade() < passingGrade) {
                     return false;
                 }
             }
@@ -121,52 +140,71 @@ public class GradeManager {
         return true;
     }
 
-    // This method calculates the average of all core subject grades for a student
+    /**
+     * Calculates the average of all core subject grades for a student.
+     * Time Complexity: O(n)
+     */
     public double calculateCoreAverage(String studentId) {
         double sum = 0;
         int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId) && grades[i].getSubject().getSubjectType().equals("Core")) {
-                sum += grades[i].getGrade();
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId) && g.getSubject().getSubjectType().equals("Core")) {
+                sum += g.getGrade();
                 count++;
             }
         }
         return count == 0 ? 0.0 : sum / count;
     }
 
-    // This method calculates the average of all elective subject grades for a
-    // student
+    /**
+     * Calculates the average of all elective subject grades for a student.
+     * Time Complexity: O(n)
+     */
     public double calculateElectiveAverage(String studentId) {
         double sum = 0;
         int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId)
-                    && grades[i].getSubject().getSubjectType().equals("Elective")) {
-                sum += grades[i].getGrade();
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId)
+                    && g.getSubject().getSubjectType().equals("Elective")) {
+                sum += g.getGrade();
                 count++;
             }
         }
         return count == 0 ? 0.0 : sum / count;
     }
 
-    // This method calculates the overall average of all grades for a student
+    /**
+     * Calculates the overall average of all grades for a student.
+     * Time Complexity: O(n) without cache, O(1) with cache hit.
+     */
     public double calculateOverallAverage(String studentId) {
+        // Check cache first
+        Double cachedAvg = averageCache.get(studentId);
+        if (cachedAvg != null) {
+            return cachedAvg;
+        }
+
         double sum = 0;
         int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId)) {
-                sum += grades[i].getGrade();
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId)) {
+                sum += g.getGrade();
                 count++;
             }
         }
-        return count == 0 ? 0.0 : sum / count;
+        double avg = count == 0 ? 0.0 : sum / count;
+
+        // Update cache
+        averageCache.put(studentId, avg);
+
+        return avg;
     }
 
     // This method counts how many subjects a student has received grades for
     public int getEnrolledSubjectCount(String studentId) {
         int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId)) {
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId)) {
                 count++;
             }
         }
@@ -176,9 +214,9 @@ public class GradeManager {
     // This method retrieves a list of all grades belonging to a specific student
     public List<Grade> getGradesForStudent(String studentId) {
         List<Grade> studentGrades = new ArrayList<>();
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentID().equals(studentId)) {
-                studentGrades.add(grades[i]);
+        for (Grade g : grades) {
+            if (g.getStudentID().equals(studentId)) {
+                studentGrades.add(g);
             }
         }
         return studentGrades;
@@ -186,6 +224,7 @@ public class GradeManager {
 
     /**
      * Determines a student's rank in the class based on their overall average.
+     * Time Complexity: O(n) - Iterates all grades to build averages.
      *
      * @param studentId The ID of the student to rank.
      * @return The student's rank (1-based), or -1 if the student has no grades.
@@ -193,8 +232,8 @@ public class GradeManager {
     public int calculateClassRank(String studentId) {
         Map<String, Double> studentAverages = new HashMap<>();
         // Calculate average for all students who have grades
-        for (int i = 0; i < gradeCount; i++) {
-            String id = grades[i].getStudentID();
+        for (Grade g : grades) {
+            String id = g.getStudentID();
             if (!studentAverages.containsKey(id)) {
                 studentAverages.put(id, calculateOverallAverage(id));
             }
@@ -221,8 +260,8 @@ public class GradeManager {
      */
     public int getTotalStudentsWithGrades() {
         Set<String> studentsWithGrades = new HashSet<>();
-        for (int i = 0; i < gradeCount; i++) {
-            studentsWithGrades.add(grades[i].getStudentID());
+        for (Grade g : grades) {
+            studentsWithGrades.add(g.getStudentID());
         }
         return studentsWithGrades.size();
     }
@@ -233,22 +272,32 @@ public class GradeManager {
      * @return A list of all Grade objects.
      */
     public List<Grade> getAllGrades() {
-        List<Grade> allGrades = new ArrayList<>();
-        for (int i = 0; i < gradeCount; i++) {
-            allGrades.add(grades[i]);
+        return new ArrayList<>(grades);
+    }
+
+    /**
+     * Refreshes the cache for all students.
+     * Useful for background tasks to keep cache warm.
+     */
+    public void refreshAllCache(StudentManager studentManager) {
+        System.out.println("Refreshing Grade Cache...");
+        for (Student s : studentManager.getAllStudents()) {
+            calculateOverallAverage(s.getStudentId()); // This updates the cache
         }
-        return allGrades;
     }
 
     /**
      * Retrieves a list of all unique subjects currently recorded in the system.
+     * Time Complexity: O(n)
      *
      * @return A list of unique Subject objects.
      */
     public List<models.Subject> getAllUniqueSubjects() {
+        // US-1: Use HashSet<String> for tracking unique courses enrolled.
+        // Even though we return a List, we use Set for uniqueness.
         Set<models.Subject> subjects = new HashSet<>();
-        for (int i = 0; i < gradeCount; i++) {
-            subjects.add(grades[i].getSubject());
+        for (Grade g : grades) {
+            subjects.add(g.getSubject());
         }
         return new ArrayList<>(subjects);
     }

@@ -1,9 +1,9 @@
-import exceptions.GradeManagementException;
+
 import exceptions.InvalidDataException;
 import exceptions.InvalidGradeException;
 import exceptions.StudentNotFoundException;
 import utils.Logger;
-import utils.Logger;
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import models.*;
 import services.*;
-import interfaces.*;
 
 // This class is the main entry point for the Student Grade Management System
 public class App {
@@ -20,9 +19,16 @@ public class App {
     private static ReportGenerator reportGenerator = new ReportGenerator();
     private static FileExporter fileExporter = new FileExporter();
     private static GPACalculator gpaCalculator = new GPACalculator();
-    private static BulkImportService bulkImportService = new BulkImportService(new SimpleCSVParser());
+    private static BulkImportService bulkImportService = new BulkImportService();
     private static ClassStatistics classStatistics = new ClassStatistics();
     private static StudentSearchService studentSearchService = new StudentSearchService();
+    private static BatchReportService batchReportService = new BatchReportService();
+    private static StatisticsDashboardService statisticsDashboardService = new StatisticsDashboardService();
+    private static TaskScheduler taskScheduler = new TaskScheduler();
+    private static PatternSearchService patternSearchService = new PatternSearchService();
+    private static AuditLogService auditLogService = new AuditLogService();
+    private static StreamDataService streamDataService = new StreamDataService();
+    private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
     /**
@@ -32,8 +38,30 @@ public class App {
      * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
+        // Start Directory Watcher
+        directoryWatcherService = new DirectoryWatcherService("imports", bulkImportService, studentManager,
+                gradeManager);
+        Thread watcherThread = new Thread(directoryWatcherService);
+        watcherThread.setDaemon(true); // Ensure it dies with the app
+        watcherThread.start();
+
+        // Load persistents schedules
+        taskScheduler.loadSchedules(studentManager, gradeManager);
+
+        // US-8: Schedule background cache refresh (if not already scheduled)
+        boolean cacheTaskExists = taskScheduler.getActiveTasks().stream()
+                .anyMatch(t -> t.getName().equals("Cache Refresh"));
+        if (!cacheTaskExists) {
+            taskScheduler.scheduleTask("Cache Refresh", () -> gradeManager.refreshAllCache(studentManager), 0, 5,
+                    java.util.concurrent.TimeUnit.MINUTES);
+        }
+
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
+
+        // Inject Audit Service
+        studentManager.setAuditService(auditLogService);
+        gradeManager.setAuditService(auditLogService);
 
         boolean running = true;
         while (running) {
@@ -58,19 +86,50 @@ public class App {
                         exportGradeReport();
                         break;
                     case 6:
-                        calculateStudentGPA();
+                        handleMultiFormatImport();
                         break;
                     case 7:
                         bulkImportGrades();
                         break;
                     case 8:
-                        viewClassStatistics();
+                        calculateStudentGPA();
                         break;
                     case 9:
-                        searchStudents();
+                        viewClassStatistics();
                         break;
                     case 10:
+                        statisticsDashboardService.startDashboard(studentManager, gradeManager, scanner);
+                        break;
+                    case 11:
+                        generateBatchReports();
+                        break;
+                    case 12:
+                        searchStudents(); // Advanced is handled within
+                        break;
+                    case 13:
+                        handlePatternSearch();
+                        break;
+                    case 14:
+                        queryGradeHistory();
+                        break;
+                    case 15:
+                        manageScheduledTasks();
+                        break;
+                    case 16:
+                        viewSystemPerformance();
+                        break;
+                    case 17:
+                        handleCacheManagement();
+                        break;
+                    case 18:
+                        handleAuditTrail();
+                        break;
+                    case 19:
                         running = false;
+                        directoryWatcherService.stop();
+                        statisticsDashboardService.shutdown();
+                        taskScheduler.shutdown();
+                        auditLogService.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
                     default:
@@ -88,19 +147,46 @@ public class App {
      * Displays the main menu options to the user.
      */
     private static void printMenu() {
-        System.out.println("\nSTUDENT GRADE MANAGEMENT SYSTEM");
-        System.out.println("__________________________________________________________________________________");
-        System.out.println("1. Add Student");
+        System.out.println("");
+        System.out.println("╔════════════════════════════════════════════════╗");
+        System.out.println("║    STUDENT GRADE MANAGEMENT - MAIN MENU        ║");
+        System.out.println("║         [Advanced Edition v3.0]                ║");
+        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("");
+        System.out.println("STUDENT MANAGEMENT");
+        System.out.println("1. Add Student (with validation)");
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
-        System.out.println("5. Export Grade Report");
-        System.out.println("6. Calculate Student GPA");
+        System.out.println("");
+        System.out.println("FILE OPERATIONS");
+        System.out.println("5. Export Grade Report (CSV/JSON/Binary)");
+        System.out.println("6. Import Data (Multi-format support)        [ENHANCED]");
         System.out.println("7. Bulk Import Grades");
-        System.out.println("8. View Class Statistics");
-        System.out.println("9. Search Students");
-        System.out.println("10. Exit");
-        System.out.println("__________________________________________________________________________________");
+        System.out.println("");
+        System.out.println("ANALYTICS & REPORTING");
+        System.out.println("8. Calculate Student GPA");
+        System.out.println("9. View Class Statistics");
+        System.out.println("10. Real-Time Statistics Dashboard           [NEW]");
+        System.out.println("11. Generate Batch Reports                   [NEW]");
+        System.out.println("");
+        System.out.println("SEARCH & QUERY");
+        System.out.println("12. Search Students (Advanced)               [ENHANCED]");
+        System.out.println("13. Pattern-Based Search                     [NEW]");
+        System.out.println("14. Query Grade History                      [NEW]");
+        System.out.println("");
+        System.out.println("ADVANCED FEATURES");
+        System.out.println("15. Schedule Automated Tasks                 [NEW]");
+        System.out.println("16. View System Performance                  [NEW]");
+        System.out.println("17. Cache Management                         [NEW]");
+        System.out.println("18. Audit Trail Viewer                       [NEW]");
+        System.out.println("");
+        System.out.println("19. Exit");
+        System.out.println("");
+
+        long activeTasks = taskScheduler.getActiveTasks().size();
+        System.out.println("Background Tasks: ⚡ " + activeTasks + " active | 📊 Stats updating...");
+        System.out.println("");
     }
 
     /**
@@ -108,58 +194,83 @@ public class App {
      * Prompts for user input and validates data before creating a student.
      */
     private static void addNewStudent() {
-        System.out.println("\nADD STUDENT");
+        System.out.println("\nADD STUDENT (with validation)");
         System.out.println("__________________________________________________________________________________");
         try {
-            String name = getStringInput("Enter student name: ");
+            String name;
+            while (true) {
+                name = getStringInput("Enter Student Name: ");
+                try {
+                    utils.ValidationUtils.validateName(name);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: Only letters, spaces, hyphens, and apostrophes");
+                }
+            }
 
             int age;
             while (true) {
-                age = getIntInput("Enter student age: ");
+                age = getIntInput("Enter Student Age: ");
                 try {
                     utils.ValidationUtils.validateAge(age);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid age: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
                 }
             }
 
             String email;
             while (true) {
-                email = getStringInput("Enter student email: ");
+                email = getStringInput("Enter Email Address: ");
                 try {
                     utils.ValidationUtils.validateEmail(email);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid email: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: username@domain.extension");
                 }
             }
 
             String phone;
             while (true) {
-                phone = getStringInput("Enter student phone (10 digits): ");
+                phone = getStringInput("Enter Phone Number: ");
                 try {
                     utils.ValidationUtils.validatePhone(phone);
                     break;
                 } catch (InvalidDataException e) {
-                    System.out.println("Invalid phone: " + e.getMessage());
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out
+                            .println("  Accepted patterns: (123) 456-7890, 123-456-7890, +1-123-456-7890, 1234567890");
+                }
+            }
+
+            String enrollmentDate;
+            while (true) {
+                enrollmentDate = getStringInput("Enter Enrollment Date (YYYY-MM-DD): ");
+                try {
+                    utils.ValidationUtils.validateDate(enrollmentDate);
+                    break;
+                } catch (InvalidDataException e) {
+                    System.out.println("X VALIDATION ERROR: " + e.getMessage());
+                    System.out.println("  Pattern required: YYYY-MM-DD (e.g. 2024-11-03)");
                 }
             }
 
             Student student = null;
             boolean selectingType = true;
             while (selectingType) {
-                System.out.println("\nStudent type:");
-                System.out.println("1. Regular Student (Passing grade: 50%)");
-                System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
+                System.out.println("\nStudent Type:");
+                System.out.println("1. Regular Student");
+                System.out.println("2. Honors Student");
                 int typeChoice = getIntInput("\nSelect type (1-2): ");
 
                 try {
                     if (typeChoice == 1) {
-                        student = new RegularStudent(name, age, email, phone);
+                        student = new RegularStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else if (typeChoice == 2) {
-                        student = new HonorsStudent(name, age, email, phone);
+                        student = new HonorsStudent(name, age, email, phone, enrollmentDate);
                         selectingType = false;
                     } else {
                         System.out.println("Invalid student type.");
@@ -171,14 +282,21 @@ public class App {
                     }
                 } catch (InvalidDataException e) {
                     System.out.println("Error creating student: " + e.getMessage());
-                    return; // Should not happen if inputs are validated, but good for safety
+                    return;
                 }
             }
 
             studentManager.addStudent(student);
+            System.out.println("\n✓ Student added successfully!");
+            System.out.println("  All inputs validated with regex patterns");
+            System.out.println("  Student ID: " + student.getStudentId());
+            System.out.println("  Name: " + student.getName());
+            System.out.println("  Email: " + student.getEmail());
+            System.out.println("  Enrolled: " + student.getEnrollmentDate());
+
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
-        } catch (InvalidDataException e) {
+        } catch (Exception e) { // Catch generic to be safe
             Logger.logError("Failed to add student", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
@@ -195,6 +313,7 @@ public class App {
         while (recording) {
             try {
                 String studentId = getStringInput("Enter Student ID: ");
+                utils.ValidationUtils.validateStudentId(studentId);
                 Student student = studentManager.getStudent(studentId);
 
                 System.out.println("\nStudent Details:");
@@ -364,10 +483,16 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("\nEnter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -377,55 +502,65 @@ public class App {
      * Prompts for report type (Summary/Detailed) and filename.
      */
     private static void exportGradeReport() {
-        System.out.println("\nEXPORT GRADE REPORT");
+        System.out.println("\nEXPORT GRADE REPORT (Multi-Format)");
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
-            System.out.println("\nStudent: " + studentId + " " + student.getName());
-            System.out.println("Type: " + student.getStudentType() + " Student");
-            System.out.println("Total Grades: " + gradeManager.getEnrolledSubjectCount(studentId));
+            System.out.println("\nStudent: " + studentId + " - " + student.getName());
 
-            boolean selectingOption = true;
-            String content = "";
-            while (selectingOption) {
-                System.out.println("\nExport options:");
-                System.out.println("1. Summary Report (overview only)");
-                System.out.println("2. Detailed Report (all grades)");
-                System.out.println("3. Both");
-                int option = getIntInput("\nSelect option (1-3): ");
+            // Format Selection
+            System.out.println("\nExport Format:");
+            System.out.println("1. CSV (Comma-Separated Values)");
+            System.out.println("2. JSON (JavaScript Object Notation)");
+            System.out.println("3. Binary (Serialized Java Object)");
+            System.out.println("4. All formats");
+            int formatChoice = getIntInput("Select format (1-4): ");
 
-                if (option == 1) {
-                    content = reportGenerator.generateSummaryReport(student, gradeManager);
-                    selectingOption = false;
-                } else if (option == 2) {
-                    content = reportGenerator.generateDetailedReport(student, gradeManager);
-                    selectingOption = false;
-                } else if (option == 3) {
-                    content = reportGenerator.generateBothReport(student, gradeManager);
-                    selectingOption = false;
-                } else {
-                    System.out.println("Invalid option.");
-                    String retry = getStringInput("Try again? (Y/N): ");
-                    if (!retry.equalsIgnoreCase("y")) {
-                        System.out.println("Export cancelled.");
-                        return;
-                    }
-                }
+            // Content Generation (Summary/Detailed logic)
+            // Reusing existing logic for content generation string if relevant for
+            // CSV/Text,
+            // but for JSON/Binary we export raw objects generally.
+            // The instructions imply exporting the "report".
+            // Existing exportToFile took a String content.
+            // New FileExporter methods take objects or strings.
+
+            // If CSV/Text report:
+            String textContent = "";
+            if (formatChoice == 1 || formatChoice == 4) {
+                // Ask for report type only if CSV/Text is involved to keep valid logic
+                textContent = generateReportContent(student);
             }
 
-            String filename = getStringInput("\nEnter filename (without extension): ");
             try {
-                String filePath = fileExporter.exportToFile(filename, content);
-                java.io.File file = new java.io.File(filePath);
-                System.out.println("\n✓ Report exported successfully!");
-                System.out.println("File: " + file.getName());
-                System.out.println("Location: " + filePath);
-                System.out.println("Size: " + file.length() + " bytes");
+                if (formatChoice == 1 || formatChoice == 4) {
+                    String filename = "report_" + studentId;
+                    String path = fileExporter.exportToFile(filename + ".txt", textContent); // Legacy txt/csv-like
+                                                                                             // report
+                    System.out.println("✓ Text/CSV Report exported: " + path);
+                }
+
+                if (formatChoice == 2 || formatChoice == 4) {
+                    // Export Grades List as JSON
+                    String filename = "grades_" + studentId;
+                    String path = fileExporter.exportToJSON(gradeManager.getGradesForStudent(studentId), filename);
+                    System.out.println("✓ JSON Data exported: " + path);
+                }
+
+                if (formatChoice == 3 || formatChoice == 4) {
+                    // Export Student object + grades as Binary? Or just Student?
+                    // Let's export the List<Grade> for now as it contains Student ID
+                    String filename = "data_" + studentId;
+                    java.util.List<Grade> grades = gradeManager.getGradesForStudent(studentId);
+                    String path = fileExporter.exportToBinary(grades, filename); // Serializing List
+                    System.out.println("✓ Binary Data exported: " + path);
+                }
+
             } catch (java.io.IOException e) {
                 Logger.logError("Export failed", e);
-                System.out.println("X ERROR: Failed to export report. " + e.getMessage());
+                System.out.println("X ERROR: Failed to export. " + e.getMessage());
             }
 
             System.out.println("\nPress Enter to continue...");
@@ -434,7 +569,36 @@ public class App {
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
+            System.out.println("X ERROR: " + e.getMessage());
         }
+    }
+
+    private static String generateReportContent(Student student) {
+        boolean selectingOption = true;
+        String content = "";
+        while (selectingOption) {
+            System.out.println("\nReport Type:");
+            System.out.println("1. Summary Report");
+            System.out.println("2. Detailed Report");
+            System.out.println("3. Both");
+            int option = getIntInput("\nSelect option (1-3): ");
+
+            if (option == 1) {
+                content = reportGenerator.generateSummaryReport(student, gradeManager);
+                selectingOption = false;
+            } else if (option == 2) {
+                content = reportGenerator.generateDetailedReport(student, gradeManager);
+                selectingOption = false;
+            } else if (option == 3) {
+                content = reportGenerator.generateBothReport(student, gradeManager);
+                selectingOption = false;
+            } else {
+                System.out.println("Invalid option.");
+            }
+        }
+        return content;
     }
 
     private static String getStringInput(String prompt) {
@@ -473,6 +637,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
         try {
             String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
 
             System.out.println("\nStudent: " + studentId + " " + student.getName());
@@ -492,6 +657,9 @@ public class App {
 
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
+            System.out.println("X ERROR: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            Logger.logError("Invalid data input", e);
             System.out.println("X ERROR: " + e.getMessage());
         }
     }
@@ -524,8 +692,7 @@ public class App {
         System.out.println("__________________________________________________________________________________");
 
         java.util.List<Grade> allGrades = gradeManager.getAllGrades();
-        Student[] studentsArray = studentManager.getAllStudents();
-        java.util.List<Student> allStudents = java.util.Arrays.asList(studentsArray);
+        java.util.List<Student> allStudents = studentManager.getAllStudents();
 
         String report = classStatistics.generateClassStatisticsReport(allGrades, allStudents);
         System.out.println(report);
@@ -572,5 +739,269 @@ public class App {
                     System.out.println("Invalid choice. Please try again.");
             }
         }
+    }
+
+    /**
+     * Generates reports for all students using concurrent processing.
+     */
+    private static void generateBatchReports() {
+        System.out.println("\nGENERATE BATCH REPORTS");
+        System.out.println("__________________________________________________________________________________");
+
+        java.util.List<Student> students = studentManager.getAllStudents();
+
+        if (students.isEmpty()) {
+            System.out.println("No students found to generate reports for.");
+            System.out.println("Press Enter to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        int threads = getIntInput("Enter number of threads (2-8): ");
+        batchReportService.generateBatchReports(students, gradeManager, threads);
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void manageScheduledTasks() {
+        System.out.println("\nSCHEDULED TASKS MANAGEMENT");
+        System.out.println("__________________________________________________________________________________");
+
+        System.out.println("Active Tasks:");
+        java.util.List<TaskScheduler.ScheduledTaskInfo> tasks = taskScheduler.getActiveTasks();
+        if (tasks.isEmpty()) {
+            System.out.println("No active tasks.");
+        } else {
+            for (TaskScheduler.ScheduledTaskInfo info : tasks) {
+                long delay = info.getDelay(java.util.concurrent.TimeUnit.SECONDS);
+                System.out.printf("- %s (Every %d %s) - Next run in: %d seconds%n",
+                        info.getName(), info.getPeriod(), info.getUnit(), delay);
+            }
+        }
+
+        System.out.println("\nOptions:");
+        System.out.println("1. Schedule Daily Backup");
+        System.out.println("2. Schedule Custom Check (Demo)");
+        System.out.println("3. Back to Main Menu");
+
+        int choice = getIntInput("Select option: ");
+        if (choice == 1) {
+            taskScheduler.scheduleTask("Daily Backup", AutomatedTasks.createDailyBackupTask(), 0, 24,
+                    java.util.concurrent.TimeUnit.HOURS);
+            System.out.println("Backup Scheduled.");
+        } else if (choice == 2) {
+            taskScheduler.scheduleTask("System Check", () -> System.out.println("System Check OK"), 0, 10,
+                    java.util.concurrent.TimeUnit.SECONDS);
+            System.out.println("System Check Scheduled (Every 10s).");
+        }
+    }
+
+    private static void handlePatternSearch() {
+        System.out.println("\nPATTERN-BASED SEARCH");
+        System.out.println("__________________________________________________");
+        System.out.println("1. Email Domain Pattern (e.g., @university.edu)");
+        System.out.println("2. Phone Area Code Pattern (e.g., 555)");
+        System.out.println("3. Student ID Pattern (e.g., STU0**)");
+        System.out.println("4. Name Pattern (regex)");
+        System.out.println("5. Custom Regex Pattern");
+
+        int type = getIntInput("Select type (1-5): ");
+        String regex = "";
+        java.util.function.Function<models.Student, String> extractor = null;
+
+        scanner.nextLine(); // consume newline
+
+        // Build regex based on type or ask user
+        try {
+            switch (type) {
+                case 1:
+                    System.out.print("Enter email domain pattern: ");
+                    String domain = scanner.nextLine().trim();
+                    regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
+                    extractor = models.Student::getEmail;
+                    break;
+                case 2:
+                    System.out.print("Enter area code: ");
+                    String area = scanner.nextLine().trim();
+                    regex = "^" + java.util.regex.Pattern.quote(area) + ".*"; // Starts with area code
+                    extractor = models.Student::getPhone;
+                    break;
+                case 3:
+                    System.out.print("Enter ID pattern (use * for wildcard): ");
+                    String idPat = scanner.nextLine().trim();
+                    regex = "^" + idPat.replace("*", ".*") + "$";
+                    extractor = models.Student::getStudentId;
+                    break;
+                case 4:
+                    System.out.print("Enter name pattern (regex): ");
+                    regex = scanner.nextLine().trim();
+                    extractor = models.Student::getName;
+                    break;
+                case 5:
+                    System.out.print("Enter custom regex: ");
+                    regex = scanner.nextLine().trim();
+                    System.out.println("Select field (1=ID, 2=Name, 3=Email, 4=Phone): ");
+                    int f = getIntInput("Field: ");
+                    scanner.nextLine();
+                    switch (f) {
+                        case 1:
+                            extractor = models.Student::getStudentId;
+                            break;
+                        case 2:
+                            extractor = models.Student::getName;
+                            break;
+                        case 3:
+                            extractor = models.Student::getEmail;
+                            break;
+                        case 4:
+                            extractor = models.Student::getPhone;
+                            break;
+                        default:
+                            extractor = models.Student::getName;
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid type.");
+                    return;
+            }
+
+            System.out.println("Searching with regex: " + regex);
+            java.util.List<models.Student> all = studentManager.getAllStudents();
+            PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex, extractor);
+
+            System.out.println("Processing " + response.stats.totalScanned + " students...");
+            System.out.println("\nSEARCH RESULTS (" + response.stats.matchesFound + " found)");
+            System.out.println("__________________________________________________");
+            System.out.printf("%-10s | %-20s | %-30s%n", "ID", "NAME", "MATCHED FIELD");
+            System.out.println("__________________________________________________");
+
+            for (PatternSearchService.SearchResult r : response.results) {
+                System.out.printf("%-10s | %-20s | %s%n",
+                        r.getStudent().getStudentId(),
+                        r.getStudent().getName(),
+                        r.getHighlightedText());
+            }
+
+            System.out.println("\nPattern Match Statistics:");
+            System.out.println("  Total Students Scanned: " + response.stats.totalScanned);
+            System.out.println(String.format("  Matches Found: %d (%.0f%%)",
+                    response.stats.matchesFound,
+                    (double) response.stats.matchesFound / response.stats.totalScanned * 100));
+            System.out.println("  Search Time: " + response.stats.searchTimeMs + "ms");
+            System.out.println("  Regex Complexity: " + response.stats.regexComplexityHint);
+
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+
+        } catch (Exception e) {
+            System.out.println("Error in search: " + e.getMessage());
+        }
+    }
+
+    private static void handleCacheManagement() {
+        System.out.println("\nCACHE MANAGEMENT");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Cache Statistics");
+        System.out.println("2. Clear Cache");
+        System.out.println("3. Back to Main Menu");
+        int subChoice = getIntInput("Select option (1-3): ");
+
+        CacheService<String, Double> cache = gradeManager.getCacheService();
+
+        switch (subChoice) {
+            case 1:
+                System.out.println(cache.getStats());
+                break;
+            case 2:
+                cache.clear();
+                auditLogService.log("CLEAR_CACHE", "Cache cleared manually", "ADMIN", true);
+                System.out.println("✓ Cache cleared successfully.");
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleAuditTrail() {
+        System.out.println("\nAUDIT TRAIL");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Recent Logs (Last 20)");
+        System.out.println("2. Search Logs by Keyword");
+        System.out.println("3. Back to Main Menu");
+        int choice = getIntInput("Select option (1-3): ");
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                java.util.List<String> logs = auditLogService.getRecentLogs(20);
+                if (logs.isEmpty()) {
+                    System.out.println("No logs found.");
+                } else {
+                    for (String log : logs) {
+                        System.out.println(log);
+                    }
+                }
+                break;
+            case 2:
+                String keyword = getStringInput("Enter keyword: ");
+                java.util.List<String> results = auditLogService.searchLogs(keyword);
+                System.out.println("\nFound " + results.size() + " matches:");
+                for (String res : results) {
+                    System.out.println(res);
+                }
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleMultiFormatImport() {
+        System.out.println("\nIMPORT DATA (Multi-Format)");
+        System.out.println("__________________________________________________");
+        System.out.println("Supported: CSV (.csv), JSON (.json), Binary (.dat/.bin)");
+        System.out.println("Place files in: imports/");
+        String filename = getStringInput("Enter filename (with extension): ");
+        bulkImportService.importGrades(filename, studentManager, gradeManager);
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void queryGradeHistory() {
+        System.out.println("\nQUERY GRADE HISTORY");
+        System.out.println("__________________________________________________");
+        try {
+            String studentId = getStringInput("Enter Student ID: ");
+            utils.ValidationUtils.validateStudentId(studentId);
+            Student s = studentManager.getStudent(studentId);
+            gradeManager.viewGradesByStudent(s);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void viewSystemPerformance() {
+        System.out.println("\nSYSTEM PERFORMANCE");
+        System.out.println("__________________________________________________");
+        long totalMem = Runtime.getRuntime().totalMemory() / (1024 * 1024);
+        long freeMem = Runtime.getRuntime().freeMemory() / (1024 * 1024);
+        System.out.println("Memory Usage: " + (totalMem - freeMem) + "MB / " + totalMem + "MB");
+        System.out.println("Active Threads: " + Thread.activeCount());
+        System.out.println("__________________________________________________");
+        System.out.println("Running Stream Performance Benchmark...");
+        System.out.println(streamDataService.comparePerformance(studentManager.getAllStudents()));
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }

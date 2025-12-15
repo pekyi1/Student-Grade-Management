@@ -13,21 +13,20 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SimpleCSVParserTest {
 
     @Test
-    public void testParseInvalidFileFormat(@TempDir Path tempDir) throws IOException {
+    public void testParseInvalidFileFormat(@TempDir Path tempDir) throws IOException, InvalidFileFormatException {
         // Create a temporary file with invalid content
         File tempFile = tempDir.resolve("invalid_grades.csv").toFile();
         try (FileWriter writer = new FileWriter(tempFile)) {
-            writer.write("StudentID,Subject,Type,Grade\n"); // Header
             writer.write("STU001,Math,Core\n"); // Missing Grade column (invalid)
         }
 
         SimpleCSVParser parser = new SimpleCSVParser();
 
-        // Assert that InvalidFileFormatException is thrown
-        Exception exception = assertThrows(InvalidFileFormatException.class, () -> {
-            parser.parse(tempFile.getAbsolutePath());
-        });
+        // The parser should NOT throw exception on partial invalid row,
+        // it should return the row so BulkImportService can log it.
+        List<String[]> records = parser.parse(tempFile.getAbsolutePath());
 
-        assertTrue(exception.getMessage().contains("Expected 4 columns"));
+        assertEquals(1, records.size());
+        assertEquals(3, records.get(0).length); // Verify it returns 3 parts
     }
 }

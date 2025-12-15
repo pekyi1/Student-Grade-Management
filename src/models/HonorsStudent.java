@@ -4,8 +4,9 @@ public class HonorsStudent extends Student {
     private double passingGrade = 60.0;
     private boolean honorsEligible;
 
-    public HonorsStudent(String name, int age, String email, String phone) throws exceptions.InvalidDataException {
-        super(name, age, email, phone, "Active");
+    public HonorsStudent(String name, int age, String email, String phone, String enrollmentDate)
+            throws exceptions.InvalidDataException {
+        super(name, age, email, phone, enrollmentDate, "Active");
         this.honorsEligible = false;
     }
 

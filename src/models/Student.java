@@ -10,23 +10,28 @@ public abstract class Student implements Exportable {
     private int age;
     private String email;
     private String phone;
+    private String enrollmentDate;
     private String status;
     private static int studentCounter = 1;
 
-    public Student(String name, int age, String email, String phone, String status)
+    public Student(String name, int age, String email, String phone, String enrollmentDate, String status)
             throws exceptions.InvalidDataException {
         if (name == null || name.trim().isEmpty()) {
             throw new exceptions.InvalidDataException("Student name cannot be empty.");
         }
+        // Validation calls
+        utils.ValidationUtils.validateName(name); // added
         utils.ValidationUtils.validateAge(age);
         utils.ValidationUtils.validateEmail(email);
         utils.ValidationUtils.validatePhone(phone);
+        utils.ValidationUtils.validateDate(enrollmentDate); // added
 
         this.studentId = String.format("STU%03d", studentCounter++);
         this.name = name;
         this.age = age;
         this.email = email;
         this.phone = phone;
+        this.enrollmentDate = enrollmentDate;
         this.status = status;
     }
 
@@ -50,6 +55,10 @@ public abstract class Student implements Exportable {
         return phone;
     }
 
+    public String getEnrollmentDate() {
+        return enrollmentDate;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -71,15 +80,14 @@ public abstract class Student implements Exportable {
     }
 
     // This method checks if the student's average meets the passing requirements
-    public boolean isPassing(double currentAverage) { // This compares the current average with the passing grade and
-                                                      // checks if the student meets the passing grade
+    public boolean isPassing(double currentAverage) {
         return currentAverage >= getPassingGrade();
     }
 
     // This method formats the student's data as a CSV string
     @Override
     public String toExportFormat() {
-        return String.format("%s,%s,%s,%d,%s,%s,%s",
-                studentId, name, getStudentType(), age, email, phone, status);
+        return String.format("%s,%s,%s,%d,%s,%s,%s,%s",
+                studentId, name, getStudentType(), age, email, phone, enrollmentDate, status);
     }
 }

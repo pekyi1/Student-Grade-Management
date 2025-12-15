@@ -35,7 +35,7 @@ public class GPACalculatorTest {
     }
 
     @Test
-    public void testCalculateCumulativeGPA() {
+    public void testCalculateCumulativeGPA() throws Exception {
         Subject math = new CoreSubject("Math", "MTH101");
         Subject science = new CoreSubject("Science", "SCI101");
 

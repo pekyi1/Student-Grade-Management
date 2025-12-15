@@ -11,38 +11,44 @@ import java.util.List;
 
 // This class manages the collection of students and deals with adding or finding them
 public class StudentManager implements Searchable {
-    private Student[] students;
-    private int studentCount;
+    // US-1: Use HashMap<String, Student> for O(1) student lookup by ID
+    private java.util.Map<String, Student> students;
+    // We don't need studentCount as the Map tracks size
 
     public StudentManager() {
-        this.students = new Student[50];
-        this.studentCount = 0;
+        this.students = new java.util.HashMap<>();
     }
 
     /**
      * Adds a new student to the system after performing validation checks.
+     * Time Complexity: O(1) - HashMap insertion is constant time on average.
      *
      * @param student The student object to be added.
-     * @throws InvalidDataException If the student data is invalid (e.g., empty
-     *                              name, invalid age/email/phone) or capacity is
-     *                              reached.
+     * @throws InvalidDataException If the student data is invalid or ID already
+     *                              exists.
      */
     public void addStudent(Student student) throws InvalidDataException {
-        if (studentCount >= students.length) {
-            throw new InvalidDataException("Cannot add student. Maximum capacity reached.");
-        }
+        // No capacity check needed for HashMap (dynamically resizes)
+        // Check for empty name
         if (student.getName() == null || student.getName().trim().isEmpty()) {
             throw new InvalidDataException("Student name cannot be empty.");
         }
+
         utils.ValidationUtils.validateAge(student.getAge());
         utils.ValidationUtils.validateEmail(student.getEmail());
         utils.ValidationUtils.validatePhone(student.getPhone());
 
-        if (findStudent(student.getStudentId()) != null) {
+        // Check if ID exists - O(1)
+        if (students.containsKey(student.getStudentId())) {
             throw new InvalidDataException("Student with ID " + student.getStudentId() + " already exists.");
         }
 
-        students[studentCount++] = student;
+        students.put(student.getStudentId(), student);
+
+        if (auditService != null) {
+            auditService.log("ADD_STUDENT", "Added student: " + student.getStudentId(), "SYSTEM", true);
+        }
+
         System.out.println("\n-> Student added successfully!");
         System.out.println("  Student ID: " + student.getStudentId());
         System.out.println("  Name: " + student.getName());
@@ -53,29 +59,34 @@ public class StudentManager implements Searchable {
         System.out.println("  Status: " + student.getStatus());
     }
 
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
+    }
+
     /**
      * Attempts to locate a student by their unique ID.
+     * Time Complexity: O(1) - HashMap lookup is constant time on average.
      *
      * @param studentId The unique identifier of the student.
      * @return The Student object if found, or null if not found.
      */
     public Student findStudent(String studentId) {
-        for (int i = 0; i < studentCount; i++) {
-            if (students[i].getStudentId().equals(studentId)) {
-                return students[i];
-            }
-        }
-        return null; // Returning null here to allow caller to decide if it's an exception or just a
-                     // check
+        return students.get(studentId);
     }
 
-    // This method finds all students whose names match the search string
+    /**
+     * Finds all students whose names match the search string.
+     * Time Complexity: O(n) - Must iterate through all values to check names.
+     */
     @Override
     public List<Student> searchByName(String name) {
         List<Student> results = new ArrayList<>();
-        for (int i = 0; i < studentCount; i++) {
-            if (students[i].getName().toLowerCase().contains(name.toLowerCase())) {
-                results.add(students[i]);
+        String searchLower = name.toLowerCase();
+        for (Student s : students.values()) {
+            if (s.getName().toLowerCase().contains(searchLower)) {
+                results.add(s);
             }
         }
         return results;
@@ -83,6 +94,7 @@ public class StudentManager implements Searchable {
 
     /**
      * Retrieves a student by their ID, throwing an exception if not found.
+     * Time Complexity: O(1)
      *
      * @param studentId The unique identifier of the student.
      * @return The Student object.
@@ -98,7 +110,7 @@ public class StudentManager implements Searchable {
 
     // This method prints a list of all students and their summary details
     public void viewAllStudents(GradeManager gm) {
-        if (studentCount == 0) {
+        if (students.isEmpty()) {
             System.out.println("No students found.");
             return;
         }
@@ -107,13 +119,18 @@ public class StudentManager implements Searchable {
         System.out.printf("%-8s | %-15s | %-10s | %-9s | %-10s%n", "STU ID", "NAME", "TYPE", "AVG GRADE", "STATUS");
         System.out.println("__________________________________________________________________________________");
 
-        for (int i = 0; i < studentCount; i++) {
-            double avg = gm.calculateOverallAverage(students[i].getStudentId());
-            int enrolledSubjects = gm.getEnrolledSubjectCount(students[i].getStudentId());
-            students[i].displayStudentDetails(avg, enrolledSubjects);
+        // Use TreeMap for ID sorting if we want persistent order, or just iterate
+        // values
+        // US-1 mentions using correct collections. HashMap doesn't guarantee order.
+        // If display order matters, we could use values() or sort them.
+        // For now, simple iteration.
+        for (Student s : students.values()) {
+            double avg = gm.calculateOverallAverage(s.getStudentId());
+            int enrolledSubjects = gm.getEnrolledSubjectCount(s.getStudentId());
+            s.displayStudentDetails(avg, enrolledSubjects);
             System.out.println("__________________________________________________________________________________");
         }
-        System.out.println("\nTotal Students: " + studentCount);
+        System.out.println("\nTotal Students: " + students.size());
         System.out.printf("Average Class Grade: %.1f%%%n", getAverageClassGrade(gm));
 
         System.out.println("\nPress Enter to continue...");
@@ -122,29 +139,47 @@ public class StudentManager implements Searchable {
 
     /**
      * Calculates the average grade across all students in the class.
+     * Time Complexity: O(n) - Iterates through all students.
      *
-     * @param gm The GradeManager instance used to calculate individual student
-     *           averages.
+     * @param gm The GradeManager instance.
      * @return The class-wide average grade percentage.
      */
     public double getAverageClassGrade(GradeManager gm) {
-        if (studentCount == 0)
+        if (students.isEmpty())
             return 0.0;
 
         double totalAverage = 0.0;
-        for (int i = 0; i < studentCount; i++) {
-            totalAverage += gm.calculateOverallAverage(students[i].getStudentId());
+        for (Student s : students.values()) {
+            totalAverage += gm.calculateOverallAverage(s.getStudentId());
         }
-        return totalAverage / studentCount;
+        return totalAverage / students.size();
     }
 
-    public Student[] getAllStudents() {
-        Student[] result = new Student[studentCount];
-        System.arraycopy(students, 0, result, 0, studentCount);
-        return result;
+    /**
+     * Retrieves students sorted by GPA in descending order.
+     * Time Complexity: O(n log n) - Sorting keys in TreeMap.
+     *
+     * @param gm The GradeManager to calculate GPAs.
+     * @return A map of GPA to list of students.
+     */
+    public java.util.Map<Double, List<Student>> getStudentsByGPA(GradeManager gm) {
+        // TreeMap sorts by keys (GPA) in natural order (ascending)
+        // We want descending, so we use Collections.reverseOrder()
+        java.util.TreeMap<Double, List<Student>> gpaMap = new java.util.TreeMap<>(java.util.Collections.reverseOrder());
+
+        for (Student s : students.values()) {
+            double gpa = gm.calculateOverallAverage(s.getStudentId());
+            gpaMap.computeIfAbsent(gpa, k -> new ArrayList<>()).add(s);
+        }
+        return gpaMap;
+    }
+
+    // Returns a list of all students
+    public List<Student> getAllStudents() {
+        return new ArrayList<>(students.values());
     }
 
     public int getStudentCount() {
-        return studentCount;
+        return students.size();
     }
 }

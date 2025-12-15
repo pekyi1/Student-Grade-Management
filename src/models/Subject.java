@@ -1,6 +1,7 @@
 package models;
 
-public abstract class Subject {
+public abstract class Subject implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     private String subjectName;
     private String subjectCode;
 
