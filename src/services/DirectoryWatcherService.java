@@ -72,6 +72,20 @@ public class DirectoryWatcherService implements Runnable {
                             }
 
                             importService.importGrades(fileName.toString(), studentManager, gradeManager);
+
+                            // Move to processed directory to prevent loops
+                            try {
+                                Path source = path.resolve(fileName);
+                                Path processedDir = path.resolve("processed");
+                                if (!Files.exists(processedDir)) {
+                                    Files.createDirectories(processedDir);
+                                }
+                                Path target = processedDir.resolve(fileName);
+                                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+                                System.out.println("File moved to: " + target);
+                            } catch (IOException e) {
+                                System.err.println("Failed to move processed file: " + e.getMessage());
+                            }
                         }
                     }
 
