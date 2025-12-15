@@ -64,7 +64,7 @@ public class BatchReportService {
         int threadCount = config.threadCount;
         System.out.println("\nInitializing thread pool...");
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        System.out.println("✓ Fixed Thread Pool created: " + threadCount + " threads");
+        System.out.println("[OK] Fixed Thread Pool created: " + threadCount + " threads");
         System.out.println("\nProcessing " + targetStudents.size() + " student reports...");
 
         // Statistics
@@ -111,11 +111,11 @@ public class BatchReportService {
                     successCount.incrementAndGet();
 
                     // Update Status: Done
-                    updateThreadStatus(tId, student.getStudentId(), "✓ (" + duration + "ms)");
+                    updateThreadStatus(tId, student.getStudentId(), "[OK] (" + duration + "ms)");
 
                 } catch (Exception e) {
                     failCount.incrementAndGet();
-                    updateThreadStatus(tId, student.getStudentId(), "X Failed");
+                    updateThreadStatus(tId, student.getStudentId(), "[X] Failed");
                     Logger.logError("Batch error for " + student.getStudentId(), e);
                 } finally {
                     completedTasks.incrementAndGet();
@@ -232,7 +232,7 @@ public class BatchReportService {
 
     private void printSummary(int total, int success, int failed, long wallTime, long procTime, int threads,
             String batchId) {
-        System.out.println("\n\n✓ BATCH GENERATION COMPLETED!");
+        System.out.println("\n\n[OK] BATCH GENERATION COMPLETED!");
         System.out.println("\nEXECUTION SUMMARY");
         System.out.println("__________________________________________________");
         System.out.println("Total Reports: " + total);

@@ -38,6 +38,7 @@ public class App {
      * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
+
         // Start Directory Watcher
         directoryWatcherService = new DirectoryWatcherService("imports", bulkImportService, studentManager,
                 gradeManager);
@@ -56,8 +57,14 @@ public class App {
                     java.util.concurrent.TimeUnit.MINUTES);
         }
 
-        // Seed data for testing
-        DataSeeder.seedStudents(studentManager, gradeManager);
+        // Load persistent data
+        studentManager.loadStudents();
+        gradeManager.loadGrades();
+
+        // Seed data ONLY if system is empty
+        if (studentManager.getAllStudents().isEmpty()) {
+            DataSeeder.seedStudents(studentManager, gradeManager);
+        }
 
         // Inject Audit Service
         studentManager.setAuditService(auditLogService);
@@ -98,7 +105,7 @@ public class App {
                         viewClassStatistics();
                         break;
                     case 10:
-                        statisticsDashboardService.startDashboard(studentManager, gradeManager, scanner);
+                        statisticsDashboardService.startDashboard(studentManager, gradeManager, taskScheduler, scanner);
                         break;
                     case 11:
                         generateBatchReports();
@@ -148,10 +155,10 @@ public class App {
      */
     private static void printMenu() {
         System.out.println("");
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║    STUDENT GRADE MANAGEMENT - MAIN MENU        ║");
-        System.out.println("║         [Advanced Edition v3.0]                ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("+================================================+");
+        System.out.println("|    STUDENT GRADE MANAGEMENT - MAIN MENU        |");
+        System.out.println("|         [Advanced Edition v3.0]                |");
+        System.out.println("+================================================+");
         System.out.println("");
         System.out.println("STUDENT MANAGEMENT");
         System.out.println("1. Add Student (with validation)");
@@ -185,7 +192,7 @@ public class App {
         System.out.println("");
 
         long activeTasks = taskScheduler.getActiveTasks().size();
-        System.out.println("Background Tasks: ⚡ " + activeTasks + " active | 📊 Stats updating...");
+        System.out.println("Background Tasks: [ACTIVE] " + activeTasks + " | [STATS] Updating...");
         System.out.println("");
     }
 
@@ -312,8 +319,13 @@ public class App {
         boolean recording = true;
         while (recording) {
             try {
-                String studentId = getStringInput("Enter Student ID: ");
-                utils.ValidationUtils.validateStudentId(studentId);
+                String studentId = getValidInput("Enter Student ID: ", (id) -> {
+                    utils.ValidationUtils.validateStudentId(id);
+                    studentManager.getStudent(id); // Verify existence
+                });
+                if (studentId == null)
+                    return;
+
                 Student student = studentManager.getStudent(studentId);
 
                 System.out.println("\nStudent Details:");
@@ -624,6 +636,29 @@ public class App {
                 return Double.parseDouble(scanner.nextLine());
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
+            }
+        }
+    }
+
+    @FunctionalInterface
+    interface InputValidator {
+        void validate(String input) throws Exception;
+    }
+
+    private static String getValidInput(String prompt, InputValidator validator) {
+        while (true) {
+            String input = getStringInput(prompt);
+            if (input == null || input.trim().isEmpty())
+                continue;
+            if (input.equalsIgnoreCase("EXIT"))
+                return null;
+
+            try {
+                validator.validate(input);
+                return input;
+            } catch (Exception e) {
+                System.out.println("X ERROR: " + e.getMessage());
+                System.out.println("Type 'EXIT' to cancel.");
             }
         }
     }

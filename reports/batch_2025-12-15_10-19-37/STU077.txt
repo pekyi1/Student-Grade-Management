@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU077 Willie Adams
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 93.0    %
+2025-12-15   | Physics         | Core       | 100.0   %
+2025-12-15   | Chemistry       | Core       | 67.0    %
+2025-12-15   | English         | Core       | 60.0    %
+2025-12-15   | Computer Science | Elective   | 69.0    %
+2025-12-15   | Music           | Elective   | 98.0    %
+__________________________________________________
