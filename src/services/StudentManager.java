@@ -45,6 +45,10 @@ public class StudentManager implements Searchable {
 
         students.put(student.getStudentId(), student);
 
+        if (auditService != null) {
+            auditService.log("ADD_STUDENT", "Added student: " + student.getStudentId(), "SYSTEM", true);
+        }
+
         System.out.println("\n-> Student added successfully!");
         System.out.println("  Student ID: " + student.getStudentId());
         System.out.println("  Name: " + student.getName());
@@ -53,6 +57,12 @@ public class StudentManager implements Searchable {
         System.out.println("  Email: " + student.getEmail());
         System.out.printf("  Passing Grade: %.0f%%%n", student.getPassingGrade());
         System.out.println("  Status: " + student.getStatus());
+    }
+
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
     }
 
     /**
@@ -164,9 +174,9 @@ public class StudentManager implements Searchable {
         return gpaMap;
     }
 
-    // Maintained for compatibility, but internally converts from Map
-    public Student[] getAllStudents() {
-        return students.values().toArray(new Student[0]);
+    // Returns a list of all students
+    public List<Student> getAllStudents() {
+        return new ArrayList<>(students.values());
     }
 
     public int getStudentCount() {

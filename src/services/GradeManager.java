@@ -16,7 +16,12 @@ public class GradeManager {
     // US-1: Use LinkedList<Grade> for frequent insertions/deletions in grade
     // history
     private java.util.LinkedList<Grade> grades;
-    // We don't need gradeCount as the List tracks size
+    // US-8: Thread-Safe Caching System
+    private final CacheService<String, Double> averageCache = new CacheService<>(150);
+
+    public CacheService<String, Double> getCacheService() {
+        return averageCache;
+    }
 
     public GradeManager() {
         this.grades = new java.util.LinkedList<>();
@@ -43,6 +48,8 @@ public class GradeManager {
 
                 // Update existing grade
                 g.recordGrade(grade.getGrade());
+                // Invalidate cache
+                averageCache.remove(grade.getStudentID());
                 System.out.println("\n✓ Grade updated successfully!");
                 return;
             }
@@ -52,7 +59,21 @@ public class GradeManager {
         // (Removed capacity check as Lists grow dynamically)
 
         grades.add(grade);
+        // Invalidate cache
+        averageCache.remove(grade.getStudentID());
+
+        if (auditService != null) {
+            auditService.log("RECORD_GRADE", "Grade: " + grade.getGrade() + " for " + grade.getStudentID(), "SYSTEM",
+                    true);
+        }
+
         System.out.println("\n✓ Grade recorded successfully!");
+    }
+
+    private AuditLogService auditService;
+
+    public void setAuditService(AuditLogService service) {
+        this.auditService = service;
     }
 
     // This method prints a detailed grade history for a specific student
@@ -104,8 +125,7 @@ public class GradeManager {
                             + (int) student.getPassingGrade() + "%)");
         }
 
-        System.out.println("\nPress Enter to continue...");
-        new java.util.Scanner(System.in).nextLine();
+
     }
 
     private boolean checkAllCoreSubjectsPassing(String studentId, double passingGrade) {
@@ -155,9 +175,15 @@ public class GradeManager {
 
     /**
      * Calculates the overall average of all grades for a student.
-     * Time Complexity: O(n)
+     * Time Complexity: O(n) without cache, O(1) with cache hit.
      */
     public double calculateOverallAverage(String studentId) {
+        // Check cache first
+        Double cachedAvg = averageCache.get(studentId);
+        if (cachedAvg != null) {
+            return cachedAvg;
+        }
+
         double sum = 0;
         int count = 0;
         for (Grade g : grades) {
@@ -166,7 +192,12 @@ public class GradeManager {
                 count++;
             }
         }
-        return count == 0 ? 0.0 : sum / count;
+        double avg = count == 0 ? 0.0 : sum / count;
+
+        // Update cache
+        averageCache.put(studentId, avg);
+
+        return avg;
     }
 
     // This method counts how many subjects a student has received grades for
@@ -242,6 +273,17 @@ public class GradeManager {
      */
     public List<Grade> getAllGrades() {
         return new ArrayList<>(grades);
+    }
+
+    /**
+     * Refreshes the cache for all students.
+     * Useful for background tasks to keep cache warm.
+     */
+    public void refreshAllCache(StudentManager studentManager) {
+        System.out.println("Refreshing Grade Cache...");
+        for (Student s : studentManager.getAllStudents()) {
+            calculateOverallAverage(s.getStudentId()); // This updates the cache
+        }
     }
 
     /**

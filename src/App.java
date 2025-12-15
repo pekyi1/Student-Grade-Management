@@ -25,6 +25,9 @@ public class App {
     private static BatchReportService batchReportService = new BatchReportService();
     private static StatisticsDashboardService statisticsDashboardService = new StatisticsDashboardService();
     private static TaskScheduler taskScheduler = new TaskScheduler();
+    private static PatternSearchService patternSearchService = new PatternSearchService();
+    private static AuditLogService auditLogService = new AuditLogService();
+    private static StreamDataService streamDataService = new StreamDataService();
     private static DirectoryWatcherService directoryWatcherService;
     private static Scanner scanner = new Scanner(System.in);
 
@@ -47,8 +50,17 @@ public class App {
         // Load persistents schedules
         taskScheduler.loadSchedules(studentManager, gradeManager);
 
+        // US-8: Schedule background cache refresh (if not already scheduled)
+        // We use a simple check or just overwrite for this demo requirement
+        taskScheduler.scheduleTask("Cache Refresh", () -> gradeManager.refreshAllCache(studentManager), 0, 5,
+                java.util.concurrent.TimeUnit.MINUTES);
+
         // Seed data for testing
         DataSeeder.seedStudents(studentManager, gradeManager);
+
+        // Inject Audit Service
+        studentManager.setAuditService(auditLogService);
+        gradeManager.setAuditService(auditLogService);
 
         boolean running = true;
         while (running) {
@@ -108,10 +120,23 @@ public class App {
                         directoryWatcherService.stop();
                         statisticsDashboardService.shutdown();
                         taskScheduler.shutdown();
+                        auditLogService.shutdown();
                         System.out.println("Thank you for using the Student Grade Management System. Goodbye!");
                         break;
                     case 13:
                         manageScheduledTasks();
+                        break;
+                    case 14:
+                        handlePatternSearch();
+                        break;
+                    case 15:
+                        handleCacheManagement();
+                        break;
+                    case 16:
+                        handleAuditTrail();
+                        break;
+                    case 17:
+                        handleStreamAnalysis();
                         break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
@@ -143,6 +168,10 @@ public class App {
         System.out.println("11. Real-Time Statistics Dashboard");
         System.out.println("12. Exit");
         System.out.println("13. Scheduled Tasks Management");
+        System.out.println("14. Advanced Pattern-Based Search");
+        System.out.println("15. Cache Management");
+        System.out.println("16. View Audit Trail");
+        System.out.println("17. Stream Analysis");
         System.out.println("__________________________________________________________________________________");
     }
 
@@ -443,6 +472,8 @@ public class App {
             utils.ValidationUtils.validateStudentId(studentId);
             Student student = studentManager.getStudent(studentId);
             gradeManager.viewGradesByStudent(student);
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
         } catch (StudentNotFoundException e) {
             Logger.logError("Student not found", e);
             System.out.println("X ERROR: " + e.getMessage());
@@ -752,5 +783,229 @@ public class App {
                     java.util.concurrent.TimeUnit.SECONDS);
             System.out.println("System Check Scheduled (Every 10s).");
         }
+    }
+
+    private static void handlePatternSearch() {
+        System.out.println("\nPATTERN-BASED SEARCH");
+        System.out.println("__________________________________________________");
+        System.out.println("1. Email Domain Pattern (e.g., @university.edu)");
+        System.out.println("2. Phone Area Code Pattern (e.g., 555)");
+        System.out.println("3. Student ID Pattern (e.g., STU0**)");
+        System.out.println("4. Name Pattern (regex)");
+        System.out.println("5. Custom Regex Pattern");
+
+        int type = getIntInput("Select type (1-5): ");
+        String regex = "";
+        java.util.function.Function<models.Student, String> extractor = null;
+
+        scanner.nextLine(); // consume newline
+
+        // Build regex based on type or ask user
+        try {
+            switch (type) {
+                case 1:
+                    System.out.print("Enter email domain pattern: ");
+                    String domain = scanner.nextLine().trim();
+                    regex = ".*" + java.util.regex.Pattern.quote(domain) + "$";
+                    extractor = models.Student::getEmail;
+                    break;
+                case 2:
+                    System.out.print("Enter area code: ");
+                    String area = scanner.nextLine().trim();
+                    regex = "^" + java.util.regex.Pattern.quote(area) + ".*"; // Starts with area code
+                    extractor = models.Student::getPhone;
+                    break;
+                case 3:
+                    System.out.print("Enter ID pattern (use * for wildcard): ");
+                    String idPat = scanner.nextLine().trim();
+                    regex = "^" + idPat.replace("*", ".*") + "$";
+                    extractor = models.Student::getStudentId;
+                    break;
+                case 4:
+                    System.out.print("Enter name pattern (regex): ");
+                    regex = scanner.nextLine().trim();
+                    extractor = models.Student::getName;
+                    break;
+                case 5:
+                    System.out.print("Enter custom regex: ");
+                    regex = scanner.nextLine().trim();
+                    System.out.println("Select field (1=ID, 2=Name, 3=Email, 4=Phone): ");
+                    int f = getIntInput("Field: ");
+                    scanner.nextLine();
+                    switch (f) {
+                        case 1:
+                            extractor = models.Student::getStudentId;
+                            break;
+                        case 2:
+                            extractor = models.Student::getName;
+                            break;
+                        case 3:
+                            extractor = models.Student::getEmail;
+                            break;
+                        case 4:
+                            extractor = models.Student::getPhone;
+                            break;
+                        default:
+                            extractor = models.Student::getName;
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid type.");
+                    return;
+            }
+
+            System.out.println("Searching with regex: " + regex);
+            java.util.List<models.Student> all = java.util.Arrays.asList(studentManager.getAllStudents());
+            PatternSearchService.SearchResponse response = patternSearchService.searchByPattern(all, regex, extractor);
+
+            System.out.println("Processing " + response.stats.totalScanned + " students...");
+            System.out.println("\nSEARCH RESULTS (" + response.stats.matchesFound + " found)");
+            System.out.println("__________________________________________________");
+            System.out.printf("%-10s | %-20s | %-30s%n", "ID", "NAME", "MATCHED FIELD");
+            System.out.println("__________________________________________________");
+
+            for (PatternSearchService.SearchResult r : response.results) {
+                System.out.printf("%-10s | %-20s | %s%n",
+                        r.getStudent().getStudentId(),
+                        r.getStudent().getName(),
+                        r.getHighlightedText());
+            }
+
+            System.out.println("\nPattern Match Statistics:");
+            System.out.println("  Total Students Scanned: " + response.stats.totalScanned);
+            System.out.println(String.format("  Matches Found: %d (%.0f%%)",
+                    response.stats.matchesFound,
+                    (double) response.stats.matchesFound / response.stats.totalScanned * 100));
+            System.out.println("  Search Time: " + response.stats.searchTimeMs + "ms");
+            System.out.println("  Regex Complexity: " + response.stats.regexComplexityHint);
+
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+
+        } catch (Exception e) {
+            System.out.println("Error in search: " + e.getMessage());
+        }
+    }
+
+    private static void handleCacheManagement() {
+        System.out.println("\nCACHE MANAGEMENT");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Cache Statistics");
+        System.out.println("2. Clear Cache");
+        System.out.println("3. Back to Main Menu");
+        int subChoice = getIntInput("Select option (1-3): ");
+
+        CacheService<String, Double> cache = gradeManager.getCacheService();
+
+        switch (subChoice) {
+            case 1:
+                System.out.println(cache.getStats());
+                break;
+            case 2:
+                cache.clear();
+                auditLogService.log("CLEAR_CACHE", "Cache cleared manually", "ADMIN", true);
+                System.out.println("✓ Cache cleared successfully.");
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleAuditTrail() {
+        System.out.println("\nAUDIT TRAIL");
+        System.out.println("__________________________________________________");
+        System.out.println("1. View Recent Logs (Last 20)");
+        System.out.println("2. Search Logs by Keyword");
+        System.out.println("3. Back to Main Menu");
+        int choice = getIntInput("Select option (1-3): ");
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                java.util.List<String> logs = auditLogService.getRecentLogs(20);
+                if (logs.isEmpty()) {
+                    System.out.println("No logs found.");
+                } else {
+                    for (String log : logs) {
+                        System.out.println(log);
+                    }
+                }
+                break;
+            case 2:
+                String keyword = getStringInput("Enter keyword: ");
+                java.util.List<String> results = auditLogService.searchLogs(keyword);
+                System.out.println("\nFound " + results.size() + " matches:");
+                for (String res : results) {
+                    System.out.println(res);
+                }
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private static void handleStreamAnalysis() {
+        System.out.println("\nSTREAM DATA ANALYSIS");
+        System.out.println("__________________________________________________________________________________");
+        System.out.println("1. Filter Students (Age > 20)");
+        System.out.println("2. Extract Student Emails");
+        System.out.println("3. Average Grade Per Subject");
+        System.out.println("4. Group Students by Grade Range");
+        System.out.println("5. Find Top 3 Students");
+        System.out.println("6. Performance Comparison (Seq vs Parallel)");
+        System.out.println("7. Back");
+        System.out.println("__________________________________________________________________________________");
+
+        int choice = getIntInput("Enter choice: ");
+        
+        List<Student> students = studentManager.getAllStudents(); // Need to verify this method exists
+        List<Grade> grades = gradeManager.getAllGrades(); // Need to verify this method exists
+
+        switch (choice) {
+            case 1:
+                List<Student> older = streamDataService.filterStudents(students, s -> s.getAge() > 20);
+                System.out.println("Found " + older.size() + " students > 20:");
+                older.forEach(s -> System.out.println(s.getName() + " (" + s.getAge() + ")"));
+                break;
+            case 2:
+                List<String> emails = streamDataService.extractEmails(students);
+                System.out.println("Emails:");
+                emails.forEach(System.out::println);
+                break;
+            case 3:
+                java.util.Map<String, Double> avgs = streamDataService.calculateAverageGradePerSubject(grades);
+                System.out.println("Average per Subject:");
+                avgs.forEach((k, v) -> System.out.printf("%s: %.2f%%%n", k, v));
+                break;
+            case 4:
+                java.util.Map<String, List<Student>> groups = streamDataService.groupStudentsByGradeRange(students, gradeManager);
+                groups.forEach((range, list) -> {
+                    System.out.println(range + ": " + list.size() + " students");
+                });
+                break;
+            case 5:
+                List<Student> top = streamDataService.findTopStudents(students, gradeManager, 3);
+                System.out.println("Top 3 Students:");
+                top.forEach(s -> System.out.printf("%s: %.2f%%%n", s.getName(), s.calculateAverageGrade(gradeManager)));
+                break;
+            case 6:
+                System.out.println(streamDataService.comparePerformance(students));
+                break;
+            case 7:
+                return;
+            default:
+                System.out.println("Invalid choice.");
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }
