@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU006 Student F
+Student: STU006 John Garcia
 __________________________________________________
 
 DETAILED GRADE HISTORY

@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU064 Joe Collins
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 90.0    %
+2025-12-15   | Physics         | Core       | 61.0    %
+2025-12-15   | Chemistry       | Core       | 87.0    %
+2025-12-15   | English         | Core       | 94.0    %
+2025-12-15   | Art             | Elective   | 74.0    %
+2025-12-15   | History         | Elective   | 66.0    %
+__________________________________________________

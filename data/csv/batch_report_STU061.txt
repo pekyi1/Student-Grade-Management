@@ -1,0 +1,15 @@
+STUDENT GRADE REPORT - DETAILED
+__________________________________________________
+Student: STU061 Ronald Martinez
+__________________________________________________
+
+DETAILED GRADE HISTORY
+DATE         | SUBJECT         | TYPE       | GRADE   
+--------------------------------------------------
+2025-12-15   | Mathematics     | Core       | 60.0    %
+2025-12-15   | Physics         | Core       | 85.0    %
+2025-12-15   | Chemistry       | Core       | 90.0    %
+2025-12-15   | English         | Core       | 69.0    %
+2025-12-15   | Computer Science | Elective   | 79.0    %
+2025-12-15   | History         | Elective   | 95.0    %
+__________________________________________________

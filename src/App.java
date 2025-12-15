@@ -743,22 +743,64 @@ public class App {
 
     /**
      * Generates reports for all students using concurrent processing.
+     * Includes advanced configuration for scope, format, and threading.
      */
     private static void generateBatchReports() {
         System.out.println("\nGENERATE BATCH REPORTS");
         System.out.println("__________________________________________________________________________________");
 
-        java.util.List<Student> students = studentManager.getAllStudents();
+        // 1. Report Scope
+        System.out.println("\nReport Scope:");
+        System.out.println("1. All Students (" + studentManager.getStudentCount() + " students)");
+        System.out.println("2. By Student Type (Regular/Honors)");
+        System.out.println("3. By Grade Range");
+        System.out.println("4. Custom Selection");
+        int scopeChoice = getIntInput("Select scope (1-4): ");
 
-        if (students.isEmpty()) {
-            System.out.println("No students found to generate reports for.");
-            System.out.println("Press Enter to continue...");
-            scanner.nextLine();
-            return;
+        BatchReportService.ReportScope scope = BatchReportService.ReportScope.ALL;
+        String filterValue = "";
+
+        if (scopeChoice == 2) {
+            scope = BatchReportService.ReportScope.TYPE;
+            System.out.println("Enter Type (Regular/Honors): ");
+            filterValue = scanner.nextLine().trim();
+        } else if (scopeChoice == 3) {
+            scope = BatchReportService.ReportScope.GRADE_RANGE;
+            System.out.println("Enter Min Grade (e.g. >90): ");
+            filterValue = scanner.nextLine().trim();
+        } else if (scopeChoice == 4) {
+            scope = BatchReportService.ReportScope.CUSTOM;
+            System.out.println("Enter Student IDs (comma separated): ");
+            filterValue = scanner.nextLine().trim();
         }
 
-        int threads = getIntInput("Enter number of threads (2-8): ");
-        batchReportService.generateBatchReports(students, gradeManager, threads);
+        // 2. Report Format
+        System.out.println("\nReport Format:");
+        System.out.println("1. PDF Summary");
+        System.out.println("2. Detailed Text");
+        System.out.println("3. Excel Spreadsheet");
+        System.out.println("4. All Formats");
+        int formatChoice = getIntInput("Select format (1-4): ");
+
+        BatchReportService.ReportFormat format = BatchReportService.ReportFormat.TEXT;
+        if (formatChoice == 1)
+            format = BatchReportService.ReportFormat.PDF;
+        else if (formatChoice == 3)
+            format = BatchReportService.ReportFormat.EXCEL;
+        else if (formatChoice == 4)
+            format = BatchReportService.ReportFormat.ALL;
+
+        // 3. Concurrency
+        System.out.println("\nConcurrency Settings:");
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        System.out.println("Available Processors: " + availableProcessors);
+        System.out.println("Recommended Threads: " + (availableProcessors / 2) + "-" + availableProcessors);
+
+        int threads = getIntInput("Enter number of threads (1-" + (availableProcessors * 2) + "): ");
+
+        // Execute
+        BatchReportService.BatchConfig config = new BatchReportService.BatchConfig(scope, format, threads, filterValue);
+        batchReportService.executeBatch(studentManager.getAllStudents(), gradeManager, config);
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();

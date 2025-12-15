@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU004 Student D
+Student: STU004 Gregory Adams
 __________________________________________________
 
 DETAILED GRADE HISTORY

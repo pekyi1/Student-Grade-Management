@@ -1,6 +1,6 @@
 STUDENT GRADE REPORT - DETAILED
 __________________________________________________
-Student: STU007 Student G
+Student: STU007 Jerry Jones
 __________________________________________________
 
 DETAILED GRADE HISTORY
