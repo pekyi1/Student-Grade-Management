@@ -57,6 +57,20 @@ public class BatchReportService {
     // Thread status tracker
     private Map<Long, String> threadStatus = new ConcurrentHashMap<>();
 
+    // Status exposure for Dashboard
+    public static class BatchStatus {
+        public boolean isRunning;
+        public int total;
+        public int completed;
+        public int threads;
+    }
+
+    private final BatchStatus currentStatus = new BatchStatus();
+
+    public BatchStatus getStatus() {
+        return currentStatus;
+    }
+
     public void executeBatch(List<Student> allStudents, GradeManager gradeManager, BatchConfig config) {
         // 1. Filter Students based on Scope
         List<Student> targetStudents = filterStudents(allStudents, gradeManager, config);
@@ -89,15 +103,24 @@ public class BatchReportService {
         String batchId = "batch_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
 
         // 3. UI Monitor Thread
+        currentStatus.isRunning = true;
+        currentStatus.total = totalTasks;
+        currentStatus.threads = threadCount;
+        currentStatus.completed = 0;
+
         Thread monitorThread = new Thread(() -> {
             try {
                 while (completedTasks.get() < totalTasks) {
+                    currentStatus.completed = completedTasks.get();
                     printStatus(threadCount, completedTasks.get(), totalTasks);
                     Thread.sleep(100);
                 }
+                currentStatus.completed = totalTasks;
                 printStatus(threadCount, completedTasks.get(), totalTasks); // Final update
             } catch (InterruptedException e) {
                 // finished
+            } finally {
+                currentStatus.isRunning = false;
             }
         });
         monitorThread.start();

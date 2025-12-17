@@ -2,9 +2,14 @@
 /bin/
 /out/
 /target/
+/imports/
+/data/
+*.dat
+*.txt
 *.class
 *.log
 compile_log.txt
 test_output.txt
 javac_log.txt
 jacoco_error.txt
+
