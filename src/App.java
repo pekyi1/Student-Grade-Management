@@ -40,6 +40,12 @@ public class App {
      */
     public static void main(String[] args) {
 
+        // Inject Audit Service (Must be done first so startup tasks can log)
+        studentManager.setAuditService(auditLogService);
+        gradeManager.setAuditService(auditLogService);
+        batchReportService.setAuditService(auditLogService);
+        taskScheduler.setAuditService(auditLogService);
+
         // Start Directory Watcher
         directoryWatcherService = new DirectoryWatcherService("imports", bulkImportService, studentManager,
                 gradeManager);
@@ -66,12 +72,6 @@ public class App {
         if (studentManager.getAllStudents().isEmpty()) {
             DataSeeder.seedStudents(studentManager, gradeManager);
         }
-
-        // Inject Audit Service
-        studentManager.setAuditService(auditLogService);
-        gradeManager.setAuditService(auditLogService);
-        batchReportService.setAuditService(auditLogService);
-        taskScheduler.setAuditService(auditLogService);
 
         auditLogService.log("APP_START", "Application started", "SYSTEM", true);
 
@@ -110,7 +110,8 @@ public class App {
                         viewClassStatistics();
                         break;
                     case 10:
-                        statisticsDashboardService.startDashboard(studentManager, gradeManager, taskScheduler, scanner);
+                        statisticsDashboardService.startDashboard(studentManager, gradeManager, taskScheduler,
+                                batchReportService, scanner);
                         break;
                     case 11:
                         generateBatchReports();
@@ -198,7 +199,8 @@ public class App {
         System.out.println("");
 
         long activeTasks = taskScheduler.getActiveTasks().size();
-        System.out.println("Background Tasks: [ACTIVE] " + activeTasks + " | [STATS] Updating...");
+        System.out.println(
+                "Background Tasks: [ACTIVE] " + activeTasks + " | [STATS] " + taskScheduler.getSchedulerStats());
         System.out.println("");
     }
 
@@ -936,6 +938,7 @@ public class App {
         System.out.println("\nExecution Time:");
         int hour = getIntInput("Enter hour (0-23): ");
         int minute = getIntInput("Enter minute (0-59): ");
+        int second = getIntInput("Enter second (0-59): ");
 
         System.out.println("\nTarget Students:");
         System.out.println("1. All Students");
@@ -962,7 +965,7 @@ public class App {
         System.out.println("\nTASK CONFIGURATION SUMMARY");
         System.out.println("__________________________________________________");
         System.out.println("Task: Daily GPA Recalculation");
-        System.out.printf("Schedule: Every day at %02d:%02d%n", hour, minute);
+        System.out.printf("Schedule: Every day at %02d:%02d:%02d%n", hour, minute, second);
         System.out
                 .println("Scope: " + (target == 1 ? "All Students" : (target == 2 ? "Honors Only" : "Grade Changes")));
         System.out.println("Threads: " + threads + " (parallel execution)");
@@ -976,7 +979,15 @@ public class App {
 
         String confirm = getStringInput("\nConfirm schedule? (Y/N): ");
         if (confirm.equalsIgnoreCase("y")) {
-            long initialDelay = 10; // Mock delay for demo purposes (real logic would calc time until hour:minute)
+            // Calculate delay
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime targetTime = now.withHour(hour).withMinute(minute).withSecond(second);
+
+            if (now.compareTo(targetTime) > 0) {
+                targetTime = targetTime.plusDays(1);
+            }
+
+            long initialDelay = java.time.Duration.between(now, targetTime).getSeconds();
 
             taskScheduler.scheduleTask("Daily GPA Recalculation", () -> {
                 System.out.println("[Daily GPA] Starting Recalculation...");
@@ -991,15 +1002,16 @@ public class App {
                 } catch (InterruptedException e) {
                 }
                 System.out.println("[Daily GPA] Completed.");
-            }, initialDelay, 24, java.util.concurrent.TimeUnit.HOURS);
+            }, initialDelay, 24 * 60 * 60, java.util.concurrent.TimeUnit.SECONDS);
 
             System.out.println("✓ Task scheduled successfully!");
             System.out.println("  Task ID: TASK-" + new java.util.Random().nextInt(1000));
             System.out.println("  Scheduler Thread: RUNNING");
-            System.out.println("  Next Execution: " + java.time.LocalDateTime.now().plusSeconds(10)
+            System.out.println("  Next Execution: " + targetTime
                     .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            System.out.println("  Initial Delay: 0h 0m 10s (Demo)");
+            System.out.printf("  Initial Delay: %ds%n", initialDelay);
             System.out.println("The task will run automatically in the background.");
+
             System.out.println("\nYou can monitor its execution in the Audit Trail.");
         } else {
             System.out.println("Schedule cancelled.");
