@@ -32,23 +32,24 @@ public class StatisticsDashboardService {
     }
 
     public void startDashboard(StudentManager studentManager, GradeManager gradeManager, TaskScheduler taskScheduler,
-            Scanner scanner) {
+            BatchReportService batchReportService, Scanner scanner) {
         isRunning.set(true);
         System.out.println("Starting Real-Time Dashboard...");
 
         // Start background update task (every 5 seconds)
         autoRefreshTask = scheduler.scheduleAtFixedRate(() -> {
             if (!isPaused.get() && isRunning.get()) {
-                refreshDashboard(studentManager, gradeManager, taskScheduler);
+                refreshDashboard(studentManager, gradeManager, taskScheduler, batchReportService);
                 printDashboard();
             }
         }, 0, 5, TimeUnit.SECONDS);
 
         // Input loop on main thread
-        handleInput(scanner, studentManager, gradeManager, taskScheduler);
+        handleInput(scanner, studentManager, gradeManager, taskScheduler, batchReportService);
     }
 
-    private void handleInput(Scanner scanner, StudentManager sm, GradeManager gm, TaskScheduler ts) {
+    private void handleInput(Scanner scanner, StudentManager sm, GradeManager gm, TaskScheduler ts,
+            BatchReportService brs) {
         while (isRunning.get()) {
             if (scanner.hasNextLine()) {
                 String input = scanner.nextLine().trim().toUpperCase();
@@ -63,7 +64,7 @@ public class StatisticsDashboardService {
                         break;
                     case "R":
                         System.out.println("Refreshing...");
-                        refreshDashboard(sm, gm, ts);
+                        refreshDashboard(sm, gm, ts, brs);
                         printDashboard();
                         break;
                     default:
@@ -80,7 +81,8 @@ public class StatisticsDashboardService {
         }
     }
 
-    private synchronized void refreshDashboard(StudentManager sm, GradeManager gm, TaskScheduler ts) {
+    private synchronized void refreshDashboard(StudentManager sm, GradeManager gm, TaskScheduler ts,
+            BatchReportService brs) {
         // Reload data from disk to pick up changes from other processes
         sm.loadStudents();
         gm.loadGrades();
@@ -173,18 +175,61 @@ public class StatisticsDashboardService {
                 });
 
         // Concurrent Operations
-        sb.append("\nCONCURRENT OPERATIONS\n");
+        sb.append("\nCONCURRENT OPERATIONS IN PROGRESS\n");
         sb.append("__________________________________________________\n");
+
+        // Batch Report Status
+        BatchReportService.BatchStatus batchStatus = brs.getStatus();
+        if (batchStatus != null && batchStatus.isRunning) {
+            double ratio = batchStatus.total > 0 ? (double) batchStatus.completed / batchStatus.total : 0;
+            int percent = (int) (ratio * 100);
+            int filled = (int) (ratio * 20);
+            String bar = repeat("█", filled) + repeat("░", 20 - filled);
+            sb.append(String.format("[%s] Batch Report Generation (%d%%) - %d threads\n",
+                    bar, percent, batchStatus.threads));
+        } else {
+            // Check for completed but not cleared? Or just generic "No batch running"?
+            // We can show nothing if not running, or placeholder.
+            // Reference image shows it. User wants to see it running.
+        }
+
         List<services.TaskScheduler.ScheduledTaskInfo> tasks = ts.getActiveTasks();
-        if (tasks.isEmpty()) {
-            sb.append("[No background tasks scheduled]\n");
+        if (tasks.isEmpty() && !batchStatus.isRunning) {
+            sb.append("No active background operations.\n");
         } else {
             for (services.TaskScheduler.ScheduledTaskInfo task : tasks) {
                 long delay = task.getDelay(TimeUnit.SECONDS);
-                String status = delay <= 0 ? "RUNNING" : "WAITING (" + delay + "s)";
-                sb.append(String.format("[%-15s] : %s\n", task.getName(), status));
+                long period = task.getUnit().toSeconds(task.getPeriod()); // Convert to seconds
+
+                String status;
+                String bar;
+                int percent;
+
+                if (delay <= 0) {
+                    status = "RUNNING";
+                    bar = repeat("█", 20); // 100% active
+                    percent = 100;
+                } else {
+                    // Calculate wait progress
+                    double ratio = period > 0 ? (double) (period - delay) / period : 0;
+                    if (ratio < 0)
+                        ratio = 0; // Should not happen
+                    percent = (int) (ratio * 100);
+                    int filled = (int) (ratio * 20);
+                    bar = repeat("█", filled) + repeat("░", 20 - filled);
+                    status = "WAITING (" + delay + "s)";
+                }
+
+                sb.append(String.format("[%s] %s (%d%%) - %s\n", bar, task.getName(), percent, status));
             }
         }
+
+        // Thread Pool Status (Generic Estimate)
+        sb.append("\nThread Pool Status:\n");
+        if (batchStatus != null && batchStatus.isRunning) {
+            sb.append(String.format("  Batch Pool: %d/%d active\n", batchStatus.threads, batchStatus.threads));
+        }
+        sb.append("  Scheduled Pool: " + tasks.size() + " tasks scheduled\n");
 
         sb.append("\nCommand: ");
 

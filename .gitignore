@@ -2,9 +2,15 @@
 /bin/
 /out/
 /target/
+/data/
+*.dat
+*.txt
 *.class
 *.log
 compile_log.txt
 test_output.txt
 javac_log.txt
 jacoco_error.txt
+PROJECT_OBJECTIVES_MAPPING.md
+project_solid_analysis.md
+

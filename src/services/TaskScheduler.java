@@ -65,6 +65,23 @@ public class TaskScheduler {
         return new ArrayList<>(activeTasks); // Return copy
     }
 
+    public String getSchedulerStats() {
+        int totalExecutions = 0;
+        int totalSuccess = 0;
+
+        for (ScheduledTaskInfo info : activeTasks) {
+            totalExecutions += info.getSubmissionCount();
+            totalSuccess += info.getSuccessCount();
+        }
+
+        if (totalExecutions == 0) {
+            return "No executions yet";
+        }
+
+        double rate = (double) totalSuccess / totalExecutions * 100;
+        return String.format("Success Rate: %.0f%% | Executions: %d", rate, totalExecutions);
+    }
+
     // ... existing shutdown/save/load methods ...
     public void shutdown() {
         System.out.println("Shutting down Task Scheduler...");
@@ -120,6 +137,7 @@ public class TaskScheduler {
         private String status = "PENDING";
         private java.time.LocalDateTime lastRun;
         private int executionCount = 0;
+        private int successCount = 0;
 
         public ScheduledTaskInfo(String name, long period, TimeUnit unit, ScheduledFuture<?> future) {
             this.name = name;
@@ -140,12 +158,21 @@ public class TaskScheduler {
             this.status = "✓ Success";
             this.lastRun = java.time.LocalDateTime.now();
             this.executionCount++;
+            this.successCount++;
         }
 
         public void markFailure() {
             this.status = "X Failed";
             this.lastRun = java.time.LocalDateTime.now();
             this.executionCount++; // Count attempts?
+        }
+
+        public int getSubmissionCount() {
+            return executionCount;
+        }
+
+        public int getSuccessCount() {
+            return successCount;
         }
 
         // Getters
